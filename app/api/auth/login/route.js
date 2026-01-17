@@ -7,11 +7,12 @@ import { requireCsrf } from '../../../../middleware/auth.middleware.js'
 import logger from '../../../../lib/logger.js'
 
 export async function POST(request) {
+  let parsed = null
   try {
     requireCsrf(request)
 
     const body = await request.json()
-    const parsed = loginSchema.safeParse(body)
+    parsed = loginSchema.safeParse(body)
     if (!parsed.success) {
       return respondError({
         status: 400,

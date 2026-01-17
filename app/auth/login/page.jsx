@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import PasswordField from "../../../components/ui/PasswordField";
+import EmailField from "../../../components/ui/EmailField";
+import Toast from "../../../components/ui/Toast";
 
 const schema = z.object({
 	email: z.string().email("Email tidak valid"),
@@ -35,70 +38,63 @@ export default function LoginPage() {
 
 	const onSubmit = async (values) => {
 		setError("");
-		const res = await fetch("/api/auth/login", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"x-csrf-token": csrfToken,
-			},
-			body: JSON.stringify(values),
-		});
+		try {
+			const res = await fetch("/api/auth/login", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"x-csrf-token": csrfToken,
+				},
+				body: JSON.stringify(values),
+			});
 
-		const json = await res.json();
-		if (!res.ok || !json.success) {
-			setError(json?.error?.message || "Login gagal");
-			return;
+			let json = null;
+			try {
+				json = await res.json();
+			} catch (e) {
+				json = null;
+			}
+
+			if (!res.ok || !json?.success) {
+				const msg = json?.error?.message || json?.message || "Login gagal";
+				setError(msg);
+				return;
+			}
+
+			router.push("/admin");
+		} catch (err) {
+			setError("Terjadi kesalahan jaringan. Silakan coba lagi.");
 		}
-
-		router.push("/admin");
 	};
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-			<div className="w-full max-w-md rounded-2xl bg-white p-8 shadow">
-				<h1 className="text-2xl font-semibold text-zinc-900">Masuk</h1>
-				<p className="mt-2 text-sm text-zinc-500">
-					Gunakan akun yang sudah dibuat admin.
-				</p>
+		<>
+			<div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
+				<div className="w-full max-w-md rounded-2xl bg-white p-8 shadow">
+					<h1 className="text-2xl font-semibold text-zinc-900">Masuk</h1>
 
-				<form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
-					<div>
-						<label className="text-sm font-medium text-zinc-700">Email</label>
-						<input
-							type="email"
-							className="mt-2 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-zinc-400"
-							placeholder="nama@domain.com"
-							{...register("email")}
-						/>
-						{errors.email && (
-							<p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-						)}
-					</div>
+					<form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+						<div>
+							<EmailField register={register} error={errors.email} />
+						</div>
 
-					<div>
-						<label className="text-sm font-medium text-zinc-700">Password</label>
-						<input
-							type="password"
-							className="mt-2 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-zinc-400"
-							placeholder="••••••••"
-							{...register("password")}
-						/>
-						{errors.password && (
-							<p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
-						)}
-					</div>
+						<div>
+							<PasswordField register={register} error={errors.password} />
+						</div>
 
-					{error && <p className="text-sm text-red-600">{error}</p>}
+						{error && <p className="text-sm text-red-600">{error}</p>}
 
-					<button
-						type="submit"
-						disabled={isSubmitting || !csrfToken}
-						className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-					>
-						{isSubmitting ? "Memproses..." : "Masuk"}
-					</button>
-				</form>
+						<button
+							type="submit"
+							disabled={isSubmitting || !csrfToken}
+							className="w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							{isSubmitting ? "Memproses..." : "Masuk"}
+						</button>
+					</form>
+				</div>
 			</div>
-		</div>
+			<Toast message={error} type="error" visible={!!error} onClose={() => setError("")} />
+		</>
 	);
 }

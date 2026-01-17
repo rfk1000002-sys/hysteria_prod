@@ -42,6 +42,7 @@ hysteria/
 │   └── auth.middleware.js        # Authentication middleware
 │
 ├── modules/                      # Modular business logic (Domain-Driven Design)
+│   ├── (modul yang lainnya)/.....
 │   ├── admin/                    # Admin module
 │   ├── auth/                     # Authentication & authorization module
 │   │   ├── index.js              # Module exports

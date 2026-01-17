@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Toast from "../../components/ui/Toast";
 
 export default function AdminPage() {
 	const router = useRouter();
 	const [csrfToken, setCsrfToken] = useState("");
+	const [toastVisible, setToastVisible] = useState(false);
+	const [toastMessage, setToastMessage] = useState("");
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
@@ -14,6 +17,10 @@ export default function AdminPage() {
 			const json = await res.json();
 			if (json?.data?.csrfToken) {
 				setCsrfToken(json.data.csrfToken);
+
+				// show welcome toast once CSRF loaded (page mounted)
+				setToastMessage("Selamat datang di area admin.");
+				setToastVisible(true);
 			}
 		}
 		loadCsrf();
@@ -33,7 +40,8 @@ export default function AdminPage() {
 	};
 
 	return (
-		<div className="rounded-2xl bg-white p-8 shadow">
+		<>
+			<div className="rounded-2xl bg-white p-8 shadow">
 			<div className="flex items-center justify-between">
 				<div>
 					<h2 className="text-xl font-semibold text-zinc-900">Dashboard</h2>
@@ -47,6 +55,8 @@ export default function AdminPage() {
 					{loading ? "Keluar..." : "Keluar"}
 				</button>
 			</div>
-		</div>
+			</div>
+			{/* <Toast message={toastMessage} type="info" visible={toastVisible} onClose={() => setToastVisible(false)} /> */}
+		</>
 	);
 }
