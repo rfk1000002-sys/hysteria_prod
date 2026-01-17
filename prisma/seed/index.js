@@ -7,7 +7,8 @@ const seeds = [
   // require('./001-create-test-pg.js'),
   // require('./002-test-pg.js'),
   // require('./003-create-more-test-pg.js'),
-  require('./004-seed-roles.js'),
+  // require('./004-seed-roles.js'),
+  require('./005-seed-statuses.js'),
 ];
 
 async function main() {
