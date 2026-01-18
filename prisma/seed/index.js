@@ -6,12 +6,10 @@
 const logger = require('../../lib/logger');
 
 const seeds = [
-  // require('./001-create-test-pg.js'),
-  // require('./002-test-pg.js'),
-  // require('./003-create-more-test-pg.js'),
-  // require('./004-seed-roles.js'),
-  // require('./005-seed-statuses.js'),
+  require('./004-seed-roles.js'),
+  require('./005-seed-statuses.js'),
   require('./006-create-admin-user.js'),
+  require('./008-seed-basic-permissions.js'),
 ];
 
 async function main() {

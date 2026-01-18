@@ -17,7 +17,7 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
         <TableHead className="bg-zinc-50">
           <TableRow>
             {columns.map((col) => (
-              <TableCell key={col.field} className={col.headerClassName || 'px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider'}>
+              <TableCell key={col.field} align={col.headerAlign || col.align || 'left'} className={col.headerClassName || 'px-6 py-3 text-xs font-medium text-zinc-500 uppercase tracking-wider'}>
                 {col.headerName}
               </TableCell>
             ))}
@@ -41,7 +41,7 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
             rows.map((row) => (
               <TableRow key={getRowId(row)} hover>
                 {columns.map((col) => (
-                  <TableCell key={col.field} className={col.className || 'px-6 py-4 whitespace-nowrap text-sm text-zinc-900'}>
+                  <TableCell key={col.field} align={col.align || 'left'} className={col.className || 'px-6 py-4 whitespace-nowrap text-sm text-zinc-900'}>
                     {col.render ? col.render(row) : (row[col.field] ?? '-')}
                   </TableCell>
                 ))}

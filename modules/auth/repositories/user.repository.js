@@ -5,7 +5,19 @@ export async function findUserByEmail(email) {
 		where: { email },
 		include: {
 			status: true,
-			roles: { include: { role: true } },
+			roles: { 
+				include: { 
+					role: {
+						include: {
+							rolePermissions: {
+								include: {
+									permission: true
+								}
+							}
+						}
+					}
+				} 
+			},
 		},
 	})
 }
@@ -15,7 +27,19 @@ export async function findUserById(id) {
 		where: { id },
 		include: {
 			status: true,
-			roles: { include: { role: true } },
+			roles: { 
+				include: { 
+					role: {
+						include: {
+							rolePermissions: {
+								include: {
+									permission: true
+								}
+							}
+						}
+					}
+				} 
+			},
 		},
 	})
 }

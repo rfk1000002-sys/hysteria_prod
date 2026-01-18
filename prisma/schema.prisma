@@ -25,6 +25,7 @@ model Role {
   createdAt   DateTime   @default(now())
 
   userRoles   UserRole[]
+  rolePermissions RolePermission[]
 }
 
 model User {
@@ -98,4 +99,43 @@ model Test {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(255)
   createdAt DateTime @default(now())
+}
+
+// Permission models for RBAC
+model PermissionGroup {
+  id          Int         @id @default(autoincrement())
+  key         String      @unique @db.VarChar(150)
+  name        String?     @db.VarChar(255)
+  description String?     @db.Text
+  createdAt   DateTime    @default(now())
+
+  permissions Permission[]
+}
+
+model Permission {
+  id          Int         @id @default(autoincrement())
+  key         String      @unique @db.VarChar(150) // e.g. users.create, users.view
+  name        String?     @db.VarChar(255)
+  description String?     @db.Text
+  group       PermissionGroup? @relation(fields: [groupId], references: [id])
+  groupId     Int?
+  createdAt   DateTime    @default(now())
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId       Int
+
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId Int
+
+  assignedAt   DateTime   @default(now())
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }

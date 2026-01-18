@@ -1,17 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Logo, IconDashboard, IconUsers, IconSettings } from "../../../components/adminUI/icon";
 
 export default function AdminSidebar({ open, collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
+  const [openKeys, setOpenKeys] = useState({});
+
   const menus = [
     { key: 'dashboard', label: 'Dashboard', view: 'dashboard', icon: IconDashboard, enabled: true },
-    { key: 'users', label: 'Users', view: 'users', icon: IconUsers, enabled: true},
+    { key: 'users', label: 'Users', view: 'users', icon: IconUsers, enabled: true, children: [
+      { key: 'user_management', label: 'User Management', view: 'users.user_management', enabled: true },
+      { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
+    ]},
     { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: false },
   ];
 
+  const toggleOpen = (key) => setOpenKeys(prev => ({ ...prev, [key]: !prev[key] }));
+
   return (
     <div className="h-screen overflow-y-auto bg-white">
-      
       {/* Logo dan tombol tutup */}
       <div className={`px-4 py-4 flex items-center border-b border-zinc-100 ${collapsed ? "justify-center" : "justify-between"}`}>
         <div className={`flex items-center gap-3 ${collapsed ? "w-full justify-center" : ""}`}>
@@ -36,35 +43,88 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
           {menus.map((item) => {
             const Icon = item.icon;
             const enabled = !!item.enabled;
-            const isActive = currentView === item.view;
+            const hasChildren = Array.isArray(item.children) && item.children.length > 0;
+            const isActive = currentView === item.view || (hasChildren && item.children.some(c => c.view === currentView));
+            const isOpen = !!openKeys[item.key];
             const baseClass = `group relative flex items-center gap-3 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
             const enabledClass = isActive 
               ? `bg-blue-50 text-blue-700` 
               : `text-zinc-700 hover:bg-zinc-50`;
             const disabledClass = `text-zinc-400 cursor-not-allowed`;
 
+            const handleClick = () => {
+              if (!enabled) return;
+              if (hasChildren && !collapsed) {
+                toggleOpen(item.key);
+              } else {
+                onNavigate(item.view);
+              }
+            };
+
             return (
               <li key={item.key}>
-                <button
-                  onClick={() => enabled && onNavigate(item.view)}
-                  title={item.label}
-                  disabled={!enabled}
-                  aria-disabled={!enabled}
-                  aria-current={isActive ? 'page' : undefined}
-                  tabIndex={enabled ? 0 : -1}
-                  className={`${baseClass} ${enabled ? enabledClass : disabledClass} w-full`}
-                  aria-label={item.label}
-                >
-                  <Icon />
-                  {!collapsed && (
-                    <>
-                      <span>{item.label}</span>
-                      {!enabled && (
-                        <span className="ml-auto inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
-                      )}
-                    </>
+                <div className="w-full">
+                  <button
+                    onClick={handleClick}
+                    title={item.label}
+                    disabled={!enabled}
+                    aria-disabled={!enabled}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-expanded={hasChildren ? isOpen : undefined}
+                    tabIndex={enabled ? 0 : -1}
+                    className={`${baseClass} ${enabled ? enabledClass : disabledClass} w-full`}
+                    aria-label={item.label}
+                  >
+                    <Icon />
+                    {!collapsed && (
+                      <>
+                        <span>{item.label}</span>
+                        {hasChildren && (
+                          <svg className={`ml-auto h-4 w-4 transform transition-transform ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fillRule="evenodd" d="M6 4a1 1 0 011.707-.707l6 6a1 1 0 010 1.414l-6 6A1 1 0 016 16.293L11.586 11 6 5.414A1 1 0 016 4z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {!enabled && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                        )}
+                      </>
+                    )}
+                  </button>
+
+                  {hasChildren && !collapsed && isOpen && (
+                    <ul className="mt-1 space-y-1 pl-9 pr-3">
+                      {item.children.map((child) => {
+                        const childActive = currentView === child.view;
+                        const childEnabled = !!child.enabled;
+                        return (
+                          <li key={child.key}>
+                            {(() => {
+                              const childClassBase = 'flex items-center gap-2 w-full text-sm rounded-md px-3 py-2';
+                              const childEnabledClass = childActive ? 'bg-blue-50 text-blue-700' : 'text-zinc-700 hover:bg-zinc-50';
+                              const childDisabledClass = 'text-zinc-400 cursor-not-allowed bg-transparent';
+                              return (
+                                <button
+                                  onClick={() => childEnabled && onNavigate(child.view)}
+                                  title={child.label}
+                                  disabled={!childEnabled}
+                                  aria-disabled={!childEnabled}
+                                  aria-current={childActive ? 'page' : undefined}
+                                  tabIndex={childEnabled ? 0 : -1}
+                                  className={`${childClassBase} ${childEnabled ? childEnabledClass : childDisabledClass}`}
+                                >
+                                  <span className="text-xs">{child.label}</span>
+                                  {!childEnabled && (
+                                    <span className="ml-auto inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                                  )}
+                                </button>
+                              );
+                            })()}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   )}
-                </button>
+                </div>
               </li>
             );
           })}

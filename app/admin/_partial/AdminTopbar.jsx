@@ -14,9 +14,6 @@ export default function AdminTopbar({ onOpenSidebar }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden sm:inline-block w-64 rounded-md">
-          <SearchField placeholder="Cari..." />
-        </div>
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-2 rounded-full bg-zinc-50 px-3 py-1 text-sm hover:bg-zinc-100">
             <Avatar className="h-8 w-8" />

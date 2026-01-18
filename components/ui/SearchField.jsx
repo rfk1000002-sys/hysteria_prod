@@ -7,9 +7,25 @@ import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 
 const SearchField = React.forwardRef(function SearchField(
-  { placeholder = "Search...", className = "", value, onChange, name, ...props },
+  { placeholder = "Search...", className = "", value, onChange, name, showAdornment = true, endAdornment = null, ...props },
   ref
 ) {
+  const inputProps = {};
+
+  if (showAdornment) {
+    inputProps.startAdornment = (
+      <InputAdornment position="start">
+        <IconButton edge="start" size="small" tabIndex={-1} aria-hidden>
+          <SearchIcon fontSize="small" />
+        </IconButton>
+      </InputAdornment>
+    );
+  }
+
+  if (endAdornment) {
+    inputProps.endAdornment = <InputAdornment position="end">{endAdornment}</InputAdornment>;
+  }
+
   return (
     <TextField
       inputRef={ref}
@@ -21,15 +37,7 @@ const SearchField = React.forwardRef(function SearchField(
       variant="outlined"
       size="small"
       className={className}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <IconButton edge="start" size="small" tabIndex={-1} aria-hidden>
-              <SearchIcon fontSize="small" />
-            </IconButton>
-          </InputAdornment>
-        ),
-      }}
+      InputProps={inputProps}
       {...props}
     />
   );

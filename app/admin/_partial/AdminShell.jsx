@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import AdminTopbar from "./AdminTopbar.jsx";
 import AdminSidebar from "./AdminSidebar.jsx";
 import { AuthProvider } from "../../../lib/context/auth-context.jsx";
-import Users from "../users/user.page.jsx";
+import Users from "../users/user_management/page.jsx";
+import Permission from "../users/permission/page.jsx";
 
 export default function AdminShell({ children }) {
   const [open, setOpen] = useState(false);
@@ -27,7 +28,10 @@ export default function AdminShell({ children }) {
   const renderContent = () => {
     switch (currentView) {
       case 'users':
+      case 'users.user_management':
         return <Users />;
+      case 'users.permission':
+        return <Permission />;
       case 'dashboard':
       default:
         return children;

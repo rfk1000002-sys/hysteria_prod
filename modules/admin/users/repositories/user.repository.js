@@ -93,6 +93,29 @@ export async function deleteUserById(id) {
 }
 
 /**
+ * Create new user
+ * @param {Object} data - User data
+ * @param {string} data.email
+ * @param {string} data.password - Already hashed password
+ * @param {string} data.name
+ * @param {number} data.statusId
+ * @returns {Promise<User>}
+ */
+export async function createUser(data) {
+	return prisma.user.create({
+		data,
+		include: {
+			status: true,
+			roles: {
+				include: {
+					role: true,
+				},
+			},
+		},
+	})
+}
+
+/**
  * Update user by ID
  * @param {number} id
  * @param {Object} data
@@ -102,5 +125,13 @@ export async function updateUserById(id, data) {
 	return prisma.user.update({
 		where: { id },
 		data,
+		include: {
+			status: true,
+			roles: {
+				include: {
+					role: true,
+				},
+			},
+		},
 	})
 }

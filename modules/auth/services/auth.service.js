@@ -7,12 +7,23 @@ import { STATUS_KEYS } from '../domain/status.constants.js'
 import logger from '../../../lib/logger.js'
 
 function mapUserAuth(user) {
+	// Collect all unique permissions from all roles
+	const allPermissions = new Set()
+	user.roles?.forEach(userRole => {
+		userRole.role.permissions?.forEach(rolePermission => {
+			if (rolePermission.permission?.key) {
+				allPermissions.add(rolePermission.permission.key)
+			}
+		})
+	})
+	
 	return {
 		id: user.id,
 		email: user.email,
 		name: user.name,
 		status: user.status?.key,
 		roles: user.roles?.map((r) => r.role.key) || [],
+		permissions: Array.from(allPermissions),
 	}
 }
 
@@ -41,6 +52,7 @@ export async function loginWithEmailPassword(email, password) {
 		name: user.name,
 		roles: authUser.roles,
 		status: authUser.status,
+		permissions: authUser.permissions,
 	})
 
 	const refresh = await createRefreshToken(user.id)

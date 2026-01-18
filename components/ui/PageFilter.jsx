@@ -8,7 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 
 export default function PageFilter({ perPage = 10, onChange }) {
   return (
-    <FormControl size="small" sx={{ minWidth: 120 }}>
+    <FormControl size="small" sx={{ minWidth: 90 }}>
       <InputLabel id="per-page-label">Per page</InputLabel>
       <Select
         labelId="per-page-label"
