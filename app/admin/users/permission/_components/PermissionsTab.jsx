@@ -27,9 +27,7 @@ export default function PermissionsTab() {
   const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
 
   const [creating, setCreating] = useState(false);
-  const [newKey, setNewKey] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newGroupId, setNewGroupId] = useState(null);
+  const [newItems, setNewItems] = useState([{ key: '', name: '', groupId: null }]);
   const [createOpen, setCreateOpen] = useState(false);
 
   const [editing, setEditing] = useState(null); // { id, key, name }
@@ -109,23 +107,28 @@ export default function PermissionsTab() {
 
   const handleCreateSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!newKey) {
-      setToast({ message: 'Key is required', type: 'error', visible: true });
+    const toCreate = (newItems || []).filter(it => it.key && it.key.trim());
+    if (!toCreate.length) {
+      setToast({ message: 'At least one Key is required', type: 'error', visible: true });
       return;
     }
     try {
       setCreating(true);
+      // Send as bulk create (single request)
       const res = await apiCall('/api/admin/permissions', {
         method: 'POST',
-        body: JSON.stringify({ key: newKey, name: newName, groupId: newGroupId }),
+        body: JSON.stringify(toCreate),
       });
-      if (!res.ok) throw new Error('Failed to create permission');
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || 'Failed to create permissions');
+      }
       const json = await res.json();
-      setPermissions(prev => [json.data, ...prev]);
-      setNewKey(''); setNewName('');
-      setNewGroupId(null);
+      const createdItems = (json?.data && (json.data.permissions || json.data)) || [];
+      if (createdItems.length) setPermissions(prev => [...createdItems, ...prev]);
+      setNewItems([{ key: '', name: '', groupId: null }]);
       setCreateOpen(false);
-      setToast({ message: 'Permission created', type: 'info', visible: true });
+      setToast({ message: `${createdItems.length} permission(s) created`, type: 'info', visible: true });
     } catch (err) {
       console.error(err);
       setToast({ message: err.message || 'Create failed', type: 'error', visible: true });
@@ -133,6 +136,17 @@ export default function PermissionsTab() {
       setCreating(false);
     }
   };
+
+  const addNewRow = () => setNewItems(prev => [...prev, { key: '', name: '', groupId: null }]);
+  const removeRow = (idx) => setNewItems(prev => {
+    if (!Array.isArray(prev) || prev.length === 0) return [{ key: '', name: '', groupId: null }];
+    if (prev.length === 1) {
+      // if only one row left, reset it instead of removing
+      return [{ key: '', name: '', groupId: null }];
+    }
+    return prev.filter((_, i) => i !== idx);
+  });
+  const updateRow = (idx, field, value) => setNewItems(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
 
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null, name: '' });
 
@@ -255,7 +269,7 @@ export default function PermissionsTab() {
 
       {editing && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-md w-full max-w-md">
+          <div className="bg-white p-6 rounded-md w-full max-w-xl">
             <h3 className="text-lg font-medium mb-4 text-zinc-900">Edit Permission</h3>
             <div className="flex flex-col gap-2">
               <label className="text-sm text-zinc-700">Key</label>
@@ -281,26 +295,47 @@ export default function PermissionsTab() {
 
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-md w-full max-w-md shadow-lg">
+          <div className="bg-white p-6 rounded-md w-full max-w-3xl shadow-lg">
             <h3 className="text-lg font-medium mb-4 text-zinc-900">Create Permission</h3>
             <form onSubmit={handleCreateSubmit} className="flex flex-col gap-3">
-              <div>
-                <label className="text-sm text-zinc-700 block mb-1">Key *</label>
-                <input value={newKey} onChange={(e) => setNewKey(e.target.value)} className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400" required />
-              </div>
-              <div>
-                <label className="text-sm text-zinc-700 block mb-1">Name</label>
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400" />
-              </div>
-              <div>
-                <label className="text-sm text-zinc-700 block mb-1">Group</label>
-                <SelectField
-                  value={newGroupId}
-                  onChange={(v) => setNewGroupId(v)}
-                  options={groups}
-                  emptyOptionLabel="- none -"
-                  className="w-full px-3 py-2 border rounded-md text-zinc-900"
-                />
+              <div className="flex flex-col gap-3">
+                {newItems.map((it, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-2 items-end">
+                    <div className="col-span-4">
+                      <label className="text-sm text-zinc-700 block mb-1">Key *</label>
+                      <input
+                        value={it.key}
+                        onChange={(e) => updateRow(idx, 'key', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400"
+                        required
+                      />
+                    </div>
+                    <div className="col-span-4">
+                      <label className="text-sm text-zinc-700 block mb-1">Name</label>
+                      <input
+                        value={it.name}
+                        onChange={(e) => updateRow(idx, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400"
+                      />
+                    </div>
+                    <div className="col-span-4 flex gap-2 items-center">
+                      <SelectField
+                        value={it.groupId}
+                        onChange={(v) => updateRow(idx, 'groupId', v)}
+                        options={groups}
+                        emptyOptionLabel="- none -"
+                        className="w-full px-3 py-2 border rounded-md text-zinc-900"
+                      />
+                      <IconButton size="small" aria-label={`remove-${idx}`} onClick={() => removeRow(idx)} className="text-red-600">
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={addNewRow} className="text-sm text-blue-600">+ Add row</button>
+                </div>
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 bg-zinc-200 text-zinc-900 rounded-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300">Cancel</button>
@@ -313,7 +348,7 @@ export default function PermissionsTab() {
 
       {deleteConfirm.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-6 rounded-md w-full max-w-md shadow-lg">
+          <div className="bg-white p-6 rounded-md w-full max-w-lg shadow-lg">
             <h3 className="text-lg font-medium mb-4 text-zinc-900">Confirm Delete</h3>
             <p className="text-sm text-zinc-700">Are you sure you want to delete permission &quot;{deleteConfirm.name}&quot;?</p>
             <div className="mt-6 flex justify-end gap-2">

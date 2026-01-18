@@ -4,6 +4,7 @@ import {
   countPermissions,
   findPermissionById,
   createPermission,
+  createPermissions,
   updatePermissionById,
   deletePermissionById,
 } from '../../../../modules/admin/users/repositories/permission.repository.js'
@@ -20,7 +21,7 @@ export async function GET(request) {
     const user = await requireAuthWithPermission(request, 'permissions.read')
 
     const { searchParams } = new URL(request.url)
-    const perPage = parseInt(searchParams.get('perPage') || '20')
+    const perPage = parseInt(searchParams.get('perPage') || '25')
     const cursor = searchParams.get('cursor') ? parseInt(searchParams.get('cursor')) : null
     const search = searchParams.get('search') || ''
     const groupId = searchParams.get('groupId') || null
@@ -50,7 +51,38 @@ export async function POST(request) {
     const user = await requireAuthWithPermission(request, 'permissions.create')
     const body = await request.json()
 
-    if (!body || !body.key) {
+    if (!body) {
+      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Request body is required' })
+    }
+
+    // Bulk create when body is an array
+    if (Array.isArray(body)) {
+      if (body.length === 0) {
+        return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Request array is empty' })
+      }
+
+      for (const item of body) {
+        if (!item || !item.key) {
+          return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Each permission must include a key' })
+        }
+      }
+
+      const toCreate = body.map((item) => ({
+        key: item.key,
+        name: item.name || null,
+        description: item.description || null,
+        groupId: item.groupId || null,
+      }))
+
+      const created = await createPermissions(toCreate)
+
+      logger.info('Permissions created', { adminId: user.id, count: created.length })
+
+      return NextResponse.json({ success: true, data: { permissions: created } })
+    }
+
+    // Single create
+    if (!body.key) {
       return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Permission key is required' })
     }
 

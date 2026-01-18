@@ -61,6 +61,36 @@ export async function createPermission(data) {
   return prisma.permission.create({ data })
 }
 
+export async function createPermissions(dataArray) {
+  if (!Array.isArray(dataArray) || dataArray.length === 0) {
+    return []
+  }
+
+  // collect keys from payload
+  const keys = dataArray.map((d) => d.key)
+
+  // find existing permissions with same keys to avoid unique constraint errors
+  const existing = await prisma.permission.findMany({ where: { key: { in: keys } }, select: { key: true } })
+  const existingKeys = new Set(existing.map((e) => e.key))
+
+  // filter out items that already exist
+  const toInsert = dataArray.filter((d) => !existingKeys.has(d.key))
+
+  if (toInsert.length === 0) {
+    return []
+  }
+
+  // Use createMany for bulk insert; skipDuplicates as a safety
+  await prisma.permission.createMany({
+    data: toInsert.map((d) => ({ key: d.key, name: d.name ?? null, description: d.description ?? null, groupId: d.groupId ?? null })),
+    skipDuplicates: true,
+  })
+
+  // Return the created records
+  const insertedKeys = toInsert.map((d) => d.key)
+  return prisma.permission.findMany({ where: { key: { in: insertedKeys } }, include: { group: true } })
+}
+
 export async function updatePermissionById(id, data) {
   return prisma.permission.update({ where: { id }, data })
 }
