@@ -23,13 +23,14 @@ export async function GET(request) {
     const perPage = parseInt(searchParams.get('perPage') || '20')
     const cursor = searchParams.get('cursor') ? parseInt(searchParams.get('cursor')) : null
     const search = searchParams.get('search') || ''
+    const groupId = searchParams.get('groupId') || null
 
     if (perPage < 1 || perPage > 200) {
       return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'perPage must be between 1 and 200' })
     }
 
-    const { permissions, nextCursor, hasMore } = await findAllPermissions({ perPage, cursor, search })
-    const total = await countPermissions(search)
+    const { permissions, nextCursor, hasMore } = await findAllPermissions({ perPage, cursor, search, groupId })
+    const total = await countPermissions(search, groupId)
 
     logger.info('Permissions fetched', { adminId: user.id, count: permissions.length })
 

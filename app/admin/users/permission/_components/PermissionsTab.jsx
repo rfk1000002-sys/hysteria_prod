@@ -6,6 +6,7 @@ import SearchField from '../../../../../components/ui/SearchField.jsx';
 import PageFilter from '../../../../../components/ui/PageFilter.jsx';
 import DataTable from '../../../../../components/ui/DataTable.jsx';
 import Toast from '../../../../../components/ui/Toast.jsx';
+import SelectField from '../../../../../components/ui/SelectField.jsx';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -17,6 +18,7 @@ export default function PermissionsTab() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [groupFilter, setGroupFilter] = useState(null);
   const [perPage, setPerPage] = useState(25);
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
@@ -27,17 +29,20 @@ export default function PermissionsTab() {
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState('');
   const [newName, setNewName] = useState('');
+  const [newGroupId, setNewGroupId] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   const [editing, setEditing] = useState(null); // { id, key, name }
+  const [groups, setGroups] = useState([]);
 
-  const fetchPermissions = useCallback(async (cursor = null, searchTerm = '') => {
+  const fetchPermissions = useCallback(async (cursor = null, searchTerm = '', groupId = null) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       params.append('perPage', perPage.toString());
       if (cursor) params.append('cursor', cursor.toString());
       if (searchTerm) params.append('search', searchTerm);
+      if (groupId) params.append('groupId', groupId.toString());
 
       const res = await apiCall(`/api/admin/permissions?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch permissions');
@@ -61,24 +66,45 @@ export default function PermissionsTab() {
     }
   }, [apiCall, perPage]);
 
+  const fetchGroups = useCallback(async () => {
+    try {
+      const res = await apiCall('/api/admin/permission-groups');
+      if (!res.ok) throw new Error('Failed to fetch permission groups');
+      const json = await res.json();
+      const items = (json?.data && (json.data.permissionGroups || json.data.groups || json.data)) || [];
+      setGroups(items);
+    } catch (err) {
+      console.error(err);
+      // silent; not critical for permissions list
+    }
+  }, [apiCall]);
+
   useEffect(() => { fetchPermissions(); }, [fetchPermissions]);
+  useEffect(() => { fetchGroups(); }, [fetchGroups]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearch(searchInput);
     setPermissions([]);
     setNextCursor(null);
-    fetchPermissions(null, searchInput);
+    fetchPermissions(null, searchInput, groupFilter);
   };
 
   const handleLoadMore = () => {
-    if (nextCursor && !loading) fetchPermissions(nextCursor, search);
+    if (nextCursor && !loading) fetchPermissions(nextCursor, search, groupFilter);
   };
 
   const handlePerPageChange = (n) => {
     setPermissions([]);
     setNextCursor(null);
     setPerPage(n);
+  };
+
+  const handleGroupFilterChange = (id) => {
+    setGroupFilter(id);
+    setPermissions([]);
+    setNextCursor(null);
+    fetchPermissions(null, search, id);
   };
 
   const handleCreateSubmit = async (e) => {
@@ -91,12 +117,13 @@ export default function PermissionsTab() {
       setCreating(true);
       const res = await apiCall('/api/admin/permissions', {
         method: 'POST',
-        body: JSON.stringify({ key: newKey, name: newName }),
+        body: JSON.stringify({ key: newKey, name: newName, groupId: newGroupId }),
       });
       if (!res.ok) throw new Error('Failed to create permission');
       const json = await res.json();
       setPermissions(prev => [json.data, ...prev]);
       setNewKey(''); setNewName('');
+      setNewGroupId(null);
       setCreateOpen(false);
       setToast({ message: 'Permission created', type: 'info', visible: true });
     } catch (err) {
@@ -130,6 +157,9 @@ export default function PermissionsTab() {
 
   const startEdit = (p) => setEditing({ id: p.id, key: p.key, name: p.name || '' });
 
+  // when starting edit, include groupId if present
+  const startEditWithGroup = (p) => setEditing({ id: p.id, key: p.key, name: p.name || '', groupId: p.group ? p.group.id : null });
+
   const saveEdit = async () => {
     if (!editing || !editing.id) return;
     try {
@@ -155,7 +185,7 @@ export default function PermissionsTab() {
       headerName: 'Actions',
       render: (r) => (
         <div className="flex items-center gap-2">
-          <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEdit(r)} className="text-blue-600">
+          <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEditWithGroup(r)} className="text-blue-600">
             <EditIcon fontSize="small" />
           </IconButton>
           <IconButton aria-label={`delete-${r.id}`} size="small" onClick={() => openDeleteConfirm(r.id, r.key || r.name)} className="text-red-600">
@@ -183,14 +213,21 @@ export default function PermissionsTab() {
                   color="primary"
                   className="bg-blue-600 text-white rounded-md"
                   aria-label="search"
-                >
+                > 
                   <SearchIcon fontSize="small" />
                 </IconButton>
               )}
             />
 
-            <div className="ml-2">
+            <div className="ml-2 flex items-center gap-2">
               <PageFilter perPage={perPage} onChange={handlePerPageChange} />
+              <SelectField
+                value={groupFilter}
+                onChange={(v) => handleGroupFilterChange(v)}
+                options={groups}
+                emptyOptionLabel="All groups"
+                className="px-3 py-2 border rounded-md text-zinc-900"
+              />
             </div>
           </div>
         </form>
@@ -225,6 +262,14 @@ export default function PermissionsTab() {
               <input value={editing.key} onChange={(e) => setEditing({ ...editing, key: e.target.value })} className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400" />
               <label className="text-sm text-zinc-700">Name</label>
               <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400" />
+              <label className="text-sm text-zinc-700">Group</label>
+              <SelectField
+                value={editing.groupId}
+                onChange={(v) => setEditing({ ...editing, groupId: v })}
+                options={groups}
+                emptyOptionLabel="- none -"
+                className="w-full px-3 py-2 border rounded-md text-zinc-900"
+              />
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={() => setEditing(null)} className="px-4 py-2 bg-zinc-200 text-zinc-900 rounded-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300">Cancel</button>
@@ -246,6 +291,16 @@ export default function PermissionsTab() {
               <div>
                 <label className="text-sm text-zinc-700 block mb-1">Name</label>
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full px-3 py-2 border rounded-md bg-white text-zinc-900 placeholder:text-zinc-400" />
+              </div>
+              <div>
+                <label className="text-sm text-zinc-700 block mb-1">Group</label>
+                <SelectField
+                  value={newGroupId}
+                  onChange={(v) => setNewGroupId(v)}
+                  options={groups}
+                  emptyOptionLabel="- none -"
+                  className="w-full px-3 py-2 border rounded-md text-zinc-900"
+                />
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 bg-zinc-200 text-zinc-900 rounded-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-300">Cancel</button>

@@ -4,16 +4,21 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../../../../lib/context/auth-context'
 import DataTable from '../../../../../components/ui/DataTable.jsx'
 import Toast from '../../../../../components/ui/Toast.jsx'
+import SelectField from '../../../../../components/ui/SelectField.jsx'
 import Button from '@mui/material/Button'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 export default function RolePermissionsTab() {
   const { apiCall } = useAuth()
   const [roleId, setRoleId] = useState('')
   const [roles, setRoles] = useState([])
+  const [groups, setGroups] = useState([])
+  const [groupFilter, setGroupFilter] = useState(null)
   const [permissions, setPermissions] = useState([])
   const [assigned, setAssigned] = useState(new Set())
   const [allPermissions, setAllPermissions] = useState([])
@@ -36,6 +41,23 @@ export default function RolePermissionsTab() {
     loadRoles()
   }, [apiCall])
 
+  // Load permission groups on mount
+  useEffect(() => {
+    async function loadGroups() {
+      try {
+        const res = await apiCall('/api/admin/permission-groups')
+        if (!res.ok) throw new Error('Failed to fetch groups')
+        const json = await res.json()
+        const items = json.data.groups || json.data.permissionGroups || json.data || []
+        setGroups(items)
+      } catch (err) {
+        console.error(err)
+        setToast({ message: 'Failed to load groups', type: 'error', visible: true })
+      }
+    }
+    loadGroups()
+  }, [apiCall])
+
   // Load permissions when roleId changes
   useEffect(() => {
     async function load() {
@@ -43,11 +65,12 @@ export default function RolePermissionsTab() {
         setLoading(true)
         const [rRes, pRes] = await Promise.all([
           apiCall(`/api/admin/roles/${roleId}/permissions`),
-          apiCall('/api/admin/permissions?perPage=50'),
+          apiCall(`/api/admin/permissions?perPage=200${groupFilter ? `&groupId=${groupFilter}` : ''}`),
         ])
         const rJson = await rRes.json()
         const pJson = await pRes.json()
         setPermissions(rJson.data.permissions || [])
+        // server already filters if groupFilter provided; otherwise use what was returned
         setAllPermissions(pJson.data.permissions || [])
         setAssigned(new Set((rJson.data.permissions || []).map(p => p.id)))
       } catch (err) {
@@ -58,12 +81,26 @@ export default function RolePermissionsTab() {
       }
     }
     if (roleId) load()
-  }, [apiCall, roleId])
+  }, [apiCall, roleId, groupFilter])
 
   const toggle = (id) => {
     const s = new Set(assigned)
     if (s.has(id)) s.delete(id)
     else s.add(id)
+    setAssigned(s)
+  }
+
+  const visibleIds = allPermissions.map(p => p.id)
+  const allSelected = visibleIds.length > 0 && visibleIds.every(id => assigned.has(id))
+  const someSelected = visibleIds.some(id => assigned.has(id))
+
+  const toggleAll = () => {
+    const s = new Set(assigned)
+    if (allSelected) {
+      visibleIds.forEach(id => s.delete(id))
+    } else {
+      visibleIds.forEach(id => s.add(id))
+    }
     setAssigned(s)
   }
 
@@ -101,28 +138,53 @@ export default function RolePermissionsTab() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <div className="flex-1 max-w-md">
-          <FormControl fullWidth size="small">
-            <InputLabel id="role-select-label">Select Role</InputLabel>
-            <Select
-              labelId="role-select-label"
-              id="role-select"
-              value={roleId}
-              label="Select Role"
-              onChange={(e) => setRoleId(e.target.value)}
-            >
-              <MenuItem value="">
-                <em>-- Select a role --</em>
-              </MenuItem>
-              {roles.map((role) => (
-                <MenuItem key={role.id} value={role.id}>
-                  {role.name}
+        <div className="flex-1 max-w-md flex items-center gap-3">
+          <div className="flex-1">
+            <FormControl fullWidth size="small">
+              <InputLabel id="role-select-label">Select Role</InputLabel>
+              <Select
+                labelId="role-select-label"
+                id="role-select"
+                value={roleId}
+                label="Select Role"
+                onChange={(e) => setRoleId(e.target.value)}
+              >
+                <MenuItem value="">
+                  <em>-- Select a role --</em>
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                {roles.map((role) => (
+                  <MenuItem key={role.id} value={role.id}>
+                    {role.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+
+          <div className="w-56">
+            <SelectField
+              value={groupFilter}
+              onChange={(v) => setGroupFilter(v)}
+              options={groups}
+              emptyOptionLabel="All groups"
+              // label="Group"
+              minWidth={160}
+            />
+          </div>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          <FormControlLabel
+            control={(
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected && !allSelected}
+                onChange={toggleAll}
+                disabled={!roleId || visibleIds.length === 0}
+                size="small"
+              />
+            )}
+            label={<span className="text-sm text-zinc-700 font-medium">Select all</span>}
+          />
           <Button variant="contained" color="primary" onClick={save} disabled={loading || !roleId}>
             Save
           </Button>

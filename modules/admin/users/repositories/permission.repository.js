@@ -3,7 +3,7 @@ import { prisma } from '../../../../lib/prisma.js'
 /**
  * Find permissions with cursor pagination and optional search
  */
-export async function findAllPermissions({ perPage = 20, cursor = null, search = '' } = {}) {
+export async function findAllPermissions({ perPage = 20, cursor = null, search = '', groupId = null } = {}) {
   const where = search
     ? {
         OR: [
@@ -12,6 +12,10 @@ export async function findAllPermissions({ perPage = 20, cursor = null, search =
         ],
       }
     : {}
+
+  if (groupId) {
+    where.groupId = parseInt(groupId)
+  }
 
   const permissions = await prisma.permission.findMany({
     where,
@@ -28,7 +32,7 @@ export async function findAllPermissions({ perPage = 20, cursor = null, search =
   return { permissions: returned, nextCursor, hasMore }
 }
 
-export async function countPermissions(search = '') {
+export async function countPermissions(search = '', groupId = null) {
   const where = search
     ? {
         OR: [
@@ -37,6 +41,10 @@ export async function countPermissions(search = '') {
         ],
       }
     : {}
+
+  if (groupId) {
+    where.groupId = parseInt(groupId)
+  }
 
   return prisma.permission.count({ where })
 }
