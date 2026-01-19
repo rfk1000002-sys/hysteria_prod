@@ -32,7 +32,7 @@ export async function GET(request) {
     // Collect all unique permissions from all roles
     const allPermissions = new Set()
     user.roles?.forEach(userRole => {
-      userRole.role.permissions?.forEach(rolePermission => {
+      userRole.role.rolePermissions?.forEach(rolePermission => {
         if (rolePermission.permission?.key) {
           allPermissions.add(rolePermission.permission.key)
         }

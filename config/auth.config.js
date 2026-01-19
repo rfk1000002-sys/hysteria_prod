@@ -2,8 +2,8 @@ export const AUTH_CONFIG = {
 	issuer: 'hysteria',
 	audience: 'hysteria-users',
 	accessToken: {
-		expiresIn: '1m', // Harus sama dengan seconds
-		seconds: 60 * 1, // 1 menit
+		expiresIn: '2h', // Harus sama dengan seconds
+		seconds: 60 * 60 * 2, // 2 jam
 	},
 	refreshToken: {
 		days: 7,

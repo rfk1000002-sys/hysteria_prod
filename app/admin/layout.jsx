@@ -22,11 +22,37 @@ export default async function AdminLayout({ children }) {
 		const payload = verifyAccessToken(token);
 		const roles = payload.roles || [];
 		const status = payload.status;
-		const hasRole = roles.includes(ROLE_KEYS.SUPERADMIN) || roles.includes(ROLE_KEYS.ADMIN);
+		const permissions = payload.permissions || [];
+		
+		// Allow access if:
+		// 1. User is SUPERADMIN or ADMIN (full access), OR
+		// 2. User has at least one permission (limited access based on permissions)
+		const hasAdminRole = roles.includes(ROLE_KEYS.SUPERADMIN) || roles.includes(ROLE_KEYS.ADMIN);
+		const hasAnyPermission = permissions.length > 0;
+		const canAccessAdmin = hasAdminRole || hasAnyPermission;
 
-		if (!hasRole || status !== STATUS_KEYS.ACTIVE) {
-			logger.warn('AdminLayout: unauthorized access attempt', { userId: payload.sub, roles, status })
-			redirect("/auth/login");
+		if (!canAccessAdmin || status !== STATUS_KEYS.ACTIVE) {
+			logger.warn('AdminLayout: unauthorized access attempt', { 
+				userId: payload.sub, 
+				roles, 
+				permissions: permissions.length,
+				status 
+			})
+			// Set a short-lived, client-readable flash cookie so the login page can show a message
+			try {
+				cookieStore.set({
+					name: 'flash_error',
+					value: 'Anda tidak memiliki akses',
+					httpOnly: false,
+					path: '/',
+					maxAge: 10, // seconds
+				})
+			} catch (e) {
+				// ignore cookie set failures
+				logger.warn('AdminLayout: failed to set flash cookie', { error: e?.message })
+			}
+			// Redirect to login (query param kept as fallback)
+			redirect(`/auth/login?error=${encodeURIComponent('Anda tidak memiliki akses')}`);
 		}
 	} catch (error) {
 		logger.error('AdminLayout: token verification failed', { error: error.message })
