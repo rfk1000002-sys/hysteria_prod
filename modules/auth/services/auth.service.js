@@ -22,6 +22,8 @@ function mapUserAuth(user) {
 		email: user.email,
 		name: user.name,
 		status: user.status?.key,
+		// tokenVersion included so we can invalidate issued access tokens when permissions change
+		tokenVersion: user.tokenVersion || 0,
 		roles: user.roles?.map((r) => r.role.key) || [],
 		permissions: Array.from(allPermissions),
 	}
@@ -52,6 +54,7 @@ export async function loginWithEmailPassword(email, password) {
 		name: user.name,
 		roles: authUser.roles,
 		status: authUser.status,
+		tokenVersion: authUser.tokenVersion,
 		permissions: authUser.permissions,
 	})
 

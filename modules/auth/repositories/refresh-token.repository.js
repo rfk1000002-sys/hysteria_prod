@@ -11,7 +11,19 @@ export async function findRefreshTokenByHash(tokenHash) {
 			user: {
 				include: {
 					status: true,
-					roles: { include: { role: true } },
+					roles: { 
+						include: { 
+							role: {
+								include: {
+									rolePermissions: {
+										include: {
+											permission: true
+										}
+									}
+								}
+							}
+						} 
+					},
 				},
 			},
 		},

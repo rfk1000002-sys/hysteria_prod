@@ -96,5 +96,19 @@ export async function updatePermissionById(id, data) {
 }
 
 export async function deletePermissionById(id) {
-  return prisma.permission.delete({ where: { id } })
+  // find roles that reference this permission so we can invalidate tokens for affected users
+  const roleLinks = await prisma.rolePermission.findMany({ where: { permissionId: id }, select: { roleId: true } })
+  const roleIds = roleLinks.map(r => r.roleId)
+
+  const deleted = await prisma.permission.delete({ where: { id } })
+
+  if (roleIds.length > 0) {
+    try {
+      await prisma.user.updateMany({ where: { roles: { some: { roleId: { in: roleIds } } } }, data: { tokenVersion: { increment: 1 } } })
+    } catch (e) {
+      console.warn('Failed to bump tokenVersion after deletePermissionById', e && e.message)
+    }
+  }
+
+  return deleted
 }

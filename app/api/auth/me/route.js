@@ -1,27 +1,14 @@
 import { NextResponse } from 'next/server'
 import { respondError } from '../../../../lib/response.js'
-import { parseAccessToken } from '../../../../modules/auth/services/token.service.js'
-import { getCookie } from '../../../../lib/cookies.js'
-import { COOKIE_NAMES } from '../../../../config/cookie.config.js'
+import { requireAuth } from '../../../../lib/helper/auth.helper.js'
 import { findUserById } from '../../../../modules/auth/repositories/user.repository.js'
 import logger from '../../../../lib/logger.js'
 
 export async function GET(request) {
   try {
-    const accessToken = getCookie(request, COOKIE_NAMES.access)
+    // Use requireAuth to validate token and check tokenVersion
+    const payload = await requireAuth(request)
     
-    if (!accessToken) {
-      return respondError({ status: 401, code: 'NO_ACCESS_TOKEN', message: 'Access token missing' })
-    }
-
-    let payload
-    try {
-      payload = parseAccessToken(accessToken)
-    } catch (error) {
-      logger.warn('Invalid access token', { error: error.message })
-      return respondError({ status: 401, code: 'INVALID_ACCESS_TOKEN', message: 'Access token invalid or expired' })
-    }
-
     const userId = parseInt(payload.sub)
     const user = await findUserById(userId)
 

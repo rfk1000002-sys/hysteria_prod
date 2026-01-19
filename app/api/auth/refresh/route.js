@@ -24,12 +24,25 @@ export async function POST(request) {
     }
 
     const roles = rotated.user.roles?.map((r) => r.role.key) || []
+    
+    // Collect all unique permissions from all roles
+    const allPermissions = new Set()
+    rotated.user.roles?.forEach(userRole => {
+      userRole.role.rolePermissions?.forEach(rolePermission => {
+        if (rolePermission.permission?.key) {
+          allPermissions.add(rolePermission.permission.key)
+        }
+      })
+    })
+    
     const accessToken = createAccessToken({
       sub: String(rotated.user.id),
       email: rotated.user.email,
       name: rotated.user.name,
       roles,
+      tokenVersion: rotated.user.tokenVersion || 0,
       status: rotated.user.status?.key,
+      permissions: Array.from(allPermissions),
     })
 
     // include access token expiry (exp) in response so client can schedule refresh

@@ -7,7 +7,7 @@ import { prisma } from '../../../../lib/prisma.js'
  * @returns {Promise<UserRole>}
  */
 export async function assignRoleToUser(userId, roleId) {
-	return prisma.userRole.create({
+	const ur = await prisma.userRole.create({
 		data: {
 			userId,
 			roleId,
@@ -23,6 +23,17 @@ export async function assignRoleToUser(userId, roleId) {
 			},
 		},
 	})
+
+	// bump tokenVersion and revoke refresh tokens to force logout
+	try {
+	  await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } })
+	  // Force logout by revoking all refresh tokens
+	  await prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } })
+	} catch (e) {
+	  console.warn('Failed to bump tokenVersion or revoke tokens after assignRoleToUser', e && e.message)
+	}
+
+	return ur
 }
 
 /**
@@ -32,12 +43,15 @@ export async function assignRoleToUser(userId, roleId) {
  * @returns {Promise<UserRole>}
  */
 export async function removeRoleFromUser(userId, roleId) {
-	return prisma.userRole.deleteMany({
-		where: {
-			userId,
-			roleId,
-		},
-	})
+		const res = await prisma.userRole.deleteMany({ where: { userId, roleId } })
+		try {
+			await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } })
+			// Force logout by revoking all refresh tokens
+			await prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } })
+		} catch (e) {
+			console.warn('Failed to bump tokenVersion or revoke tokens after removeRoleFromUser', e && e.message)
+		}
+		return res
 }
 
 /**
@@ -62,21 +76,20 @@ export async function getUserRoles(userId) {
  */
 export async function replaceUserRoles(userId, roleIds) {
 	await prisma.$transaction(async (tx) => {
-		// Delete all existing roles
-		await tx.userRole.deleteMany({
-			where: { userId },
-		})
-
-		// Create new role assignments
+		await tx.userRole.deleteMany({ where: { userId } })
 		if (roleIds.length > 0) {
-			await tx.userRole.createMany({
-				data: roleIds.map((roleId) => ({
-					userId,
-					roleId,
-				})),
-			})
+			await tx.userRole.createMany({ data: roleIds.map((roleId) => ({ userId, roleId })) })
 		}
 	})
+
+	// bump tokenVersion and revoke refresh tokens to force logout
+	try {
+	  await prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } })
+	  // Force logout by revoking all refresh tokens
+	  await prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } })
+	} catch (e) {
+	  console.warn('Failed to bump tokenVersion or revoke tokens after replaceUserRoles', e && e.message)
+	}
 }
 
 /**
