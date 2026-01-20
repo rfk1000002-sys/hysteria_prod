@@ -9,10 +9,9 @@ import Sheet from "../../../../components/ui/SheetDialog";
 export default function ProfileSheet({ open, onClose }) {
   const closeRef = useRef(null);
   const router = useRouter();
-  const { apiCall, csrfToken } = useAuth();
+  const { apiCall, csrfToken, user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     function onKey(e) {
@@ -31,35 +30,22 @@ export default function ProfileSheet({ open, onClose }) {
     };
   }, [open, onClose]);
 
-  // Fetch current user profile when the sheet opens
+  // Refresh user profile when sheet opens
   useEffect(() => {
     if (!open) return;
     let mounted = true;
-    const controller = new AbortController();
-
-    async function fetchUser() {
+    (async () => {
       try {
         setLoading(true);
-        const res = await apiCall('/api/auth/me', { method: 'GET', signal: controller.signal });
-        const json = await res.json().catch(() => null);
-        if (!mounted) return;
-        if (json?.success && json.data?.user) {
-          setUser(json.data.user);
-        }
+        await refreshUser();
       } catch (e) {
-        // ignore errors (user will see placeholders)
+        // ignore
       } finally {
         if (mounted) setLoading(false);
       }
-    }
-
-    fetchUser();
-
-    return () => {
-      mounted = false;
-      controller.abort();
-    };
-  }, [open, apiCall]);
+    })();
+    return () => { mounted = false; };
+  }, [open, refreshUser]);
 
   return (
     <>
@@ -85,7 +71,7 @@ export default function ProfileSheet({ open, onClose }) {
               hoverBorderColor="#60A5FA"
               hoverBorderWidth={1}
               hoverScale={1.06}
-              src={user?.avatarUrl || user?.photo || user?.image || user?.profilePicture || ''}
+              src={user?.avatar || user?.photo || user?.image || user?.profilePicture || ''}
               alt={user?.name || 'User'}
             />
             <div className="text-sm font-semibold text-zinc-900">{user?.name ?? (loading ? 'Memuat...' : 'Pengguna')}</div>

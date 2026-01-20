@@ -159,6 +159,41 @@ export function AuthProvider({ children }) {
     [csrfToken]
   );
 
+  // User profile state and helper to refresh it
+  const [user, setUser] = useState(null);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/auth/me', { method: 'GET', credentials: 'include' });
+      const json = await res.json().catch(() => null);
+      if (json?.success && json.data?.user) {
+        setUser(json.data.user);
+        return json.data.user;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  }, []);
+
+  // When authentication state changes, try to load user profile
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUser(null);
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      try {
+        const u = await refreshUser();
+        if (!mounted) return;
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, [isAuthenticated, refreshUser]);
+
   const value = {
     csrfToken,
     refreshCsrf,
@@ -166,6 +201,9 @@ export function AuthProvider({ children }) {
     isLoading,
     isAuthenticated,
     setAuthenticated,
+    user,
+    setUser,
+    refreshUser,
   };
 
   // Global event listeners so UI can show friendly notifications

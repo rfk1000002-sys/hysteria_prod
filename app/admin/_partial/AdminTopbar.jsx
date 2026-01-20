@@ -1,29 +1,13 @@
 "use client";
 
 import { Avatar, IconMenu } from "../../../components/adminUI/icon";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ProfileSheet from "./_components/profile";
 import { useAuth } from "../../../lib/context/auth-context";
 
 export default function AdminTopbar({ onOpenSidebar }) {
   const [openProfile, setOpenProfile] = useState(false);
-  const [user, setUser] = useState(null);
-  const { apiCall } = useAuth();
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await apiCall('/api/auth/me', { method: 'GET' });
-        const json = await res.json().catch(() => null);
-        if (!mounted) return;
-        if (json?.success && json.data?.user) setUser(json.data.user);
-      } catch (e) {
-        // ignore
-      }
-    })();
-    return () => { mounted = false; };
-  }, [apiCall]);
+  const { user } = useAuth();
   return (
     <div className="flex w-full items-center justify-between px-6 py-4">
       <div className="flex items-center gap-4">
@@ -39,7 +23,7 @@ export default function AdminTopbar({ onOpenSidebar }) {
           hoverBorderColor="#3B82F6"
           hoverBorderWidth={1}
           hoverScale={1.08}
-          src={user?.avatarUrl || user?.photo || user?.image || user?.profilePicture || ''}
+          src={user?.avatar || user?.photo || user?.image || user?.profilePicture || ''}
           alt={user?.name || 'User'}
         />
       </button>

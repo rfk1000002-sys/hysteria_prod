@@ -32,6 +32,7 @@ export async function GET(request) {
       name: user.name,
       status: user.status?.key,
       roles: user.roles?.map(r => r.role.key) || [],
+      avatar: user.avatar || null,
       permissions: Array.from(allPermissions),
     }
 
