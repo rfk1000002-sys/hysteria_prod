@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Logo, IconDashboard, IconUsers, IconSettings } from "../../../components/adminUI/icon";
+import { Logo, IconDashboard, IconUsers, IconSettings, IconPlatform, IconEvent, IconPost, IconSocial } from "../../../components/adminUI/icon";
 
 export default function AdminSidebar({ open, collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
@@ -12,6 +12,10 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
       { key: 'user_management', label: 'User Management', view: 'users.user_management', enabled: true },
       { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
     ]},
+    { key: 'platform', label: 'Platform', view: 'platform', icon: IconPlatform, enabled: false },
+    { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: false },
+    { key: 'post', label: 'Post', view: 'post', icon: IconPost, enabled: false },
+    { key: 'social', label: 'Social', view: 'social', icon: IconSocial, enabled: false },
     { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: false },
   ];
 

@@ -44,6 +44,48 @@ export function IconSettings({ className = '', size = 20 }) {
   );
 }
 
+export function IconPlatform({ className = '', size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect x="3" y="3" width="8" height="8" rx="1" stroke="#6B7280" strokeWidth="1.2" fill="none" />
+      <rect x="13" y="3" width="8" height="8" rx="1" stroke="#6B7280" strokeWidth="1.2" fill="none" />
+      <rect x="3" y="13" width="8" height="8" rx="1" stroke="#6B7280" strokeWidth="1.2" fill="none" />
+      <rect x="13" y="13" width="8" height="8" rx="1" stroke="#6B7280" strokeWidth="1.2" fill="none" />
+    </svg>
+  );
+}
+
+export function IconEvent({ className = '', size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2" stroke="#6B7280" strokeWidth="1.5" fill="none" />
+      <path d="M16 3v4M8 3v4" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 11h10M7 15h10" stroke="#6B7280" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconPost({ className = '', size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <path d="M8 6h8v2H8zM8 10h8v2H8zM8 14h5v2H8z" fill="#6B7280" />
+      <rect x="3" y="4" width="14" height="16" rx="2" stroke="#6B7280" strokeWidth="1.2" fill="none" />
+    </svg>
+  );
+}
+
+export function IconSocial({ className = '', size = 20 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
+      <circle cx="6" cy="12" r="2" stroke="#6B7280" strokeWidth="1.4" fill="none" />
+      <circle cx="12" cy="6" r="2" stroke="#6B7280" strokeWidth="1.4" fill="none" />
+      <circle cx="18" cy="16" r="2" stroke="#6B7280" strokeWidth="1.4" fill="none" />
+      <path d="M8 11l6-4" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 13l6 3" stroke="#6B7280" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function Avatar({
   className = '',
   size = 32,
