@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { apiFetch } from "../api-client";
+import Toast from "../../components/ui/Toast";
 
 const AuthContext = createContext(null);
 const REFRESH_BEFORE_EXPIRY = 10; // Refresh 10 detik sebelum expired
@@ -10,6 +11,7 @@ export function AuthProvider({ children }) {
   const [csrfToken, setCsrfToken] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "error" });
   const refreshTimerRef = useRef(null);
   const isRefreshingRef = useRef(false);
   const tokenExpiryRef = useRef(null); // unix seconds
@@ -166,7 +168,56 @@ export function AuthProvider({ children }) {
     setAuthenticated,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Global event listeners so UI can show friendly notifications
+  useEffect(() => {
+    function handleForceLogout(e) {
+      const message = e?.detail?.message || "Sesi Anda kedaluwarsa. Silakan login kembali.";
+      setToast({ visible: true, message, type: "error" });
+    }
+
+    function handleSessionExpired(e) {
+      const message = e?.detail?.message || "Sesi berakhir. Silakan login kembali.";
+      setToast({ visible: true, message, type: "error" });
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("force-logout", handleForceLogout);
+      window.addEventListener("session-expired", handleSessionExpired);
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("force-logout", handleForceLogout);
+        window.removeEventListener("session-expired", handleSessionExpired);
+      }
+    };
+  }, []);
+
+  // Show persisted message (if any) after navigation (e.g. after logout redirect)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = sessionStorage.getItem('auth:logoutMessage');
+      if (stored) {
+        setToast({ visible: true, message: stored, type: 'error' });
+        sessionStorage.removeItem('auth:logoutMessage');
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={!!toast.visible}
+        onClose={() => setToast((t) => ({ ...t, visible: false }))}
+      />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
