@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../../lib/context/auth-context";
 import { Avatar } from "../../../../components/adminUI/icon";
+import Sheet from "../../../../components/ui/SheetDialog";
 
 export default function ProfileSheet({ open, onClose }) {
   const closeRef = useRef(null);
@@ -62,21 +63,9 @@ export default function ProfileSheet({ open, onClose }) {
 
   return (
     <>
-      <div
-        aria-hidden={!open}
-        className={`fixed inset-0 z-40 transition-opacity duration-200 ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-      >
-        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      </div>
-
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-hidden={!open}
-        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-lg z-50 transform transition-transform duration-200 ${open ? "translate-x-0" : "translate-x-full"}`}
-      >
+      <Sheet open={open} onClose={onClose}>
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Profile</h2>
+          <h2 className="text-lg font-semibold text-zinc-900">Profile</h2>
           <button
             ref={closeRef}
             aria-label="Close profile"
@@ -90,10 +79,17 @@ export default function ProfileSheet({ open, onClose }) {
         </div>
 
         <div className="p-4">
-          <div className="flex flex-col items-center gap-2">
-            <Avatar className="h-16 w-16" />
-            <div className="text-sm font-semibold">{user?.name ?? (loading ? 'Memuat...' : 'Pengguna')}</div>
-            <div className="text-xs text-zinc-500">{user?.email ?? ''}</div>
+            <div className="flex flex-col items-center gap-2">
+            <Avatar
+              className="h-16 w-16"
+              hoverBorderColor="#60A5FA"
+              hoverBorderWidth={1}
+              hoverScale={1.06}
+              src={user?.avatarUrl || user?.photo || user?.image || user?.profilePicture || ''}
+              alt={user?.name || 'User'}
+            />
+            <div className="text-sm font-semibold text-zinc-900">{user?.name ?? (loading ? 'Memuat...' : 'Pengguna')}</div>
+            <div className="text-xs text-zinc-600">{user?.email ?? ''}</div>
           </div>
 
           <div className="mt-4">
@@ -169,7 +165,7 @@ export default function ProfileSheet({ open, onClose }) {
             )}
           </div>
         </div>
-      </aside>
+      </Sheet>
     </>
   );
 }

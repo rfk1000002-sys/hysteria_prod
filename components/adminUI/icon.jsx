@@ -1,4 +1,6 @@
-export function Logo({ className = '', size = 32 }) {
+import { useState, useId } from 'react';
+
+export function Logo({ className = '', size = 32, initials = 'H', bgColor = '#F3F4F6', textColor = '#374151', label = 'Hysteria logo' }) {
   return (
     <svg
       width={size}
@@ -8,10 +10,10 @@ export function Logo({ className = '', size = 32 }) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
-      aria-label="Hysteria logo"
+      aria-label={label}
     >
-      <rect x="6" y="6" width="36" height="36" rx="8" fill="#F3F4F6" />
-      <text x="24" y="30" textAnchor="middle" fontFamily="Inter, system-ui, -apple-system, 'Segoe UI', Roboto" fontSize="18" fontWeight="700" fill="#374151">H</text>
+      <rect x="6" y="6" width="36" height="36" rx="8" fill={bgColor} />
+      <text x="24" y="30" textAnchor="middle" fontFamily="Inter, system-ui, -apple-system, 'Segoe UI', Roboto" fontSize={18} fontWeight={700} fill={textColor}>{initials}</text>
     </svg>
   );
 }
@@ -42,12 +44,82 @@ export function IconSettings({ className = '', size = 20 }) {
   );
 }
 
-export function Avatar({ className = '', size = 32 }) {
+export function Avatar({
+  className = '',
+  size = 32,
+  borderColor = '#D1D5DB',
+  borderWidth = 1,
+  hoverBorderColor = '#9CA3AF',
+  hoverBorderWidth = 2.5,
+  hoverScale = 1.05,
+  src = '',
+  alt = '',
+  ariaLabel = 'User avatar',
+}) {
+  const [hover, setHover] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const id = useId();
+  const uid = String(id).replace(/:/g, '');
+  const clipId = `avatar-clip-${uid}`;
+
+  const strokeColor = hover ? hoverBorderColor : borderColor;
+  const strokeW = hover ? hoverBorderWidth : borderWidth;
+
+  const showImage = src && !imgError;
+
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden>
-      <circle cx="12" cy="12" r="10" fill="#F3F4F6" />
-      <path d="M12 12c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" fill="#9CA3AF" />
-      <path d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4v1H4v-1z" fill="#9CA3AF" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden={ariaLabel ? undefined : true}
+      aria-label={ariaLabel}
+      overflow="visible"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      focusable="false"
+      style={{
+        transform: hover ? `scale(${hoverScale})` : 'scale(1)',
+        transformOrigin: 'center',
+        transition: 'transform 180ms cubic-bezier(.2,.9,.2,1), stroke 180ms ease, box-shadow 180ms ease',
+        boxShadow: hover ? '0 8px 20px rgba(15,23,42,0.12)' : 'none',
+        cursor: 'pointer',
+        outline: 'none',
+      }}
+    >
+      <defs>
+        <clipPath id={clipId}>
+          <circle cx="12" cy="12" r="10" />
+        </clipPath>
+      </defs>
+
+      <circle cx="12" cy="12" r="12" stroke={strokeColor} strokeWidth={strokeW} fill="none" />
+
+      {showImage ? (
+        <>
+          <circle cx="12" cy="12" r="10" fill="#E6E7EA" />
+          <image
+            href={src}
+            x="2"
+            y="2"
+            width="20"
+            height="20"
+            preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#${clipId})`}
+            onError={() => setImgError(true)}
+            alt={alt}
+          />
+        </>
+      ) : (
+        <>
+          <circle cx="12" cy="12" r="10" fill="#E6E7EA" />
+          <path d="M12 12c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3z" fill="#6B7280" />
+          <path d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4v1H4v-1z" fill="#6B7280" />
+        </>
+      )}
     </svg>
   );
 }

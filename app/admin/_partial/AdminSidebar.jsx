@@ -28,7 +28,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
             className="flex items-center gap-3 focus:outline-none"
             title={collapsed ? "Open sidebar" : "Collapse sidebar"}
           >
-            <Logo size={40} />
+            <Logo size={40} initials={collapsed ? 'HY' : 'HY'} bgColor={collapsed ? '#F3F4F6' : '#0EA5A4'} textColor={collapsed ? '#374151' : '#FFFFFF'} label="Hysteria" />
             {!collapsed && <span className="text-sm font-semibold text-zinc-900">Hysteria</span>}
           </button>
         </div>
