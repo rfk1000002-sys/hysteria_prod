@@ -302,30 +302,38 @@ export default function UserManagement() {
       headerName: 'Actions',
       render: (r) => (
         <div className="flex items-center gap-2">
-          <IconButton 
-            size="small" 
-            onClick={() => openRoleModal(r)} 
-            className="text-purple-600"
-            title="Manage roles"
-          >
-            <ManageAccountsIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            onClick={() => openEditModal(r)} 
-            className="text-blue-600"
-            title="Edit user"
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton 
-            size="small" 
-            onClick={() => handleDelete(r)} 
-            className="text-red-600"
-            title="Delete user"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <PermissionGate requiredPermissions={"users.roles.assign"} disableOnDenied>
+            <IconButton 
+              size="small" 
+              onClick={() => openRoleModal(r)} 
+              className="text-purple-600"
+              title="Manage roles"
+            >
+              <ManageAccountsIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
+
+          <PermissionGate requiredPermissions={"users.update"} disableOnDenied>
+            <IconButton 
+              size="small" 
+              onClick={() => openEditModal(r)} 
+              className="text-blue-600"
+              title="Edit user"
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
+
+          <PermissionGate requiredPermissions={"users.delete"} disableOnDenied>
+            <IconButton 
+              size="small" 
+              onClick={() => handleDelete(r)} 
+              className="text-red-600"
+              title="Delete user"
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
         </div>
       ),
     },
@@ -365,14 +373,16 @@ export default function UserManagement() {
           </div>
         </form>
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<PersonAddIcon />}
-          onClick={() => setShowCreateModal(true)}
-        >
-          Create User
-        </Button>
+        <PermissionGate requiredPermissions={"users.create"} disableOnDenied>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PersonAddIcon />}
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create User
+          </Button>
+        </PermissionGate>
       </div>
 
       <div className="mb-4 text-sm text-zinc-600">
