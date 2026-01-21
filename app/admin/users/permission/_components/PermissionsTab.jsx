@@ -7,6 +7,7 @@ import PageFilter from '../../../../../components/ui/PageFilter.jsx';
 import DataTable from '../../../../../components/ui/DataTable.jsx';
 import Toast from '../../../../../components/ui/Toast.jsx';
 import SelectField from '../../../../../components/ui/SelectField.jsx';
+import PermissionGate from '../../../../../components/adminUI/PermissionGate.jsx';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -199,12 +200,17 @@ export default function PermissionsTab() {
       headerName: 'Actions',
       render: (r) => (
         <div className="flex items-center gap-2">
-          <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEditWithGroup(r)} className="text-blue-600">
-            <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton aria-label={`delete-${r.id}`} size="small" onClick={() => openDeleteConfirm(r.id, r.key || r.name)} className="text-red-600">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          <PermissionGate requiredPermissions={"permissions.update"} disableOnDenied>
+            <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEditWithGroup(r)} className="text-blue-600">
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
+
+          <PermissionGate requiredPermissions={"permissions.delete"} disableOnDenied>
+            <IconButton aria-label={`delete-${r.id}`} size="small" onClick={() => openDeleteConfirm(r.id, r.key || r.name)} className="text-red-600">
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
         </div>
       ),
     },
@@ -249,13 +255,15 @@ export default function PermissionsTab() {
         </form>
 
         <div className="w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md text-sm sm:text-base"
-          >
-            Create Permission
-          </button>
+          <PermissionGate requiredPermissions={"permissions.create"} disableOnDenied>
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md text-sm sm:text-base"
+            >
+              Create Permission
+            </button>
+          </PermissionGate>
         </div>
       </div>
 

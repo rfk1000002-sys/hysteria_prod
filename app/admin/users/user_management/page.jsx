@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../../lib/context/auth-context";
+import PermissionGate from '../../../../components/adminUI/PermissionGate.jsx';
 import SearchField from '../../../../components/ui/SearchField.jsx';
 import DataTable from '../../../../components/ui/DataTable.jsx';
 import Toast from '../../../../components/ui/Toast.jsx';
@@ -331,6 +332,7 @@ export default function UserManagement() {
   ];
 
   return (
+    <PermissionGate requiredPermissions={["users.read"]}>
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-900">User Management</h1>
@@ -429,5 +431,6 @@ export default function UserManagement() {
         onClose={() => setToast({ ...toast, visible: false })} 
       />
     </div>
+    </PermissionGate>
   );
 }

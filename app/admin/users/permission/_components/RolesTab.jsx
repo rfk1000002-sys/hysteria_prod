@@ -6,6 +6,7 @@ import SearchField from '../../../../../components/ui/SearchField.jsx';
 import PageFilter from '../../../../../components/ui/PageFilter.jsx';
 import DataTable from '../../../../../components/ui/DataTable.jsx';
 import Toast from '../../../../../components/ui/Toast.jsx';
+import PermissionGate from '../../../../../components/adminUI/PermissionGate.jsx';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -119,8 +120,13 @@ export default function RolesTab() {
     ) },
     { field: 'actions', headerName: 'Actions', render: (r) => (
       <div className="flex items-center gap-2">
-        <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEdit(r)} className="text-blue-600"><EditIcon fontSize="small" /></IconButton>
-        <IconButton aria-label={`delete-${r.id}`} size="small" onClick={() => handleDelete(r.id)} className="text-red-600"><DeleteIcon fontSize="small" /></IconButton>
+        <PermissionGate requiredPermissions={"roles.update"} disableOnDenied>
+          <IconButton aria-label={`edit-${r.id}`} size="small" onClick={() => startEdit(r)} className="text-blue-600"><EditIcon fontSize="small" /></IconButton>
+        </PermissionGate>
+
+        <PermissionGate requiredPermissions={"roles.delete"} disableOnDenied>
+          <IconButton aria-label={`delete-${r.id}`} size="small" onClick={() => handleDelete(r.id)} className="text-red-600"><DeleteIcon fontSize="small" /></IconButton>
+        </PermissionGate>
       </div>
     ) },
   ];
@@ -143,7 +149,9 @@ export default function RolesTab() {
         </form>
 
         <div className="w-full sm:w-auto">
-          <button type="button" onClick={() => setCreateOpen(true)} className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md text-sm sm:text-base">Create Role</button>
+          <PermissionGate requiredPermissions={"roles.create"} disableOnDenied>
+            <button type="button" onClick={() => setCreateOpen(true)} className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md text-sm sm:text-base">Create Role</button>
+          </PermissionGate>
         </div>
       </div>
 

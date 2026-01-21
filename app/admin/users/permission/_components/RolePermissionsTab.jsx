@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../../../../lib/context/auth-context'
+import PermissionGate from '../../../../../components/adminUI/PermissionGate.jsx'
 import DataTable from '../../../../../components/ui/DataTable.jsx'
 import Toast from '../../../../../components/ui/Toast.jsx'
 import SelectField from '../../../../../components/ui/SelectField.jsx'
@@ -14,7 +15,11 @@ import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
 export default function RolePermissionsTab() {
-  const { apiCall } = useAuth()
+  const auth = useAuth()
+  const { apiCall } = auth
+  const userRoles = auth?.user?.roles || []
+  const userPermissions = auth?.user?.permissions || []
+  const canAssign = userRoles.includes('SUPERADMIN') || userPermissions.includes('roles.permissions.assign') || userPermissions.includes('roles.permissions.replace')
   const [roleId, setRoleId] = useState('')
   const [roles, setRoles] = useState([])
   const [groups, setGroups] = useState([])
@@ -129,7 +134,7 @@ export default function RolePermissionsTab() {
     { field: 'name', headerName: 'Name', render: (r) => r.name || '-' },
     { field: 'assigned', headerName: 'Assigned', headerAlign: 'center', align: 'center', headerClassName: 'px-6 py-3 text-center text-xs font-medium text-zinc-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-zinc-900 text-center', render: (r) => (
         <div className="flex items-center justify-center h-full w-full">
-          <input type="checkbox" checked={assigned.has(r.id)} onChange={() => toggle(r.id)} disabled={!roleId} />
+          <input type="checkbox" checked={assigned.has(r.id)} onChange={() => toggle(r.id)} disabled={!roleId || !canAssign} />
         </div>
       )
     }
@@ -178,22 +183,24 @@ export default function RolePermissionsTab() {
                 checked={allSelected}
                 indeterminate={someSelected && !allSelected}
                 onChange={toggleAll}
-                disabled={!roleId || visibleIds.length === 0}
+                disabled={!roleId || visibleIds.length === 0 || !canAssign}
                 size="small"
               />
             )}
             label={<span className="text-xs sm:text-sm text-zinc-700 font-medium">Select all</span>}
           />
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={save} 
-            disabled={loading || !roleId}
-            fullWidth
-            className="sm:w-auto"
-          >
-            Save
-          </Button>
+          <PermissionGate requiredPermissions={"roles.permissions.assign"} disableOnDenied>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={save} 
+              disabled={loading || !roleId}
+              fullWidth
+              className="sm:w-auto"
+            >
+              Save
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 

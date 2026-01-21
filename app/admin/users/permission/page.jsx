@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import PermissionGate from '../../../../components/adminUI/PermissionGate.jsx';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -17,6 +18,7 @@ export default function PermissionPage() {
   };
 
   return (
+    <PermissionGate requiredPermissions={["permissions.read", "roles.permissions.read", "permission-groups.read"]}>
     <div className="p-4 sm:p-6">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-zinc-900">Permissions Management</h1>
@@ -54,5 +56,6 @@ export default function PermissionPage() {
         {activeTab === 3 && <PermissionGroupsTab />}
       </div>
     </div>
+    </PermissionGate>
   );
 }
