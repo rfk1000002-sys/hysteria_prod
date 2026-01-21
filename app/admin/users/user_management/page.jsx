@@ -5,6 +5,7 @@ import { useAuth } from "../../../../lib/context/auth-context";
 import PermissionGate from '../../../../components/adminUI/PermissionGate.jsx';
 import SearchField from '../../../../components/ui/SearchField.jsx';
 import DataTable from '../../../../components/ui/DataTable.jsx';
+import { useDialog } from '../../../../components/ui/DynamicDialogModals.jsx';
 import Toast from '../../../../components/ui/Toast.jsx';
 import PageFilter from '../../../../components/ui/PageFilter.jsx';
 import IconButton from '@mui/material/IconButton';
@@ -19,6 +20,7 @@ import ManageRolesModal from '../../../../components/adminUI/ManageRolesModal.js
 
 export default function UserManagement() {
   const { apiCall } = useAuth();
+  const open = useDialog();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -257,9 +259,9 @@ export default function UserManagement() {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 60 },
-    { field: 'email', headerName: 'Email' },
-    { field: 'name', headerName: 'Name', render: (r) => r.name || '-' },
+    { field: 'id', headerName: 'ID', freeze: true },
+    { field: 'name', headerName: 'Name', render: (r) => r.name || '-',freeze: true },
+    { field: 'email', headerName: 'Email', freeze: true },
     { 
       field: 'status', 
       headerName: 'Status', 
@@ -339,6 +341,27 @@ export default function UserManagement() {
     },
   ];
 
+  const handleRowClick = async (row) => {
+    await open({
+      title: row.name || row.email || 'User detail',
+      content: ({ onClose }) => (
+        <div className="space-y-2 text-sm text-zinc-800">
+          <div><strong>Name:</strong> {row.name || '-'}</div>
+          <div><strong>Email:</strong> {row.email || '-'}</div>
+          <div><strong>Status:</strong> {row.status?.name || '-'}</div>
+          <div><strong>Last login:</strong> {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : '-'}</div>
+          <div><strong>Roles:</strong> {row.roles?.length ? row.roles.map(r => r.role?.key).join(', ') : 'No roles'}</div>
+        </div>
+      ),
+      footer: ({ onClose }) => (
+        <div className="flex justify-end">
+          <button className="px-3 py-1 text-sm" onClick={onClose}>Close</button>
+        </div>
+      ),
+      size: 'sm',
+    });
+  };
+
   return (
     <PermissionGate requiredPermissions={["users.read"]}>
     <div className="p-6">
@@ -389,7 +412,7 @@ export default function UserManagement() {
         Showing {users.length} of {total} users
       </div>
 
-      <DataTable columns={columns} rows={users} loading={loading} />
+      <DataTable columns={columns} rows={users} loading={loading} onRowClick={handleRowClick} />
 
       {hasMore && (
         <div className="mt-6 text-center">
