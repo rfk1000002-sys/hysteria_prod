@@ -30,10 +30,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body >
         <Providers>
-          <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
           <Header onMenuToggle={() => setMenuOpen(!menuOpen)} />
           <main>{children}</main>
           <Footer />
+          <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
         </Providers>
       </body>
     </html>

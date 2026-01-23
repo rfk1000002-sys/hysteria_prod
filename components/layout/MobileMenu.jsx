@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import Sheet from "../ui/Sheet";
 
@@ -60,74 +61,39 @@ export default function MobileMenu({ open, onClose }) {
             </div>
 
             {/* navigation links */}
-            <nav className="flex flex-col gap-4 items-end justify-start pt-6 md:pt-4 flex-1">
+            <nav className="flex flex-col gap-1 items-end justify-start pt-6 md:pt-4 flex-1">
               <Link href="/" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 transform rotate-180"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                
                 Beranda
               </Link>
 
               <Link href="/about" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 transform rotate-180"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                
                 Tentang Kami
               </Link>
 
               <Link href="/program" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 transform rotate-180"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <Image src="/svg/left_arrow.svg" alt="" width={16} height={16} className="h-4 w-4" />
                 Program Hysteria
               </Link>
 
+              <Link href="/platform" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
+                <Image src="/svg/left_arrow.svg" alt="" width={16} height={16} className="h-4 w-4" />
+                Platform
+              </Link>
+
+              <Link href="/event" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
+                <Image src="/svg/left_arrow.svg" alt="" width={16} height={16} className="h-4 w-4" />
+                Event
+              </Link>
+
               <Link href="/artikel" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 transform rotate-180"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                
                 Artikel
               </Link>
 
               <Link href="/contact" onClick={onClose} className="flex items-center gap-3 justify-end w-full text-white text-xl font-semibold text-right">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 transform rotate-180"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                
                 Kontak Kami
               </Link>
             </nav>
