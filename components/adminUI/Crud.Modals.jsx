@@ -33,6 +33,7 @@ export default function CrudModals({
   loading = false,
 }) {
   const [form, setForm] = useState({});
+  const [initialSnapshot, setInitialSnapshot] = useState({});
 
   useEffect(() => {
     // Sync form when modal opens or initialData changes. Do NOT depend on `form`
@@ -42,6 +43,7 @@ export default function CrudModals({
     // mark this update as non-urgent to avoid cascading renders warning
     startTransition(() => {
       setForm({ ...next });
+      setInitialSnapshot({ ...next });
     });
   }, [initialData, isOpen]);
 
@@ -58,6 +60,26 @@ export default function CrudModals({
       return false;
     });
   }, [fields, form]);
+
+  const isSameValue = (a, b) => {
+    // both strictly equal
+    if (a === b) return true;
+    // file comparison
+    if (a instanceof File && b instanceof File) return a.name === b.name && a.size === b.size && a.type === b.type;
+    if (a instanceof File || b instanceof File) return false;
+    // both objects -> compare JSON
+    if (typeof a === 'object' && typeof b === 'object') return JSON.stringify(a) === JSON.stringify(b);
+    // fallback to string comparison
+    return String(a) === String(b);
+  };
+
+  const isDirty = useMemo(() => {
+    const keys = new Set([...Object.keys(initialSnapshot || {}), ...Object.keys(form || {})]);
+    for (const k of keys) {
+      if (!isSameValue(form[k], initialSnapshot[k])) return true;
+    }
+    return false;
+  }, [form, initialSnapshot]);
 
   const handleChange = (name, value) => {
     setForm((s) => ({ ...s, [name]: value }));
@@ -173,7 +195,9 @@ export default function CrudModals({
         onClick={async () => {
           await handleSubmit();
         }}
-        disabled={loading || (isDelete ? false : requiredMissing)}
+        disabled={
+          loading || (isDelete ? false : (requiredMissing || (mode === "edit" && !isDirty)))
+        }
         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? "Please wait..." : isDelete ? (confirmLabel || "Delete") : (submitLabel || (mode === "edit" ? "Update" : "Create"))}

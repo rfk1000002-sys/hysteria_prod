@@ -141,87 +141,44 @@ export default function HeroManagement() {
   };
 
   const columns = [
-    {
-      field: "id",
-      headerName: "ID",
-      freeze: true,
-      render: (hero) => (
-        <div className="text-sm text-zinc-700">{hero.id}</div>
-      ),
+    { field: "id", headerName: "ID", freeze: true, render: hero => <div className="text-sm text-zinc-700">{hero.id}</div> },
+
+    { field: "title", headerName: "Title", freeze: true, render: hero => <div className="font-medium text-zinc-900">{hero.title}</div> },
+
+    { field: "description", headerName: "Description", render: hero => (
+        <div className="text-sm text-zinc-600 max-w-md truncate">{hero.description}</div>
+      )
     },
-    {
-      field: "title",
-      headerName: "Title",
-      freeze: true,
-      render: (hero) => (
-        <div className="font-medium text-zinc-900">{hero.title}</div>
-      ),
+
+    { field: "source", headerName: "Source", render: hero => (
+        <div className="text-xs text-zinc-500 max-w-xs truncate">{hero.source}</div>
+      )
     },
-    {
-      field: "description",
-      headerName: "Description",
-      render: (hero) => (
-        <div className="text-sm text-zinc-600 max-w-md truncate">
-          {hero.description}
-        </div>
-      ),
-    },
-    {
-      field: "source",
-      headerName: "Source",
-      render: (hero) => (
-        <div className="text-xs text-zinc-500 max-w-xs truncate">
-          {hero.source}
-        </div>
-      ),
-    },
-    {
-      field: "isActive",
-      headerName: "Status",
-      render: (hero) => (
-        <span
-          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-            hero.isActive
-              ? "bg-green-50 text-green-700"
-              : "bg-zinc-100 text-zinc-600"
-          }`}
-        >
+
+    { field: "isActive", headerName: "Status", render: hero => (
+        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+          hero.isActive ? "bg-green-50 text-green-700" : "bg-zinc-100 text-zinc-600"
+        }`}>
           {hero.isActive ? "Active" : "Inactive"}
         </span>
-      ),
+      )
     },
-    {
-      field: "actions",
-      headerName: "Actions",
-      render: (hero) => (
+
+    { field: "actions", headerName: "Actions", render: hero => (
         <div className="flex gap-2">
           <Tooltip title="Edit">
-            <IconButton
-              size="small"
-              color="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(hero);
-              }}
-            >
+            <IconButton size="small" color="primary" onClick={e => { e.stopPropagation(); handleEdit(hero); }}>
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Delete">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={(e) => {
-                e.stopPropagation();
-                confirmDelete(hero);
-              }}
-            >
+            <IconButton size="small" color="error" onClick={e => { e.stopPropagation(); confirmDelete(hero); }}>
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </div>
-      ),
+      )
     },
   ];
 
@@ -266,9 +223,27 @@ export default function HeroManagement() {
         mode={modalMode}
         title={editingHero ? (modalMode === "delete" ? "Delete Hero" : "Edit Hero Section") : "Create Hero Section"}
         size="lg"
-        fields={[
-          { name: "source", label: "Source URL", type: "text", placeholder: "https://example.com/video.mp4", required: false, help: "Enter video or image URL (or upload below)" },
-          { name: "media", label: "Upload Media", type: "file", placeholder: "", help: "Upload image or video instead of URL" },
+        fields={
+          [
+            {
+              name: "source",
+              label: "Source URL",
+              type: "text",
+              placeholder: "https://example.com/video.mp4",
+              required: false,
+              help:
+                "Masukkan URL publik gambar/video (http/https). Jika menggunakan URL, pastikan file dapat diakses tanpa autentikasi. Contoh: https://example.com/image.jpg atau https://cdn.example.com/video.mp4. Jika ingin meng-upload file dari perangkat, gunakan opsi Upload di bawah.",
+            },
+            {
+              name: "media",
+              label: "Upload Media",
+              type: "file",
+              accept: "image/*,video/*",
+              multiple: false,
+              placeholder: "",
+              help:
+                "Upload file gambar atau video sebagai pengganti URL. Format yang direkomendasikan: JPG, PNG untuk gambar; MP4 untuk video. Usahakan ukuran file <= 10 MB. Jika meng-upload, tidak perlu mengisi field URL.",
+            },
           { name: "title", label: "Title", type: "text", placeholder: "Enter hero title", required: true },
           { name: "description", label: "Description", type: "textarea", placeholder: "Enter hero description", required: true },
           { name: "isActive", label: "Active", type: "checkbox", placeholder: "Set as active hero section" },
