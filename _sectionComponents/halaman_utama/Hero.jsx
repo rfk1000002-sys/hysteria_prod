@@ -174,7 +174,7 @@ export default function Hero() {
               position: 'absolute',
               top: '50%',
               left: '50%',
-              width: '177.78%',
+              width: '100%',
               height: '100%',
               transform: 'translate(-50%, -50%)',
             }}

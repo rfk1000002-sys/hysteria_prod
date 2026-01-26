@@ -17,6 +17,8 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SearchIcon from '@mui/icons-material/Search';
 import UserModal from '../../../../components/adminUI/UserModal.jsx';
 import ManageRolesModal from '../../../../components/adminUI/ManageRolesModal.jsx';
+import ChangeStatusModal from '../../../../components/adminUI/ChangeStatusModal.jsx';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 export default function UserManagement() {
   const { apiCall } = useAuth();
@@ -36,6 +38,7 @@ export default function UserManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -49,6 +52,12 @@ export default function UserManagement() {
   const [userRoles, setUserRoles] = useState([]);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState(new Set());
+  
+  // Status change state
+  const [statusUser, setStatusUser] = useState(null);
+  const [availableStatuses, setAvailableStatuses] = useState([]);
+  const [selectedStatusId, setSelectedStatusId] = useState(null);
+  const [statusReason, setStatusReason] = useState('');
 
   const fetchUsers = useCallback(async (cursor = null, searchTerm = '') => {
     try {
@@ -258,6 +267,59 @@ export default function UserManagement() {
     setSelectedRoles(newSet);
   };
 
+  const openStatusModal = async (user) => {
+    setStatusUser(user);
+    setSelectedStatusId(user.status?.id || null);
+    setStatusReason('');
+    
+    // Fetch available statuses
+    try {
+      setLoading(true);
+      const res = await apiCall('/api/admin/user-statuses');
+      if (!res.ok) throw new Error('Failed to fetch statuses');
+      const json = await res.json();
+      setAvailableStatuses(json.data.statuses || []);
+      setShowStatusModal(true);
+    } catch (err) {
+      console.error(err);
+      setToast({ message: err.message || 'Failed to load statuses', type: 'error', visible: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeStatus = async (e) => {
+    e.preventDefault();
+    if (!statusUser || !selectedStatusId || !statusReason.trim()) return;
+    
+    try {
+      setLoading(true);
+      const res = await apiCall(`/api/admin/users/${statusUser.id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ 
+          statusId: selectedStatusId, 
+          reason: statusReason.trim() 
+        }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error?.message || 'Failed to update status');
+      }
+      
+      setShowStatusModal(false);
+      setToast({ message: 'User status updated successfully', type: 'success', visible: true });
+      
+      // Refresh user list
+      fetchUsers(null, search);
+    } catch (err) {
+      console.error(err);
+      setToast({ message: err.message || 'Failed to change status', type: 'error', visible: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     { field: 'id', headerName: 'ID', freeze: true },
     { field: 'name', headerName: 'Name', render: (r) => r.name || '-',freeze: true },
@@ -303,11 +365,22 @@ export default function UserManagement() {
       field: 'actions',
       headerName: 'Actions',
       render: (r) => (
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-1 justify-items-center">
+          <PermissionGate requiredPermissions={"users.status.update"} disableOnDenied>
+            <IconButton 
+              size="small" 
+              onClick={(e) => { e.stopPropagation(); openStatusModal(r); }} 
+              className="text-orange-600"
+              title="Change status"
+            >
+              <SwapHorizIcon fontSize="small" />
+            </IconButton>
+          </PermissionGate>
+
           <PermissionGate requiredPermissions={"users.roles.assign"} disableOnDenied>
             <IconButton 
               size="small" 
-              onClick={() => openRoleModal(r)} 
+              onClick={(e) => { e.stopPropagation(); openRoleModal(r); }} 
               className="text-purple-600"
               title="Manage roles"
             >
@@ -318,7 +391,7 @@ export default function UserManagement() {
           <PermissionGate requiredPermissions={"users.update"} disableOnDenied>
             <IconButton 
               size="small" 
-              onClick={() => openEditModal(r)} 
+              onClick={(e) => { e.stopPropagation(); openEditModal(r); }} 
               className="text-blue-600"
               title="Edit user"
             >
@@ -329,7 +402,7 @@ export default function UserManagement() {
           <PermissionGate requiredPermissions={"users.delete"} disableOnDenied>
             <IconButton 
               size="small" 
-              onClick={() => handleDelete(r)} 
+              onClick={(e) => { e.stopPropagation(); handleDelete(r); }} 
               className="text-red-600"
               title="Delete user"
             >
@@ -342,15 +415,55 @@ export default function UserManagement() {
   ];
 
   const handleRowClick = async (row) => {
+    // Fetch status history
+    let statusHistory = [];
+    try {
+      const res = await apiCall(`/api/admin/users/${row.id}/status/history`);
+      if (res.ok) {
+        const json = await res.json();
+        statusHistory = json.data.history || [];
+      }
+    } catch (err) {
+      console.error('Failed to load status history:', err);
+    }
+
     await open({
       title: row.name || row.email || 'User detail',
       content: ({ onClose }) => (
-        <div className="space-y-2 text-sm text-zinc-800">
-          <div><strong>Name:</strong> {row.name || '-'}</div>
-          <div><strong>Email:</strong> {row.email || '-'}</div>
-          <div><strong>Status:</strong> {row.status?.name || '-'}</div>
-          <div><strong>Last login:</strong> {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : '-'}</div>
-          <div><strong>Roles:</strong> {row.roles?.length ? row.roles.map(r => r.role?.key).join(', ') : 'No roles'}</div>
+        <div className="space-y-4 text-sm text-zinc-800">
+          <div className="space-y-2">
+            <div><strong>Name:</strong> {row.name || '-'}</div>
+            <div><strong>Email:</strong> {row.email || '-'}</div>
+            <div><strong>Status:</strong> {row.status?.name || '-'}</div>
+            <div><strong>Last login:</strong> {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : '-'}</div>
+            <div><strong>Roles:</strong> {row.roles?.length ? row.roles.map(r => r.role?.key).join(', ') : 'No roles'}</div>
+          </div>
+
+          {statusHistory.length > 0 && (
+            <div className="border-t pt-4">
+              <div className="font-semibold mb-2">Status History:</div>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {statusHistory.map((history, idx) => (
+                  <div key={idx} className="bg-zinc-50 p-3 rounded text-xs">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-medium">{history.status?.name}</span>
+                      <span className="text-zinc-500">
+                        {new Date(history.startAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {history.reason && (
+                      <div className="text-zinc-600 italic mt-1">&quot;{history.reason}&quot;</div>
+                    )}
+                    {history.endAt && (
+                      <div className="text-zinc-500 mt-1">
+                        Ended: {new Date(history.endAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ),
       footer: ({ onClose }) => (
@@ -358,14 +471,14 @@ export default function UserManagement() {
           <button className="px-3 py-1 text-sm" onClick={onClose}>Close</button>
         </div>
       ),
-      size: 'sm',
+      size: 'md',
     });
   };
 
   return (
     <PermissionGate requiredPermissions={["users.read"]}>
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="mx-4 sm:mx-6 lg:mx-12 p-6 bg-white rounded-lg shadow-sm max-w-full">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold text-zinc-900">User Management</h1>
         <p className="text-sm text-zinc-600 mt-1">Manage system users and their roles</p>
       </div>
@@ -411,8 +524,9 @@ export default function UserManagement() {
       <div className="mb-4 text-sm text-zinc-600">
         Showing {users.length} of {total} users
       </div>
-
-      <DataTable columns={columns} rows={users} loading={loading} onRowClick={handleRowClick} />
+      <div className="max-w-full overflow-auto">
+        <DataTable columns={columns} rows={users} loading={loading} onRowClick={handleRowClick} />
+      </div>
 
       {hasMore && (
         <div className="mt-6 text-center">
@@ -454,6 +568,19 @@ export default function UserManagement() {
         toggleRole={toggleRole}
         onClose={() => setShowRoleModal(false)}
         onSave={handleSaveRoles}
+        loading={loading}
+      />
+
+      <ChangeStatusModal
+        open={showStatusModal}
+        user={statusUser}
+        availableStatuses={availableStatuses}
+        selectedStatusId={selectedStatusId}
+        setSelectedStatusId={setSelectedStatusId}
+        reason={statusReason}
+        setReason={setStatusReason}
+        onClose={() => setShowStatusModal(false)}
+        onSubmit={handleChangeStatus}
         loading={loading}
       />
 

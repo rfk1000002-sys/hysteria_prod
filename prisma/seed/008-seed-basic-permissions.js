@@ -143,6 +143,14 @@ module.exports = async function seed() {
         groupId: userGroupId,
       },
 
+      // User status management
+      {
+        key: "users.status.update",
+        name: "Update User Status",
+        description: "Change user status (active, suspended, banned, etc.)",
+        groupId: userGroupId,
+      },
+
       // Role management
       {
         key: "roles.read",
