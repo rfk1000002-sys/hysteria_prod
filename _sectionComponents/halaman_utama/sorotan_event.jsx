@@ -191,14 +191,14 @@ export default function SorotanEvent() {
   };
 
   return (
-    <section className="bg-[#FFFFFF] py-8 md:py-20 mt-20 relative overflow-visible"> {/* allow cards to move outside without being clipped */}
+    <section className="bg-[#FFFFFF] py-8 md:py-20 mt-20 relative overflow-visible">
       <div className="max-w-[1920px] w-full mx-auto px-2 sm:px-2">
         {/* Section Title */}
         <div className="text-center mb-6">
           <h2 className="text-#000000 font-bold text-[1.75rem] md:text-[2.5rem] mb-2">
             Sorotan Event
           </h2>
-          <p className="text-#626262 text-[0.9rem] md:text-base max-w-[600px] mx-auto">
+          <p className="text-#626262 text-[0.9rem] md:text-base max-w-[600px] mx-auto mb-10">
             Deretan event terbaik dan paling menarik untuk diikuti!
           </p>
         </div>

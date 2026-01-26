@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import Hero from "../_sectionComponents/halaman_utama/Hero";
 import SorotanEvent from "../_sectionComponents/halaman_utama/sorotan_event";
 import PlatformKami from "../_sectionComponents/halaman_utama/platform_kami";
