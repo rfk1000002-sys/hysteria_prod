@@ -11,8 +11,8 @@ export default function Footer() {
 
   const year = new Date().getFullYear();
   return (
-    <footer className="w-full" style={{ backgroundColor: 'rgba(67, 51, 76, 1)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <div className="mx-auto w-full max-w-[1920px] lg:h-[320px] h-auto px-8 py-10 text-sm text-white opacity-100 transform rotate-0">
+    <footer className="w-full flex flex-col flex-grow" style={{ backgroundColor: 'rgba(67, 51, 76, 1)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="mx-auto w-full max-w-[1920px] flex-1 px-8 py-10 flex flex-col justify-start text-sm text-white opacity-100 transform rotate-0">
         
         {/* row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-8 items-start">  
