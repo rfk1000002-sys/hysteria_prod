@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body >
+      <body className="min-h-screen flex flex-col">
         <Providers>
           <Header onMenuToggle={() => setMenuOpen(!menuOpen)} />
           <main>{children}</main>
