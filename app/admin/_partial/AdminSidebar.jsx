@@ -17,7 +17,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
       { key: 'hero', label: 'Hero', view: 'section.hero', enabled: true },
     ]},
     { key: 'platform', label: 'Platform', view: 'platform', icon: IconPlatform, enabled: false },
-    { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: false },
+    { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: true },
     { key: 'post', label: 'Post', view: 'post', icon: IconPost, enabled: false },
     { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: true, children: [
       { key: 'social', label: 'Social', view: 'settings.social', enabled: false },
