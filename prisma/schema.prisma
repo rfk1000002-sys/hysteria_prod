@@ -100,6 +100,7 @@ model PermissionGroup {
 }
 
 model Permission {
+<<<<<<< HEAD
   id              Int              @id @default(autoincrement())
   key             String           @unique @db.VarChar(150)
   name            String?          @db.VarChar(255)
@@ -107,6 +108,18 @@ model Permission {
   groupId         Int?
   createdAt       DateTime         @default(now())
   group           PermissionGroup? @relation(fields: [groupId], references: [id])
+=======
+  id          Int         @id @default(autoincrement())
+  key         String      @unique @db.VarChar(150) // e.g. users.create, users.view
+  name        String?     @db.VarChar(255)
+  description String?     @db.Text
+  group       PermissionGroup? @relation(fields: [groupId], references: [id])
+  groupId     Int?
+  createdAt   DateTime    @default(now())
+
+  categories   Category[]
+
+>>>>>>> origin/main
   rolePermissions RolePermission[]
 }
 
@@ -122,3 +135,73 @@ model RolePermission {
   @@index([roleId])
   @@index([permissionId])
 }
+<<<<<<< HEAD
+=======
+
+model HeroSection {
+  id          Int      @id @default(autoincrement())
+  source      String   @db.Text // URL video atau gambar
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ====================================
+// NAVIGASI & KATEGORI
+// ====================================
+
+model Category {
+  id          Int            @id @default(autoincrement())
+  title       String         @db.VarChar(255)
+  slug        String         @unique @db.VarChar(255)
+  description String?        @db.Text
+  order       Int            @default(0)
+  isActive    Boolean        @default(true)
+  
+  // Optional: Permission gating untuk visibility kategori
+  requiredPermissionId Int?
+  requiredPermission   Permission? @relation(fields: [requiredPermissionId], references: [id])
+  
+  items       CategoryItem[]
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@index([slug])
+  @@index([order])
+}
+
+model CategoryItem {
+  id         Int       @id @default(autoincrement())
+  
+  // Relasi ke category parent
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+  
+  // Self-referential untuk hirarki multi-level
+  parent     CategoryItem?  @relation("CatChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId   Int?
+  children   CategoryItem[] @relation("CatChildren")
+  
+  title      String         @db.VarChar(255)
+  slug       String?        @db.VarChar(255)
+  url        String?        @db.VarChar(500)
+  
+  // Order untuk sorting
+  order      Int            @default(0)
+  
+  // Metadata flexible (JSON)
+  meta       Json?          @db.JsonB
+  
+  isActive   Boolean        @default(true)
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  
+  @@index([categoryId])
+  @@index([parentId])
+  @@index([order])
+}
+>>>>>>> origin/main

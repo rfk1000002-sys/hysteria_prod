@@ -12,6 +12,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.974.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.2",
@@ -20,13 +21,22 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcrypt": "^6.0.0",
+    "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",
+<<<<<<< HEAD
     "lucide-react": "^0.563.0",
+=======
+    "mime-types": "^3.0.2",
+>>>>>>> origin/main
     "next": "16.1.2",
     "pg": "^8.17.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
+    "react-slick": "^0.31.0",
+    "sharp": "^0.34.5",
+    "slick-carousel": "^1.8.1",
+    "uuid": "^13.0.0",
     "winston": "^3.19.0",
     "zod": "^4.3.5"
   },

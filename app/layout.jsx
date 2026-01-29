@@ -34,11 +34,18 @@ export default function RootLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
+<<<<<<< HEAD
     <html lang="en" className={poppins.variable}>
       <body >
+=======
+    <html lang="en">
+      <body className="min-h-screen flex flex-col">
+>>>>>>> origin/main
         <Providers>
           <Header onMenuToggle={() => setMenuOpen(!menuOpen)} />
-          <main>{children}</main>
+            <main>
+              {children}
+            </main>
           <Footer />
           <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
         </Providers>

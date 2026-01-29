@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Logo, IconDashboard, IconUsers, IconSettings, IconPlatform, IconEvent, IconPost, IconSocial } from "../../../components/ui/icon";
+import Image from "next/image";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial } from "../../../components/ui/icon";
 
 export default function AdminSidebar({ open, collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
@@ -11,12 +12,17 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
     { key: 'users', label: 'Users', view: 'users', icon: IconUsers, enabled: true, children: [
       { key: 'user_management', label: 'User Management', view: 'users.user_management', enabled: true },
       { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
+      { key: 'status_management', label: 'Status', view: 'users.status_management', enabled: true },
+    ]},
+    { key: 'section', label: 'Section', view: 'section', icon: IconSection, enabled: true, children: [
+      { key: 'hero', label: 'Hero', view: 'section.hero', enabled: true },
     ]},
     { key: 'platform', label: 'Platform', view: 'platform', icon: IconPlatform, enabled: false },
     { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: false },
     { key: 'post', label: 'Post', view: 'post', icon: IconPost, enabled: false },
-    { key: 'social', label: 'Social', view: 'social', icon: IconSocial, enabled: false },
-    { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: false },
+    { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: true, children: [
+      { key: 'social', label: 'Social', view: 'settings.social', enabled: false },
+    ]},
   ];
 
   const toggleOpen = (key) => setOpenKeys(prev => ({ ...prev, [key]: !prev[key] }));
@@ -32,7 +38,9 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
             className="flex items-center gap-3 focus:outline-none"
             title={collapsed ? "Open sidebar" : "Collapse sidebar"}
           >
-            <Logo size={40} initials={collapsed ? 'HY' : 'HY'} bgColor={collapsed ? '#F3F4F6' : '#0EA5A4'} textColor={collapsed ? '#374151' : '#FFFFFF'} label="Hysteria" />
+            <div className={`rounded-full p-1 ${collapsed ? 'bg-[#E83C91]' : 'bg-[#E83C91]'}`}>
+              <Image src="/image/Logo-hysteria.svg" alt="Hysteria logo" width={40} height={40} className="h-8 w-8" priority />
+            </div>
             {!collapsed && <span className="text-sm font-semibold text-zinc-900">Hysteria</span>}
           </button>
         </div>
