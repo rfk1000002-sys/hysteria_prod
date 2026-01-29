@@ -1,12 +1,19 @@
 "use client";
 
 import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { useState } from "react";
 import "./globals.css";
 import Providers from "./providers";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import MobileMenu from "../components/layout/MobileMenu";
+
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+});
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -27,7 +34,7 @@ export default function RootLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <html lang="en">
+    <html lang="en" className={poppins.variable}>
       <body >
         <Providers>
           <Header onMenuToggle={() => setMenuOpen(!menuOpen)} />
