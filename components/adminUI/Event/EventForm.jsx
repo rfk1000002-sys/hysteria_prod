@@ -1,221 +1,220 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import ImageUpload from "./ImageUpload";
 
-export default function EventForm() {
+export default function EventForm({ initialData = null, isEdit = false, eventId = null }) {
+  const router = useRouter();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Track field error
+  const [errors, setErrors] = useState({});
+
   const [form, setForm] = useState({
     title: "",
-    category: "",
+    categoryId: "",
     organizer: "",
     description: "",
     startDate: "",
     startTime: "",
+    endDate: "",
+    endTime: "",
     location: "",
     registerLink: "",
-    mapsShortLink: "",
     mapsEmbed: "",
+    poster: "",
   });
+
+  // PREFILL EDIT
+  useEffect(() => {
+    if (!initialData) return;
+
+    const start = new Date(initialData.startAt);
+    const end = initialData.endAt ? new Date(initialData.endAt) : null;
+
+    setForm({
+      title: initialData.title || "",
+      categoryId: initialData.categoryId?.toString() || "",
+      organizer: initialData.organizer || "",
+      description: initialData.description || "",
+      startDate: start.toISOString().slice(0, 10),
+      startTime: start.toTimeString().slice(0, 5),
+      endDate: end ? end.toISOString().slice(0, 10) : "",
+      endTime: end ? end.toTimeString().slice(0, 5) : "",
+      location: initialData.location || "",
+      registerLink: initialData.registerLink || "",
+      mapsEmbed: initialData.mapsEmbedSrc || "",
+      poster: initialData.poster || "",
+    });
+  }, [initialData]);
+
+  // FETCH CATEGORIES
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const res = await fetch("/api/admin/categories");
+      const data = await res.json();
+      setCategories(data);
+    };
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  /* ===============================
-    EVENT STATUS (AUTO)
-  =============================== */
-  const getEventStatus = () => {
-    if (!form.startDate || !form.startTime) return "Draft";
-
-    const eventDateTime = new Date(
-      `${form.startDate}T${form.startTime}`
-    );
-    const now = new Date();
-
-    if (now < eventDateTime) return "Upcoming";
-    if (now.toDateString() === eventDateTime.toDateString())
-      return "Ongoing";
-
-    return "Finished";
-  };
-
-  /* ===============================
-    MAPS EMBED EXTRACTOR
-  =============================== */
   const extractMapSrc = (iframeHtml) => {
     if (!iframeHtml) return null;
     const match = iframeHtml.match(/src="([^"]+)"/);
     return match ? match[1] : null;
   };
-
   const mapSrc = extractMapSrc(form.mapsEmbed);
 
-  /* ===============================
-    SUBMIT
-  =============================== */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    // Validasi
+    const missingFields = [];
+    if (!form.title) missingFields.push("Judul Event");
+    if (!form.categoryId) missingFields.push("Kategori");
+    if (!form.startDate || !form.startTime) missingFields.push("Tanggal & Waktu Mulai");
+    if (!form.poster) missingFields.push("Poster Event");
+    if (!form.location) missingFields.push("Lokasi");
+
+    if (missingFields.length > 0) {
+      alert("Field berikut belum diisi:\n- " + missingFields.join("\n- "));
+      setLoading(false);
+      return;
+    }
 
     const payload = {
-      ...form,
-      status: getEventStatus(),
-      mapsEmbedSrc: mapSrc,
+      title: form.title,
+      categoryId: Number(form.categoryId),
+      organizer: form.organizer,
+      description: form.description,
+      startAt: new Date(`${form.startDate}T${form.startTime}`).toISOString(),
+      endAt: form.endDate && form.endTime
+        ? new Date(`${form.endDate}T${form.endTime}`).toISOString()
+        : null, // optional
+      location: form.location,
+      registerLink: form.registerLink,
+      mapsEmbedSrc: extractMapSrc(form.mapsEmbed),
+      poster: form.poster,
     };
 
-    console.log("DATA EVENT:", payload);
+    try {
+      const res = await fetch(
+        isEdit ? `/api/admin/events/${eventId}` : "/api/admin/events",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.message || "Gagal menyimpan event");
+        return;
+      }
+
+      router.push("/admin/events");
+      router.refresh();
+    } catch (err) {
+      alert("Server error");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClass =
-    "w-full border border-gray-300 bg-white text-black " +
-    "placeholder-gray-400 rounded-lg px-3 py-2 " +
-    "focus:outline-none focus:ring-2 focus:ring-pink-500";
+    "w-full border border-gray-300 bg-white text-black placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500";
+
+  const errorClass = "text-red-600 text-sm mt-1";
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white rounded-xl shadow p-6 space-y-6"
-    >
-      {/* STATUS */}
-      <div className="text-sm text-black">
-        Status Event:
-        <span className="ml-2 font-semibold text-pink-600">
-          {getEventStatus()}
-        </span>
-      </div>
-
+    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 space-y-6">
       {/* POSTER */}
       <div>
         <label className="block font-medium mb-2 text-black">Poster Event</label>
-        <ImageUpload />
+        <ImageUpload value={form.poster} onChange={(url) => setForm({ ...form, poster: url })} />
       </div>
 
-      {/* JUDUL */}
+      {/* TITLE */}
       <div>
         <label className="block font-medium mb-1 text-black">Judul Event</label>
-        <input
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <input name="title" value={form.title} onChange={handleChange} className={inputClass} required />
       </div>
 
-      {/* KATEGORI */}
+      {/* CATEGORY */}
       <div>
         <label className="block font-medium mb-1 text-black">Kategori</label>
-        <input
-          name="category"
-          value={form.category}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <select name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
+          <option value="">-- Pilih Kategori --</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>{cat.title}</option>
+          ))}
+        </select>
       </div>
 
-      {/* PENYELENGGARA */}
+      {/* ORGANIZER */}
       <div>
-        <label className="block font-medium mb-1 text-black">
-          Diselenggarakan oleh
-        </label>
-        <input
-          name="organizer"
-          value={form.organizer}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <label className="block font-medium mb-1 text-black">Diselenggarakan oleh</label>
+        <input name="organizer" value={form.organizer} onChange={handleChange} className={inputClass} />
       </div>
 
-      {/* DESKRIPSI */}
+      {/* DESCRIPTION */}
       <div>
         <label className="block font-medium mb-1 text-black">Deskripsi</label>
-        <textarea
-          name="description"
-          rows={5}
-          value={form.description}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <textarea name="description" rows={5} value={form.description} onChange={handleChange} className={inputClass} />
       </div>
 
-      {/* JADWAL */}
+      {/* START & END */}
       <div>
-        <label className="block font-medium mb-1 text-black">Tanggal & Waktu</label>
+        <label className="block font-medium mb-2 text-black">Tanggal & Waktu</label>
+        <label className="block font-medium mb-1 text-black">Mulai</label>
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="date"
-            name="startDate"
-            value={form.startDate}
-            onChange={handleChange}
-            className={inputClass}
-          />
-          <input
-            type="time"
-            name="startTime"
-            value={form.startTime}
-            onChange={handleChange}
-            className={inputClass}
-          />
+          <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={inputClass} required />
+          <input type="time" name="startTime" value={form.startTime} onChange={handleChange} className={inputClass} required />
+        </div>
+        <label className="block font-medium mb-1 text-black">Hingga (Opsional)</label>
+        <div className="grid grid-cols-2 gap-4">
+          <input type="date" name="endDate" value={form.endDate} onChange={handleChange} className={inputClass} />
+          <input type="time" name="endTime" value={form.endTime} onChange={handleChange} className={inputClass} />
         </div>
       </div>
 
-      {/* LOKASI */}
+      {/* LOCATION */}
       <div>
         <label className="block font-medium mb-1 text-black">Lokasi</label>
-        <input
-          name="location"
-          value={form.location}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <input name="location" value={form.location} onChange={handleChange} className={inputClass} />
       </div>
 
-      {/* LINK DAFTAR */}
+      {/* REGISTER LINK */}
       <div>
         <label className="block font-medium mb-1 text-black">Link Pendaftaran</label>
-        <input
-          type="url"
-          name="registerLink"
-          placeholder="https://"
-          value={form.registerLink}
-          onChange={handleChange}
-          className={inputClass}
-        />
+        <input type="url" name="registerLink" value={form.registerLink} onChange={handleChange} className={inputClass} />
       </div>
 
       {/* MAPS */}
       <div>
         <label className="block font-medium mb-1 text-black">Google Maps</label>
-
-        <textarea
-          name="mapsEmbed"
-          placeholder="Paste iframe Google Maps di sini"
-          value={form.mapsEmbed}
-          onChange={handleChange}
-          rows={3}
-          className={`${inputClass} mt-2`}
-        />
-
-        {/* MAP PREVIEW */}
+        <textarea name="mapsEmbed" value={form.mapsEmbed} onChange={handleChange} rows={3} className={inputClass} />
         {mapSrc && (
           <div className="mt-3 rounded-lg overflow-hidden border">
-            <iframe
-              src={mapSrc}
-              width="100%"
-              height="300"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-            />
+            <iframe src={mapSrc} width="100%" height="300" style={{ border: 0 }} loading="lazy" allowFullScreen />
           </div>
         )}
       </div>
 
       {/* ACTION */}
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="px-5 py-2 bg-pink-600 text-white rounded-lg"
-        >
-          Simpan Event
+        <button type="submit" disabled={loading} className="px-5 py-2 bg-pink-600 text-white rounded-lg disabled:opacity-50">
+          {loading ? "Menyimpan..." : "Simpan Event"}
         </button>
       </div>
     </form>

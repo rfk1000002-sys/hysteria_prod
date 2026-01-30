@@ -125,6 +125,8 @@ model Permission {
   groupId     Int?
   createdAt   DateTime    @default(now())
 
+  categories   Category[]
+
   rolePermissions RolePermission[]
 }
 
@@ -154,18 +156,109 @@ model HeroSection {
   updatedAt   DateTime @updatedAt
 }
 
+// ====================================
+// NAVIGASI & KATEGORI
+// ====================================
+
+model Category {
+  id          Int            @id @default(autoincrement())
+  title       String         @db.VarChar(255)
+  slug        String         @unique @db.VarChar(255)
+  description String?        @db.Text
+  order       Int            @default(0)
+  isActive    Boolean        @default(true)
+  
+  // Optional: Permission gating untuk visibility kategori
+  requiredPermissionId Int?
+  requiredPermission   Permission? @relation(fields: [requiredPermissionId], references: [id])
+  
+  items       CategoryItem[]
+
+  events      Event[]
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@index([slug])
+  @@index([order])
+}
+
+model CategoryItem {
+  id         Int       @id @default(autoincrement())
+  
+  // Relasi ke category parent
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+  
+  // Self-referential untuk hirarki multi-level
+  parent     CategoryItem?  @relation("CatChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId   Int?
+  children   CategoryItem[] @relation("CatChildren")
+  
+  title      String         @db.VarChar(255)
+  slug       String?        @db.VarChar(255)
+  url        String?        @db.VarChar(500)
+  
+  // Order untuk sorting
+  order      Int            @default(0)
+  
+  // Metadata flexible (JSON)
+  meta       Json?          @db.JsonB
+  
+  isActive   Boolean        @default(true)
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  
+  @@index([categoryId])
+  @@index([parentId])
+  @@index([order])
+}
+
+enum EventStatus {
+  DRAFT
+  UPCOMING
+  ONGOING
+  FINISHED
+}
+
 model Event {
-  id              Int      @id @default(autoincrement())
-  title           String
-  slug            String   @unique
-  poster          String?
-  description     String
-  startDatetime   DateTime
-  endDatetime     DateTime?
-  locationName    String?
-  locationAddress String?
-  mapsUrl         String?
-  isPublished     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+
+  title         String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(255)
+
+  description   String?   @db.Text
+  organizer     String?   @db.VarChar(255)
+
+  poster        String?   @db.VarChar(500)
+
+  // RELASI KE CATEGORY
+  category      Category  @relation(fields: [categoryId], references: [id])
+  categoryId    Int
+
+  // WAKTU
+  startAt       DateTime
+  endAt         DateTime?
+
+  // LOKASI
+  location      String?   @db.VarChar(255)
+  mapsEmbedSrc  String?   @db.Text
+  mapsShortLink String?   @db.VarChar(500)
+
+  // LINK
+  registerLink  String?   @db.VarChar(500)
+
+  // STATUS EVENT
+  status        EventStatus @default(DRAFT)
+
+  // PUBLISH
+  isPublished   Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([startAt])
 }

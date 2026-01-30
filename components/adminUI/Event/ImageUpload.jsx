@@ -1,33 +1,83 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
-export default function ImageUpload() {
+export default function ImageUpload({ value, onChange }) {
   const inputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false); // status upload
 
-  const handleSelect = (e) => {
+  // Sync preview dengan value dari parent (misal edit)
+  useEffect(() => {
+    if (value) {
+      setPreview(value);
+      const parts = value.split("/");
+      setFileName(parts[parts.length - 1] || "");
+    } else {
+      setPreview(null);
+      setFileName("");
+    }
+  }, [value]);
+
+  const handleSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setFileName(file.name);
     setPreview(URL.createObjectURL(file));
+    setUploading(true);
+
+    // Upload ke server
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/events/upload-poster", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        throw new Error("Response bukan JSON atau kosong");
+      }
+
+      if (res.ok && data.url) {
+        onChange(data.url); // kirim URL ke parent
+      } else {
+        alert("Gagal upload poster: " + (data?.message || "Server error"));
+        resetInput();
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error saat upload poster");
+      resetInput();
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const resetInput = () => {
+    setPreview(null);
+    setFileName("");
+    if (inputRef.current) inputRef.current.value = "";
+    if (onChange) onChange(""); // reset parent
   };
 
   const handleRemove = () => {
-    setFileName("");
-    setPreview(null);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    resetInput();
   };
 
   return (
     <div className="space-y-3">
       {/* PREVIEW AREA */}
       <div
-        className="w-full h-52 border-2 border-dashed border-black rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer"
+        className={`w-full h-52 border-2 border-dashed rounded-lg flex items-center justify-center overflow-hidden bg-gray-50 cursor-pointer ${
+          preview ? "border-gray-300" : "border-black"
+        }`}
         onClick={() => !preview && inputRef.current.click()}
       >
         {preview ? (
@@ -41,21 +91,18 @@ export default function ImageUpload() {
             <button
               type="button"
               className="px-4 py-2 rounded-lg border border-black text-black hover:bg-black hover:text-white transition"
+              disabled={uploading}
             >
-              Upload Poster
+              {uploading ? "Uploading..." : "Upload Poster"}
             </button>
-            <p className="text-sm text-black">
-              PNG / JPG
-            </p>
+            <p className="text-sm text-black">PNG / JPG</p>
           </div>
         )}
       </div>
 
       {/* FILE NAME */}
       {fileName && (
-        <div className="text-sm font-medium text-black truncate">
-          {fileName}
-        </div>
+        <div className="text-sm font-medium text-black truncate">{fileName}</div>
       )}
 
       {/* ACTION BUTTONS */}
@@ -65,10 +112,10 @@ export default function ImageUpload() {
             type="button"
             onClick={() => inputRef.current.click()}
             className="px-4 py-2 rounded-lg border border-black text-black hover:bg-black hover:text-white transition"
+            disabled={uploading}
           >
             Ganti Poster
           </button>
-
           <button
             type="button"
             onClick={handleRemove}
