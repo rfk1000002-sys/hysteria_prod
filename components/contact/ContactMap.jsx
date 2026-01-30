@@ -1,4 +1,31 @@
-export default function ContactMap() {
+export default function ContactMap({ contactData }) {
+  // URL embed Google Maps yang benar untuk Semarang, Indonesia
+  // Untuk mendapatkan URL embed yang benar:
+  // 1. Buka Google Maps di browser
+  // 2. Cari lokasi yang diinginkan
+  // 3. Klik tombol "Share" / "Bagikan"
+  // 4. Pilih tab "Embed a map" / "Sematkan peta"
+  // 5. Copy URL dari iframe yang diberikan
+  const defaultMapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126559.80427893577!2d110.32047802407377!3d-6.993126356472846!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b4ec52229d7%3A0xc791d6abc9236c7!2sSemarang%2C%20Kota%20Semarang%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1738157000000!5m2!1sid!2sid";
+  
+  // Fungsi untuk ekstrak URL dari tag iframe jika data berisi HTML
+  const extractMapUrl = (data) => {
+    if (!data) return defaultMapUrl;
+    
+    // Jika data berisi tag iframe, ekstrak URL dari atribut src
+    if (data.includes('<iframe')) {
+      const srcMatch = data.match(/src=["']([^"']+)["']/);
+      if (srcMatch && srcMatch[1]) {
+        return srcMatch[1];
+      }
+    }
+    
+    // Jika sudah berupa URL, gunakan langsung
+    return data;
+  };
+  
+  const mapUrl = extractMapUrl(contactData?.mapsEmbedUrl);
+
   return (
     <section className="mt-14">
       <div className="overflow-hidden rounded-xl shadow-lg">
@@ -7,7 +34,8 @@ export default function ContactMap() {
           className="h-60 w-full md:h-80"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.9026038306443!2d110.408!3d-7.045!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b0000000000%3A0x0000000000000000!2sSemarang!5e0!3m2!1sid!2sid!4v0000000000"
+          src={mapUrl}
+          allowFullScreen
         />
       </div>
     </section>

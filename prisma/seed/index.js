@@ -11,6 +11,7 @@ const seeds = [
   // require('./006-create-admin-user.js'),
   // require('./008-seed-basic-permissions.js'),
   require('./009-nav-category.js'),
+  require('./010-seed-contact.js'),
 ];
 
 async function main() {

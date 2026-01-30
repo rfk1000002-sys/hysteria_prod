@@ -1,4 +1,7 @@
-export default function ContactCTA() {
+export default function ContactCTA({ contactData }) {
+  const whatsappNumber = contactData?.whatsappNumber || "628121272483";
+  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=Halo%2C%20saya%20ingin%20memulai%20diskusi%20dengan%20Hysteria`;
+
   return (
     <section className="mt-20 bg-[#E93C8E]">
       <div className="mx-auto max-w-6xl px-6 py-14 text-center text-white">
@@ -17,7 +20,7 @@ export default function ContactCTA() {
             Ajukan Kolaborasi
           </a>
           <a
-            href="https://wa.me/628121272483?text=Halo%2C%20saya%20ingin%20memulai%20diskusi%20dengan%20Hysteria"
+            href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#E93C8E] shadow hover:shadow-2xl hover:scale-105 hover:bg-gray-50 transition-all duration-200"
