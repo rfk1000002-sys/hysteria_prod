@@ -2,27 +2,27 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial } from "../../../components/ui/icon";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall } from "../../../components/ui/icon";
 
-export default function AdminSidebar({ open, collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
+export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
 
   const menus = [
     { key: 'dashboard', label: 'Dashboard', view: 'dashboard', icon: IconDashboard, enabled: true },
     { key: 'users', label: 'Users', view: 'users', icon: IconUsers, enabled: true, children: [
-      { key: 'user_management', label: 'User Management', view: 'users.user_management', enabled: true },
-      { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
-      { key: 'status_management', label: 'Status', view: 'users.status_management', enabled: true },
+      { key: 'user_management', label: 'User Management', view: 'users.user_management', icon: IconUserManagement, enabled: true },
+      { key: 'permission', label: 'Permission', view: 'users.permission', icon: IconPermission, enabled: true },
+      { key: 'status_management', label: 'Status', view: 'users.status_management', icon: IconStatus, enabled: true },
     ]},
     { key: 'section', label: 'Section', view: 'section', icon: IconSection, enabled: true, children: [
-      { key: 'hero', label: 'Hero', view: 'section.hero', enabled: true },
-      { key: 'category', label: 'Category', view: 'section.navigation', enabled: true },
+      { key: 'hero', label: 'Hero', view: 'section.hero', icon: IconHero, enabled: true },
+      { key: 'category', label: 'Category', view: 'section.navigation', icon: IconCategorySmall, enabled: true },
     ]},
     { key: 'platform', label: 'Platform', view: 'platform', icon: IconPlatform, enabled: false },
     { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: false },
     { key: 'post', label: 'Post', view: 'post', icon: IconPost, enabled: false },
     { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: true, children: [
-      { key: 'social', label: 'Social', view: 'settings.social', enabled: false },
+      { key: 'social', label: 'Social', view: 'settings.social', icon: IconSocial, enabled: false },
     ]},
   ];
 
@@ -50,8 +50,8 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
         </div>
       </div>
 
-      {/* Navigasi tabs */}
-      <nav className="px-2 py-6">
+      {/* Parent Navigasi tabs */}
+      <nav className="px-2 py-4 flex-1">
         <ul className="space-y-1">
           {menus.map((item) => {
             const Icon = item.icon;
@@ -59,7 +59,7 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
             const hasChildren = Array.isArray(item.children) && item.children.length > 0;
             const isActive = currentView === item.view || (hasChildren && item.children.some(c => c.view === currentView));
             const isOpen = !!openKeys[item.key];
-            const baseClass = `group relative flex items-center gap-3 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
+            const baseClass = `group relative flex items-center gap-2 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
             const enabledClass = isActive 
               ? `bg-blue-50 text-blue-700` 
               : `text-zinc-700 hover:bg-zinc-50`;
@@ -98,17 +98,19 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                           </svg>
                         )}
                         {!enabled && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                          <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-zinc-100 px-1 py-0.5 text-[10px] font-medium text-zinc-600">Coming soon</span>
                         )}
                       </>
                     )}
                   </button>
 
+                  {/* children nav tabs */}
                   {hasChildren && !collapsed && isOpen && (
-                    <ul className="mt-1 space-y-1 pl-9 pr-3">
+                    <ul className="mt-0 space-y-0 pl-6 pr-1">
                       {item.children.map((child) => {
                         const childActive = currentView === child.view;
                         const childEnabled = !!child.enabled;
+                        const ChildIcon = child.icon;
                         return (
                           <li key={child.key}>
                             {(() => {
@@ -125,9 +127,10 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                                   tabIndex={childEnabled ? 0 : -1}
                                   className={`${childClassBase} ${childEnabled ? childEnabledClass : childDisabledClass}`}
                                 >
+                                  {ChildIcon && <ChildIcon />}
                                   <span className="text-xs">{child.label}</span>
                                   {!childEnabled && (
-                                    <span className="ml-auto inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                                    <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-zinc-100 px-1 py-0.5 text-[10px] font-medium text-zinc-600">Coming soon</span>
                                   )}
                                 </button>
                               );
