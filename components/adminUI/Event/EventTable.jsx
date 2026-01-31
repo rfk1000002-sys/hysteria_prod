@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function EventTable() {
+  const router = useRouter();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     async function fetchEvents() {
       try {
-        const res = await fetch("/api/admin/events");
+        const res = await fetch("/api/admin/events", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Gagal mengambil data event");
         const data = await res.json();
         setEvents(data);
@@ -24,8 +29,37 @@ export default function EventTable() {
     fetchEvents();
   }, []);
 
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Yakin ingin menghapus event ini?"
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(id);
+
+      const res = await fetch(`/api/admin/events/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal menghapus event");
+      }
+
+      // HAPUS DARI STATE (tanpa reload)
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) return <p className="text-center py-6">Loading...</p>;
-  if (error) return <p className="text-center py-6 text-red-600">{error}</p>;
+  if (error)
+    return (
+      <p className="text-center py-6 text-red-600">{error}</p>
+    );
 
   return (
     <div className="bg-white rounded-xl shadow overflow-x-auto">
@@ -52,18 +86,12 @@ export default function EventTable() {
 
           {events.map((event) => {
             const startDate = new Date(event.startAt);
-            const formattedDate = startDate.toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-            });
-            const formattedTime = startDate.toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
 
             return (
-              <tr key={event.id} className="border-t border-black hover:bg-gray-100">
+              <tr
+                key={event.id}
+                className="border-t border-black hover:bg-gray-100"
+              >
                 <td className="px-4 py-3">
                   {event.poster ? (
                     <img
@@ -78,37 +106,55 @@ export default function EventTable() {
                   )}
                 </td>
 
-                <td className="px-4 py-3 text-black font-medium">{event.title}</td>
-
-                <td className="px-4 py-3 text-black">
-                  {formattedDate} <br />
-                  <span className="text-sm">{formattedTime}</span>
+                <td className="px-4 py-3 text-black font-medium">
+                  {event.title}
                 </td>
 
-                <td className="px-4 py-3 text-black">{event.location}</td>
+                <td className="px-4 py-3 text-black">
+                  {startDate.toLocaleDateString("id-ID")}
+                  <br />
+                  <span className="text-sm">
+                    {startDate.toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </td>
+
+                <td className="px-4 py-3 text-black">
+                  {event.location}
+                </td>
 
                 <td className="px-4 py-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      event.status === "UPCOMING"
-                        ? "bg-yellow-200 text-black"
-                        : event.status === "ONGOING"
-                        ? "bg-green-200 text-black"
-                        : event.status === "FINISHED"
-                        ? "bg-gray-300 text-black"
-                        : "bg-gray-100 text-black"
-                    }`}
-                  >
+                  <span className="px-3 py-1 rounded-full text-sm bg-gray-200 text-black">
                     {event.status}
                   </span>
                 </td>
 
                 <td className="px-4 py-3 text-center space-x-2">
-                  <button className="px-3 py-1 border border-black rounded text-black hover:bg-black hover:text-white">
+                  {/* EDIT */}
+                  <button
+                    onClick={() =>
+                      router.push(
+                        `/admin/events/${event.id}/edit`
+                      )
+                    }
+                    className="px-3 py-1 border border-black rounded text-black hover:bg-black hover:text-white"
+                  >
                     Edit
                   </button>
-                  <button className="px-3 py-1 border border-red-600 text-red-600 rounded hover:bg-red-600 hover:text-white">
-                    Hapus
+
+                  {/* DELETE */}
+                  <button
+                    onClick={() => handleDelete(event.id)}
+                    disabled={deletingId === event.id}
+                    className={`px-3 py-1 border border-red-600 rounded ${
+                      deletingId === event.id
+                        ? "opacity-50 cursor-not-allowed"
+                        : "text-red-600 hover:bg-red-600 hover:text-white"
+                    }`}
+                  >
+                    {deletingId === event.id ? "Menghapus..." : "Hapus"}
                   </button>
                 </td>
               </tr>

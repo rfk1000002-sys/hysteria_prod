@@ -9,6 +9,7 @@ import Permission from "../users/permission/page.jsx";
 import StatusManagement from "../users/status_management/page.jsx";
 import HeroManagement from "../section/HeroManagement.jsx";
 import EventPage from "../events/page.jsx";
+import { usePathname } from "next/navigation";
 
 export default function AdminShell({ children }) {
   const [open, setOpen] = useState(false);
@@ -27,6 +28,9 @@ export default function AdminShell({ children }) {
     setCurrentView(view);
     setOpen(false); // Close mobile sidebar after navigation
   };
+
+  const pathname = usePathname();
+  const isDashboard = pathname === "/admin";
 
   const renderContent = () => {
     switch (currentView) {
@@ -68,7 +72,9 @@ export default function AdminShell({ children }) {
             <AdminTopbar onOpenSidebar={() => setOpen(true)} />
           </div>
 
-          <main className="mx-auto w-full max-w-5xl px-6 py-8">{renderContent()}</main>
+          <main className="mx-auto w-full max-w-5xl px-6 py-8">
+            {isDashboard ? renderContent() : children}
+          </main>
         </div>
 
         {open && (

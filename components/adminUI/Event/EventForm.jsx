@@ -110,6 +110,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         isEdit ? `/api/admin/events/${eventId}` : "/api/admin/events",
         {
           method: isEdit ? "PUT" : "POST",
+          credentials: "include", 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }

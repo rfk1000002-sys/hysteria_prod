@@ -6,19 +6,20 @@ export default function ImageUpload({ value, onChange }) {
   const inputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState(null);
-  const [uploading, setUploading] = useState(false); // status upload
+  const [uploading, setUploading] = useState(false); 
 
-  // Sync preview dengan value dari parent (misal edit)
   useEffect(() => {
-    if (value) {
+    if (value && !preview) {
       setPreview(value);
       const parts = value.split("/");
       setFileName(parts[parts.length - 1] || "");
-    } else {
+    }
+
+    if (!value) {
       setPreview(null);
       setFileName("");
     }
-  }, [value]);
+  }, [value, preview]);
 
   const handleSelect = async (e) => {
     const file = e.target.files[0];
@@ -36,6 +37,7 @@ export default function ImageUpload({ value, onChange }) {
       const res = await fetch("/api/admin/events/upload-poster", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       let data;
@@ -64,11 +66,13 @@ export default function ImageUpload({ value, onChange }) {
     setPreview(null);
     setFileName("");
     if (inputRef.current) inputRef.current.value = "";
-    if (onChange) onChange(""); // reset parent
   };
 
   const handleRemove = () => {
-    resetInput();
+    setPreview(null);
+    setFileName("");
+    if (inputRef.current) inputRef.current.value = "";
+    onChange(""); // user memang ingin hapus
   };
 
   return (
