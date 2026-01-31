@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma.js';
 import { respondSuccess, respondError } from '../../../lib/response.js';
 import logger from '../../../lib/logger.js';
+import { getActiveCategories } from '@/modules/admin/categories/index.js';
 
 /**
  * GET /api/categories
@@ -9,44 +9,17 @@ import logger from '../../../lib/logger.js';
  */
 export async function GET(request) {
   try {
-    const categories = await prisma.category.findMany({
-      where: {
-        isActive: true
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        description: true,
-        order: true,
-        isActive: true,
-        _count: {
-          select: {
-            items: true
-          }
-        }
-      },
-      orderBy: {
-        order: 'asc'
-      }
-    });
-
-    const formatted = categories.map(cat => ({
-      id: cat.id,
-      title: cat.title,
-      slug: cat.slug,
-      description: cat.description,
-      order: cat.order,
-      isActive: cat.isActive,
-      itemCount: cat._count.items
-    }));
+    const categories = await getActiveCategories();
 
     logger.info('Fetched categories list', { count: categories.length });
 
-    return respondSuccess({ categories: formatted }, 200);
+    return respondSuccess({ categories }, 200);
 
   } catch (error) {
     logger.error('Error fetching categories:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to fetch categories', status: 500 });
   }
 }

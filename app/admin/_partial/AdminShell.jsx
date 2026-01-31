@@ -8,7 +8,7 @@ import Users from "../users/user_management/page.jsx";
 import Permission from "../users/permission/page.jsx";
 import StatusManagement from "../users/status_management/page.jsx";
 import HeroManagement from "../section/HeroManagement.jsx";
-import NavigationPage from "../section/categories/page.jsx";
+import CategoriesPage from "../categories/page.jsx";
 
 export default function AdminShell({ children }) {
   const [open, setOpen] = useState(false);
@@ -40,8 +40,8 @@ export default function AdminShell({ children }) {
       case 'section':
         case 'section.hero':
           return <HeroManagement />;
-        case 'section.navigation':
-          return <NavigationPage />;
+      case 'category':
+          return <CategoriesPage />;
       case 'dashboard':
       default:
         return children;

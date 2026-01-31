@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../../../lib/context/auth-context';
-import { apiGet, apiPost, apiPut, apiDelete } from '../../../../lib/api-client';
+import { useAuth } from '../../../lib/context/auth-context';
+import { apiGet, apiPost, apiPut, apiDelete } from '../../../lib/api-client';
 import { 
   DndContext, 
   closestCenter,
@@ -126,16 +126,21 @@ function SortableTreeNode({ item, onEdit, onDelete, onAddChild, depth = 0 }) {
       {/* Render children */}
       {expanded && hasChildren && (
         <div className="mt-1">
-          {item.children.map(child => (
-            <SortableTreeNode
-              key={child.id}
-              item={child}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onAddChild={onAddChild}
-              depth={depth + 1}
-            />
-          ))}
+          <SortableContext
+            items={item.children.map(c => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {item.children.map(child => (
+              <SortableTreeNode
+                key={child.id}
+                item={child}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onAddChild={onAddChild}
+                depth={depth + 1}
+              />
+            ))}
+          </SortableContext>
         </div>
       )}
     </div>
@@ -455,8 +460,8 @@ function ItemModal({ isOpen, onClose, onSave, item, categoryId, allItems }) {
   );
 }
 
-export default function NavigationPage() {
-  const { user } = useAuth();
+export default function CategoriesPage() {
+  useAuth();
 
   // ============================================================================
   // STATE MANAGEMENT
@@ -568,6 +573,103 @@ export default function NavigationPage() {
     setActiveId(event.active.id);
   };
 
+  // Helper: find parent path (path to parent array) and index of item
+  const findParentPath = (items, id, parentPath = []) => {
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].id === id) {
+        return { parentPath, index: i };
+      }
+      if (items[i].children && items[i].children.length) {
+        const res = findParentPath(items[i].children, id, [...parentPath, i]);
+        if (res) return res;
+      }
+    }
+    return null;
+  };
+
+  // Recursive remove that also returns removed item
+  const removeAtRecursive = (currItems, parentPath, index) => {
+    if (!parentPath || parentPath.length === 0) {
+      const newRoot = [...currItems];
+      const removed = newRoot.splice(index, 1)[0];
+      return { newItems: newRoot, removed };
+    }
+
+    const head = parentPath[0];
+    const rest = parentPath.slice(1);
+    const newItems = currItems.map((it, i) => {
+      if (i !== head) return it;
+      const children = it.children ? it.children : [];
+      const { newItems: newChildren, removed } = removeAtRecursive(children, rest, index);
+      return { ...it, children: newChildren };
+    });
+
+    // removed is only available from deepest recursion base case, so we re-run a search to get it
+    const flat = flattenItems(currItems);
+    const removed = flat.find(x => x.id === currItems?.[parentPath[0]]?.id && false) || null;
+    return { newItems, removed: null };
+  };
+
+  // Insert item at parentPath and index (immutable)
+  const insertAtRecursive = (currItems, parentPath, index, item) => {
+    if (!parentPath || parentPath.length === 0) {
+      const newRoot = [...currItems];
+      newRoot.splice(index, 0, item);
+      return newRoot;
+    }
+    const head = parentPath[0];
+    const rest = parentPath.slice(1);
+    return currItems.map((it, i) => {
+      if (i !== head) return it;
+      const children = it.children ? it.children : [];
+      return { ...it, children: insertAtRecursive(children, rest, index, item) };
+    });
+  };
+
+  // Move item in tree from activeId to the position of overId
+  const moveItemInTree = (items, activeId, overId) => {
+    const activeLoc = findParentPath(items, activeId);
+    const overLoc = findParentPath(items, overId);
+    if (!activeLoc || !overLoc) return items;
+
+    // Remove active item
+    const { newItems: afterRemoval, removed } = (function removeHelper(currItems, parentPath, index) {
+      if (!parentPath || parentPath.length === 0) {
+        const newRoot = [...currItems];
+        const removed = newRoot.splice(index, 1)[0];
+        return { newItems: newRoot, removed };
+      }
+      const head = parentPath[0];
+      const rest = parentPath.slice(1);
+      const newItems = currItems.map((it, i) => {
+        if (i !== head) return it;
+        const children = it.children ? it.children : [];
+        const { newItems: newChildren, removed } = removeHelper(children, rest, index);
+        return { ...it, children: newChildren };
+      });
+      return { newItems, removed: null };
+    })(items, activeLoc.parentPath, activeLoc.index);
+
+    // If removed is null, find removed from original tree
+    let removedItem = removed;
+    if (!removedItem) {
+      const flat = flattenItems(items);
+      removedItem = flat.find(i => i.id === activeId);
+    }
+
+    if (!removedItem) return items;
+
+    // Find over location after removal
+    const overLocAfter = findParentPath(afterRemoval, overId);
+    if (!overLocAfter) return afterRemoval;
+
+    const targetParentPath = overLocAfter.parentPath;
+    const targetIndex = overLocAfter.index;
+
+    const result = insertAtRecursive(afterRemoval, targetParentPath, targetIndex, removedItem);
+    return result;
+  };
+
   const handleDragEnd = (event) => {
     const { active, over } = event;
     setActiveId(null);
@@ -575,14 +677,14 @@ export default function NavigationPage() {
     if (!over || active.id === over.id) return;
 
     setCategoryItems((items) => {
-      const oldIndex = items.findIndex(item => item.id === active.id);
-      const newIndex = items.findIndex(item => item.id === over.id);
-
-      if (oldIndex === -1 || newIndex === -1) return items;
-
-      const newItems = arrayMove(items, oldIndex, newIndex);
-      setHasChanges(true);
-      return newItems;
+      try {
+        const newTree = moveItemInTree(items, active.id, over.id);
+        setHasChanges(true);
+        return newTree;
+      } catch (err) {
+        console.error('Error moving item in tree:', err);
+        return items;
+      }
     });
   };
 

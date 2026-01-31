@@ -1,33 +1,7 @@
-import { prisma } from '@/lib/prisma.js';
 import { respondSuccess, respondError } from '@/lib/response.js';
 import logger from '@/lib/logger.js';
 import { requireAuthWithPermission } from '@/lib/helper/permission.helper.js';
-import { buildTreeFromPrisma } from '@/lib/helper/tree.helper.js';
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-const itemSelectFields = {
-  id: true,
-  title: true,
-  slug: true,
-  url: true,
-  order: true,
-  isActive: true,
-  meta: true,
-  parentId: true,
-  createdAt: true,
-  updatedAt: true
-};
-
-const buildNestedSelect = (depth = 4) => {
-  if (depth === 0) return itemSelectFields;
-  return {
-    ...itemSelectFields,
-    children: { select: buildNestedSelect(depth - 1) }
-  };
-};
+import { getCategoryItemsTree, createCategoryItem } from '@/modules/admin/categories/index.js';
 
 // ============================================================================
 // GET - Fetch all items in tree structure
@@ -44,31 +18,17 @@ export async function GET(request, { params }) {
       return respondError({ message: 'Invalid category ID', status: 400 });
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
-      select: { id: true, title: true, slug: true }
-    });
+    const result = await getCategoryItemsTree(categoryId);
 
-    if (!category) {
-      return respondError({ message: 'Category not found', status: 404 });
-    }
+    logger.info('Admin fetched category items', { categoryId, itemCount: result.totalItems });
 
-    // Fetch root items with nested children (up to 5 levels)
-    const items = await prisma.categoryItem.findMany({
-      where: { categoryId, parentId: null },
-      select: buildNestedSelect(4),
-      orderBy: { order: 'asc' }
-    });
-
-    const tree = buildTreeFromPrisma(items);
-
-    logger.info('Admin fetched category items', { categoryId, itemCount: items.length });
-
-    return respondSuccess({ category, items: tree, totalItems: items.length }, 200);
+    return respondSuccess(result, 200);
 
   } catch (error) {
     logger.error('Error fetching category items:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to fetch category items', status: 500 });
   }
 }
@@ -88,53 +48,16 @@ export async function POST(request, { params }) {
       return respondError({ message: 'Invalid category ID', status: 400 });
     }
 
-    // Verify category exists
-    const category = await prisma.category.findUnique({ where: { id: categoryId } });
-    if (!category) {
-      return respondError({ message: 'Category not found', status: 404 });
-    }
-
     const body = await request.json();
-    const { title, slug, url, parentId, order, meta, isActive } = body;
-
-    // Validation
-    if (!title) {
-      return respondError({ message: 'Title is required', status: 400 });
-    }
-
-    // Verify parent exists if provided
-    if (parentId) {
-      const parent = await prisma.categoryItem.findFirst({
-        where: { id: parentId, categoryId }
-      });
-      if (!parent) {
-        return respondError({ message: 'Parent item not found in this category', status: 400 });
-      }
-    }
-
-    // Create item
-    const item = await prisma.categoryItem.create({
-      data: {
-        categoryId,
-        title,
-        slug: slug || null,
-        url: url || null,
-        parentId: parentId || null,
-        order: order || 0,
-        meta: meta || null,
-        isActive: isActive !== undefined ? isActive : true
-      }
-    });
-
-    logger.info('Admin created category item', { 
-      categoryId, 
-      itemId: item.id 
-    });
+    const item = await createCategoryItem(categoryId, body);
 
     return respondSuccess({ item }, 201);
 
   } catch (error) {
     logger.error('Error creating category item:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to create category item', status: 500 });
   }
 }

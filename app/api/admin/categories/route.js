@@ -1,25 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma.js';
 import { respondSuccess, respondError } from '@/lib/response.js';
 import logger from '@/lib/logger.js';
 import { requireAuthWithPermission } from '@/lib/helper/permission.helper.js';
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-const formatCategoryResponse = (cat) => ({
-  id: cat.id,
-  title: cat.title,
-  slug: cat.slug,
-  description: cat.description,
-  order: cat.order,
-  isActive: cat.isActive,
-  requiredPermissionId: cat.requiredPermissionId,
-  itemCount: cat._count.items,
-  createdAt: cat.createdAt,
-  updatedAt: cat.updatedAt
-});
+import { getAllCategories, createCategory, formatCategoryResponse } from '@/modules/admin/categories/index.js';
 
 // ============================================================================
 // GET - List all categories
@@ -29,24 +12,7 @@ export async function GET(request) {
   try {
     await requireAuthWithPermission(request, 'categories.view');
 
-    const categories = await prisma.category.findMany({
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        description: true,
-        order: true,
-        isActive: true,
-        requiredPermissionId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: { items: true }
-        }
-      },
-      orderBy: { order: 'asc' }
-    });
-
+    const categories = await getAllCategories();
     const formatted = categories.map(formatCategoryResponse);
 
     logger.info('Admin fetched categories', { count: categories.length });
@@ -55,6 +21,9 @@ export async function GET(request) {
 
   } catch (error) {
     logger.error('Error fetching categories:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to fetch categories', status: 500 });
   }
 }
@@ -68,40 +37,15 @@ export async function POST(request) {
     await requireAuthWithPermission(request, 'categories.create');
 
     const body = await request.json();
-    const { title, slug, description, order, isActive, requiredPermissionId } = body;
-
-    // Validation
-    if (!title || !slug) {
-      return respondError({ message: 'Title and slug are required', status: 400 });
-    }
-
-    // Check slug uniqueness
-    const existing = await prisma.category.findUnique({ where: { slug } });
-    if (existing) {
-      return respondError({ message: 'Category with this slug already exists', status: 400 });
-    }
-
-    // Create category
-    const category = await prisma.category.create({
-      data: {
-        title,
-        slug,
-        description: description || null,
-        order: order || 0,
-        isActive: isActive !== undefined ? isActive : true,
-        requiredPermissionId: requiredPermissionId || null
-      }
-    });
-
-    logger.info('Admin created category', { 
-      categoryId: category.id, 
-      slug: category.slug 
-    });
+    const category = await createCategory(body);
 
     return respondSuccess({ category }, 201);
 
   } catch (error) {
     logger.error('Error creating category:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to create category', status: 500 });
   }
 }

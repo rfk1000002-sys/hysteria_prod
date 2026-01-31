@@ -1,7 +1,7 @@
-import { prisma } from '@/lib/prisma.js';
 import { respondSuccess, respondError } from '@/lib/response.js';
 import logger from '@/lib/logger.js';
 import { requireAuthWithPermission } from '@/lib/helper/permission.helper.js';
+import { getCategoryById, updateCategory, deleteCategory } from '@/modules/admin/categories/index.js';
 
 // ============================================================================
 // GET - Fetch single category
@@ -18,27 +18,7 @@ export async function GET(request, { params }) {
       return respondError({ message: 'Invalid category ID', status: 400 });
     }
 
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        description: true,
-        order: true,
-        isActive: true,
-        requiredPermissionId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: { items: true }
-        }
-      }
-    });
-
-    if (!category) {
-      return respondError({ message: 'Category not found', status: 404 });
-    }
+    const category = await getCategoryById(categoryId);
 
     logger.info('Admin fetched category', { categoryId });
 
@@ -46,6 +26,9 @@ export async function GET(request, { params }) {
 
   } catch (error) {
     logger.error('Error fetching category:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to fetch category', status: 500 });
   }
 }
@@ -66,44 +49,15 @@ export async function PUT(request, { params }) {
     }
 
     const body = await request.json();
-    const { title, slug, description, order, isActive, requiredPermissionId } = body;
-
-    // Check if category exists
-    const existing = await prisma.category.findUnique({ where: { id: categoryId } });
-    if (!existing) {
-      return respondError({ message: 'Category not found', status: 404 });
-    }
-
-    // Check slug uniqueness if changed
-    if (slug && slug !== existing.slug) {
-      const slugExists = await prisma.category.findUnique({ where: { slug } });
-      if (slugExists) {
-        return respondError({ message: 'Category with this slug already exists', status: 400 });
-      }
-    }
-
-    // Update category
-    const category = await prisma.category.update({
-      where: { id: categoryId },
-      data: {
-        ...(title && { title }),
-        ...(slug && { slug }),
-        ...(description !== undefined && { description }),
-        ...(order !== undefined && { order }),
-        ...(isActive !== undefined && { isActive }),
-        ...(requiredPermissionId !== undefined && { requiredPermissionId })
-      }
-    });
-
-    logger.info('Admin updated category', { 
-      categoryId, 
-      changes: Object.keys(body) 
-    });
+    const category = await updateCategory(categoryId, body);
 
     return respondSuccess({ category }, 200);
 
   } catch (error) {
     logger.error('Error updating category:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to update category', status: 500 });
   }
 }
@@ -123,42 +77,15 @@ export async function DELETE(request, { params }) {
       return respondError({ message: 'Invalid category ID', status: 400 });
     }
 
-    // Check if category exists
-    const existing = await prisma.category.findUnique({
-      where: { id: categoryId },
-      select: {
-        id: true,
-        slug: true,
-        _count: {
-          select: {
-            items: true
-          }
-        }
-      }
-    });
+    const result = await deleteCategory(categoryId);
 
-    if (!existing) {
-      return respondError({ message: 'Category not found', status: 404 });
-    }
-
-    // Delete category (cascade will delete items)
-    await prisma.category.delete({
-      where: { id: categoryId }
-    });
-
-    logger.info('Admin deleted category', { 
-      categoryId, 
-      slug: existing.slug,
-      itemsDeleted: existing._count.items
-    });
-
-    return respondSuccess({ 
-      message: 'Category deleted successfully',
-      deletedItems: existing._count.items
-    }, 200);
+    return respondSuccess(result, 200);
 
   } catch (error) {
     logger.error('Error deleting category:', error);
+    if (error.statusCode) {
+      return respondError({ message: error.message, status: error.statusCode });
+    }
     return respondError({ message: 'Failed to delete category', status: 500 });
   }
 }
