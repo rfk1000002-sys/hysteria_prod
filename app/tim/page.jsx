@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Poppins } from "next/font/google";
 import TimHero from "./_components/TimHero";
 import ProfileCard from "./_components/ProfileCard";
@@ -11,68 +12,82 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-const pengelolaProfiles = [
-  { name: "A Khairudin", role: "Solidarity Maker" },
-  { name: "Ragil Maulana A.", role: "General Manager" },
-  { name: "Izza Nadia Hikma", role: "Sekretaris" },
-  { name: "Titis Wijayanti", role: "Bendahara" },
-  { name: "Tommy Ari Wibowo", role: "Manajer Ruang" },
-  { name: "Arif Fitra Kurniawan", role: "Divisi Riset" },
-  { name: "Purna Cipta N.", role: "Deputi Sapu Jagad" },
-  { name: "Istiqbalul F. Asteja", role: "Direktur Bukit Buku" },
-];
-
-const artlabProfiles = [
-  { name: "Tyok Hari", role: "Staff Hysteria Artlab" },
-  { name: "Hananingsih W.", role: "Staff Hysteria Artlab" },
-  { name: "Humam Zidni Ahmad", role: "Staff Hysteria Artlab" },
-  { name: "Wan Fajar", role: "Staff Hysteria Artlab" },
-  { name: "Mukhammad J. F.", role: "Staff Hysteria Artlab" },
-  { name: "Anita Dewi", role: "Staff Hysteria Artlab" },
-  { name: "Dheni Fattah", role: "Staff Hysteria Artlab" },
-];
-
-const pekakotaProfiles = [
-  { name: "Pujo Nugroho", role: "Staff Pekakota" },
-  { name: "Nella Ardiantanti S.", role: "Staff Pekakota" },
-  { name: "Radit Bayu Anggoro", role: "Staff Pekakota" },
-  { name: "Yasin Fajar", role: "Staff Pekakota" },
-  { name: "Salma Ibrahim", role: "Staff Pekakota" },
-];
-
 export default function TimPage() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTeam = async () => {
+      try {
+        const res = await fetch("/api/team", { method: "GET" });
+        const json = await res.json().catch(() => null);
+        if (!isMounted) return;
+        if (json?.success) {
+          const list = Array.isArray(json.data?.categories) ? json.data.categories : [];
+          setCategories(list);
+        }
+      } catch (error) {
+        console.error("Error fetching team data:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchTeam();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const orderedCategories = useMemo(() => {
+    return [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [categories]);
+
+  const primaryCategory = orderedCategories[0];
+  const sliderCategories = orderedCategories.slice(1);
+
   return (
     <main className={`${poppins.variable} font-sans bg-white min-h-screen pb-32`}>
       <TimHero />
 
       {/* Section 1: Pengelola Hysteria (Grid) */}
       <section className="py-20 relative px-4 md:px-0">
-
         <div className="max-w-[1400px] mx-auto mt-12 md:mt-24">
-          <h2 className="text-center font-bold text-[32px] md:text-[40px] leading-[1.5] mb-16 text-black font-poppins">Pengelola Hysteria</h2>
+          <h2 className="text-center font-bold text-[32px] md:text-[40px] leading-[1.5] mb-16 text-black font-poppins">{primaryCategory?.name || "Pengelola Hysteria"}</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16 justify-items-center">
-            {pengelolaProfiles.map((p, i) => (
-              <ProfileCard
-                key={i}
-                {...p}
-              />
-            ))}
-          </div>
+          {loading && !primaryCategory ? (
+            <div className="text-center text-sm text-zinc-500">Memuat data tim...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16 justify-items-center">
+              {(primaryCategory?.members || []).map((member) => (
+                <ProfileCard
+                  key={member.id}
+                  name={member.name}
+                  role={member.role}
+                  imageUrl={member.imageUrl}
+                  email={member.email}
+                  instagram={member.instagram}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Section 2: Hysteria Artlab (Slider) */}
-      <ProfileSlider
-        title="Pengurus Hysteria Artlab"
-        profiles={artlabProfiles}
-      />
-
-      {/* Section 3: Pengurus Pekakota (Slider) */}
-      <ProfileSlider
-        title="Pengurus Pekakota"
-        profiles={pekakotaProfiles}
-      />
+      {sliderCategories.map((category) => (
+        <ProfileSlider
+          key={category.id}
+          title={category.name}
+          profiles={(category.members || []).map((member) => ({
+            name: member.name,
+            role: member.role,
+            imageUrl: member.imageUrl,
+            email: member.email,
+            instagram: member.instagram,
+          }))}
+        />
+      ))}
     </main>
   );
 }
