@@ -35,6 +35,20 @@ const looksLikeManagedUpload = (source) => {
   return false;
 };
 
+const normalizeUploadSourceForDeletion = (source) => {
+  if (!source || typeof source !== "string") return source;
+  if (source.startsWith("/uploads/") || source.startsWith("uploads/")) return source;
+  try {
+    const parsed = new URL(source);
+    if (parsed.pathname.startsWith("/uploads/")) {
+      return `${parsed.pathname}${parsed.search}`;
+    }
+  } catch (err) {
+    // fall back to raw source when parsing fails
+  }
+  return source;
+};
+
 export async function getTeamMemberById(id) {
   const member = await teamMemberRepository.findTeamMemberById(id);
   if (!member) {
@@ -182,20 +196,17 @@ export async function updateTeamMemberWithFile(id, data, file) {
     }
   }
 
-  const updateData = Object.fromEntries(
-    Object.entries(validatedData).filter(([_, value]) => value !== undefined)
-  );
+  const updateData = Object.fromEntries(Object.entries(validatedData).filter(([_, value]) => value !== undefined));
   delete updateData.imageUrl;
 
   const uploads = new Uploads();
-  const snapshot = { ...existingMember };
+  const snapshot = { ...existingMember, source: existingMember.imageUrl };
 
   try {
     const member = await updateWithUpload(
       {
         getExisting: async () => snapshot,
-        updateRecord: async (recordId, dataToUpdate) =>
-          teamMemberRepository.updateTeamMember(recordId, dataToUpdate),
+        updateRecord: async (recordId, dataToUpdate) => teamMemberRepository.updateTeamMember(recordId, dataToUpdate),
         uploadFile: async (filePayload) => uploads.handleUpload(filePayload),
         updateSource: async (recordId, url) => teamMemberRepository.updateTeamMember(recordId, { imageUrl: url }),
         revertRecord: async (recordId, prev) => {
@@ -243,20 +254,34 @@ export async function deleteTeamMember(id) {
   const member = await getTeamMemberById(id);
 
   try {
-    await teamMemberRepository.deleteTeamMember(id);
-    if (member?.imageUrl && looksLikeManagedUpload(member.imageUrl)) {
+    if (member?.imageUrl) {
       const uploads = new Uploads();
       try {
-        await uploads.deleteFile(member.imageUrl);
-        logger.info("Deleted stored image for team member", { memberId: id, source: member.imageUrl });
+        const attemptedSources = [member.imageUrl];
+        let deleted = await uploads.deleteFile(member.imageUrl);
+
+        if (!deleted) {
+          const normalized = normalizeUploadSourceForDeletion(member.imageUrl);
+          if (normalized && normalized !== member.imageUrl) {
+            attemptedSources.push(normalized);
+            deleted = await uploads.deleteFile(normalized);
+          }
+        }
+
+        if (deleted) {
+          logger.info("Deleted stored image for team member", { memberId: id, source: member.imageUrl });
+        } else {
+          logger.warn("Stored image not found during deletion", { memberId: id, source: member.imageUrl, attemptedSources });
+        }
       } catch (err) {
-        logger.warn("Failed to delete stored image after member removal", {
+        logger.warn("Failed to delete stored image before member removal", {
           memberId: id,
           source: member.imageUrl,
           error: err && (err.message || err.stack),
         });
       }
     }
+    await teamMemberRepository.deleteTeamMember(id);
     logger.info("Team member deleted", { memberId: id });
     return { message: "Team member deleted successfully" };
   } catch (error) {
