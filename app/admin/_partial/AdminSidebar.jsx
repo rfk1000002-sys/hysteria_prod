@@ -9,13 +9,7 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
 
   const menus = [
     { key: "dashboard", label: "Dashboard", view: "dashboard", icon: IconDashboard, enabled: true },
-    {
-      key: "users",
-      label: "Users",
-      view: "users",
-      icon: IconUsers,
-      enabled: true,
-      children: [
+    { key: "users", label: "Users", view: "users", icon: IconUsers, enabled: true,children: [
         { key: "user_management", label: "User Management", view: "users.user_management", icon: IconUserManagement, enabled: true },
         { key: "permission", label: "Permission", view: "users.permission", icon: IconPermission, enabled: true },
         { key: "status_management", label: "Status", view: "users.status_management", icon: IconStatus, enabled: true },
