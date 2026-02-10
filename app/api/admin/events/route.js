@@ -10,36 +10,45 @@ export async function POST(req) {
       title,
       description,
       organizer,
-      categoryId,
+      categoryItemId,
       startAt,
       endAt,
       location,
       registerLink,
       mapsEmbedSrc,
       poster,
+      driveLink,
+      youtubeLink,
+      isPublished,
     } = body;
 
     // VALIDASI WAJIB
-    if (!title || !categoryId || !startAt || !location || !poster) {
-      return NextResponse.json({ message: "Field wajib belum lengkap" }, { status: 400 });
+    if (!title || !categoryItemId || !startAt || !location || !poster) {
+      return NextResponse.json(
+        { message: "Field wajib belum lengkap" }, 
+        { status: 400 }
+      );
+    }
+
+    // CEK KATEGORI
+    const category = await prisma.categoryItem.findUnique({
+      where: { id: Number(categoryItemId) },
+    });
+
+    if (!category) {
+      return NextResponse.json(
+        { message: "Kategori tidak valid" },
+        { status: 400 }
+      );
     }
 
     // SLUG
     const baseSlug = slugify(title, { lower: true, strict: true });
-    const slugCount = await prisma.event.count({ where: { slug: { startsWith: baseSlug } } });
+    const slugCount = await prisma.event.count(
+      { where: { slug: { startsWith: baseSlug } },
+    });
+
     const slug = slugCount > 0 ? `${baseSlug}-${slugCount + 1}` : baseSlug;
-
-    // CATEGORY CHECK
-    const categoryExists = await prisma.category.findUnique({ where: { id: Number(categoryId) } });
-    if (!categoryExists) return NextResponse.json({ message: "Kategori tidak valid" }, { status: 400 });
-
-    // STATUS OTOMATIS
-    const now = new Date();
-    let status = "DRAFT";
-    const startDateObj = new Date(startAt);
-    if (now < startDateObj) status = "UPCOMING";
-    else if (now.toDateString() === startDateObj.toDateString()) status = "ONGOING";
-    else status = "FINISHED";
 
     const event = await prisma.event.create({
       data: {
@@ -47,29 +56,53 @@ export async function POST(req) {
         slug,
         description,
         organizer,
-        categoryId: Number(categoryId),
+        categoryItemId: Number(categoryItemId),
         startAt: new Date(startAt),
-        endAt: endAt ? new Date(endAt) : null, // optional
+        endAt: endAt ? new Date(endAt) : null, 
         location,
         registerLink,
         mapsEmbedSrc,
         poster,
-        status,
-        isPublished: true,
+        driveLink,
+        youtubeLink,
+        isPublished: Boolean(isPublished),
       },
     });
 
     return NextResponse.json(event, { status: 201 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ message: "Gagal membuat event" }, { status: 500 });
+    console.error("POST /api/admin/events ERROR:", err);
+
+    return NextResponse.json(
+      { message: "Gagal membuat event" },
+      { status: 500 }
+    );
   }
 }
 
 export async function GET() {
-  const events = await prisma.event.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { category: { select: { title: true } } },
-  });
-  return NextResponse.json(events);
+  try {
+    const events = await prisma.event.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        categoryItem: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    // WALAU KOSONG → TETAP BALIK []
+    return NextResponse.json(events, { status: 200 });
+  } catch (err) {
+    console.error("GET /api/admin/events ERROR:", err);
+
+    return NextResponse.json(
+      { message: "Gagal mengambil data event" },
+      { status: 500 }
+    );
+  }
 }

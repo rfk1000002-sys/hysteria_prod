@@ -127,7 +127,7 @@ export default function EventTable() {
 
                 <td className="px-4 py-3">
                   <span className="px-3 py-1 rounded-full text-sm bg-gray-200 text-black">
-                    {event.status}
+                    {event.isPublished}
                   </span>
                 </td>
 

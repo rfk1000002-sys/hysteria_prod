@@ -6,7 +6,7 @@ import ImageUpload from "./ImageUpload";
 
 export default function EventForm({ initialData = null, isEdit = false, eventId = null }) {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
+  const [categoryItems, setCategoryItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Track field error
@@ -14,7 +14,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
   const [form, setForm] = useState({
     title: "",
-    categoryId: "",
+    categoryItemId: "",
     organizer: "",
     description: "",
     startDate: "",
@@ -25,6 +25,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     registerLink: "",
     mapsEmbed: "",
     poster: "",
+    status: "PUBLISHED",      
+    driveLink: "",            
+    youtubeLink: "", 
   });
 
   // PREFILL EDIT
@@ -36,7 +39,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
     setForm({
       title: initialData.title || "",
-      categoryId: initialData.categoryId?.toString() || "",
+      categoryItemId: initialData.categoryItemId?.toString() || "",
       organizer: initialData.organizer || "",
       description: initialData.description || "",
       startDate: start.toISOString().slice(0, 10),
@@ -45,24 +48,65 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       endTime: end ? end.toTimeString().slice(0, 5) : "",
       location: initialData.location || "",
       registerLink: initialData.registerLink || "",
-      mapsEmbed: initialData.mapsEmbedSrc || "",
       poster: initialData.poster || "",
+      status: initialData.isPublished ? "PUBLISHED" : "DRAFT",
+      driveLink: initialData.driveLink || "",                 
+      youtubeLink: initialData.youtubeLink || "",  
+
+      mapsEmbed: initialData.mapsEmbedSrc
+        ? `<iframe src="${initialData.mapsEmbedSrc}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`
+        : "",
+
     });
   }, [initialData]);
 
+  const flattenCategoryItems = (items = [], parentPath = "") => {
+    let result = [];
+
+    for (const item of items) {
+      const label = parentPath
+        ? `${parentPath} › ${item.title}`
+        : item.title;
+
+      result.push({
+        id: item.id,
+        title: label,
+      });
+
+      if (item.children?.length) {
+        result = result.concat(
+          flattenCategoryItems(item.children, label)
+        );
+      }
+    }
+
+    return result;
+  };
+
   // FETCH CATEGORIES
   useEffect(() => {
-    const fetchCategories = async () => {
-      const res = await fetch("/api/admin/categories");
-      const data = await res.json();
-      setCategories(data);
+    const fetchCategoryItems = async () => {
+      const res = await fetch("/api/categories/program-hysteria");
+      const json = await res.json();
+
+      const items = json?.data?.items || [];
+      const flatItems = flattenCategoryItems(items);
+
+      setCategoryItems(flatItems);
     };
-    fetchCategories();
+
+    fetchCategoryItems();
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "categoryItemId" ? Number(value) : value,
+    }));
+
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const extractMapSrc = (iframeHtml) => {
@@ -79,7 +123,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     // Validasi
     const missingFields = [];
     if (!form.title) missingFields.push("Judul Event");
-    if (!form.categoryId) missingFields.push("Kategori");
+    if (!form.categoryItemId) missingFields.push("Kategori");
     if (!form.startDate || !form.startTime) missingFields.push("Tanggal & Waktu Mulai");
     if (!form.poster) missingFields.push("Poster Event");
     if (!form.location) missingFields.push("Lokasi");
@@ -92,7 +136,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
     const payload = {
       title: form.title,
-      categoryId: Number(form.categoryId),
+      categoryItemId: Number(form.categoryItemId),
       organizer: form.organizer,
       description: form.description,
       startAt: new Date(`${form.startDate}T${form.startTime}`).toISOString(),
@@ -103,6 +147,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       registerLink: form.registerLink,
       mapsEmbedSrc: extractMapSrc(form.mapsEmbed),
       poster: form.poster,
+      isPublished: form.status === "PUBLISHED", 
+      driveLink: form.driveLink,                
+      youtubeLink: form.youtubeLink,
     };
 
     try {
@@ -121,9 +168,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         alert(err.message || "Gagal menyimpan event");
         return;
       }
-
-      router.push("/admin/events");
-      router.refresh();
+      window.location.href = "/admin/events";
     } catch (err) {
       alert("Server error");
       console.error(err);
@@ -154,10 +199,19 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       {/* CATEGORY */}
       <div>
         <label className="block font-medium mb-1 text-black">Kategori</label>
-        <select name="categoryId" value={form.categoryId} onChange={handleChange} className={inputClass} required>
-          <option value="">-- Pilih Kategori --</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.title}</option>
+        <select
+          name="categoryItemId"
+          value={form.categoryItemId}
+          onChange={handleChange}
+          className={inputClass}
+          required
+        >
+          <option value="">-- Pilih Program --</option>
+
+          {categoryItems.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.title}
+            </option>
           ))}
         </select>
       </div>
@@ -210,6 +264,54 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
             <iframe src={mapSrc} width="100%" height="300" style={{ border: 0 }} loading="lazy" allowFullScreen />
           </div>
         )}
+      </div>
+
+      {/* Dokumentasi */}
+      <div>
+        <label className="block font-medium mb-1 text-black">
+          Link Google Drive (Opsional)
+        </label>
+        <input
+          type="url"
+          name="driveLink"
+          value={form.driveLink}
+          onChange={handleChange}
+          placeholder="https://drive.google.com/..."
+          className={inputClass}
+        />
+      </div>
+
+      {/* YOUTUBE */}
+      <div>
+        <label className="block font-medium mb-1 text-black">
+          Link YouTube (Opsional)
+        </label>
+        <input
+          type="url"
+          name="youtubeLink"
+          value={form.youtubeLink}
+          onChange={handleChange}
+          placeholder="https://www.youtube.com/watch?v=..."
+          className={inputClass}
+        />
+      </div>
+
+      {/* STATUS */}
+      <div>
+        <label className="block font-medium mb-1 text-black">Status Event</label>
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleChange}
+          className={inputClass}
+        >
+          <option value="PUBLISHED">Publish</option>
+          <option value="DRAFT">Draft</option>
+        </select>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Draft tidak akan tampil di halaman publik
+        </p>
       </div>
 
       {/* ACTION */}

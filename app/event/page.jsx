@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { getEventStatus } from "../../lib/event-status";
+
+const ITEMS_PER_PAGE = 6;
 
 export default function EventsPage() {
   const router = useRouter();
@@ -14,6 +17,19 @@ export default function EventsPage() {
   const [sort, setSort] = useState(searchParams.get("sort") || "latest");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
+
+  const paginatedEvents = events
+  .map(event => ({
+    ...event,
+    status: getEventStatus(event.startAt, event.endAt),
+  }))
+  .slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
 
   /* UPDATE URL */
   useEffect(() => {
@@ -22,7 +38,8 @@ export default function EventsPage() {
     if (status !== "all") params.set("status", status);
     if (sort !== "latest") params.set("sort", sort);
 
-    router.push(`/event?${params.toString()}`);
+    router.replace(`/event?${params.toString()}`);
+    setPage(1); 
   }, [q, status, sort]);
 
   /* FETCH DATA */
@@ -39,6 +56,12 @@ export default function EventsPage() {
 
     loadEvents();
   }, [q, status, sort]);
+
+  useEffect(() => {
+    setQ(searchParams.get("q") || "");
+    setStatus(searchParams.get("status") || "all");
+    setSort(searchParams.get("sort") || "latest");
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -61,7 +84,7 @@ export default function EventsPage() {
           <option value="all">Semua Event</option>
           <option value="upcoming">Akan Berlangsung</option>
           <option value="ongoing">Sedang Berlangsung</option>
-          <option value="past">Telah Berakhir</option>
+          <option value="finished">Telah Berakhir</option>
         </select>
 
         <select
@@ -71,45 +94,142 @@ export default function EventsPage() {
         >
           <option value="latest">Terbaru</option>
           <option value="oldest">Terlama</option>
-          <option value="nearest">Terdekat</option>
-          <option value="farthest">Terjauh</option>
         </select>
       </div>
 
-      {/* GRID */}
+      {/* CONTENT */}
       {loading ? (
         <p className="text-gray-500">Memuat event...</p>
       ) : !events.length ? (
         <p className="text-gray-500">Event tidak ditemukan.</p>
       ) : (
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {events.map((event) => (
-            <Link
-              key={event.id}
-              href={`/event/${event.slug}`}
-              className="group relative rounded-xl overflow-hidden shadow hover:shadow-xl transition"
-            >
-              <div className="relative h-[420px]">
-                <Image
-                  src={event.poster || "/placeholder-event.jpg"}
-                  alt={event.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition"
-                />
-              </div>
+        <>
+          {/* GRID */}
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {paginatedEvents.map((event) => (
+              <Link
+                key={event.id}
+                href={`/event/${event.slug}`}
+                className="group relative rounded-xl overflow-hidden shadow hover:shadow-xl transition"
+              >
+                <div className="relative h-[420px]">
+                  <Image
+                    src={event.poster || "/placeholder-event.jpg"}
+                    alt={event.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition"
+                  />
+                </div>
 
-              <div className="absolute inset-0 p-5 flex flex-col justify-end bg-black/40 opacity-0 group-hover:opacity-100 transition">
-                <span className="text-xs bg-pink-600 text-white px-3 py-1 rounded-full w-fit">
-                  {event.category?.title}
-                </span>
+                <div className="absolute inset-0 p-5 flex flex-col justify-end
+                  bg-gradient-to-t from-black/70 via-black/40 to-transparent
+                  opacity-0 group-hover:opacity-100 transition duration-300">
 
-                <h2 className="text-white font-semibold text-lg mt-2">
-                  {event.title}
-                </h2>
-              </div>
-            </Link>
-          ))}
-        </div>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {event.categoryItem?.title && (
+                      <span className="text-xs bg-pink-600 text-white px-3 py-1 rounded-full">
+                        {event.categoryItem.title}
+                      </span>
+                    )}
+                    {event.organizer && (
+                      <span className="text-xs bg-white/90 text-black px-3 py-1 rounded-full">
+                        {event.organizer}
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="text-white font-semibold text-lg">
+                    {event.title}
+                  </h2>
+
+                  <p className="text-sm text-gray-200 mt-1">
+                    {new Date(event.startAt).toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+
+                  {event.status === "UPCOMING" && event.registerLink && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(event.registerLink, "_blank");
+                      }}
+                      className="mt-4 px-5 py-2.5 rounded-lg
+                                bg-pink-600 text-white text-sm
+                                hover:bg-pink-700 transition"
+                    >
+                      Ikuti Sekarang
+                    </button>
+                  )}
+
+                  {event.status === "ONGOING" && event.registerLink && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(event.registerLink, "_blank"); // bisa diklik juga
+                      }}
+                      className="mt-4 px-5 py-2.5 rounded-lg
+                                bg-yellow-500 text-white text-sm
+                                hover:bg-yellow-600 transition"
+                    >
+                      Sedang Berlangsung
+                    </button>
+                  )}
+
+                  {event.status === "FINISHED" && (
+                    <button
+                      disabled
+                      className="mt-4 px-5 py-2.5 rounded-lg
+                                bg-gray-400 text-white text-sm cursor-not-allowed"
+                    >
+                      Event Telah Berakhir
+                    </button>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-10">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="px-4 py-2 rounded border disabled:opacity-40"
+              >
+                Prev
+              </button>
+
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={`px-4 py-2 rounded border ${
+                    page === i + 1
+                      ? "bg-pink-600 text-white border-pink-600"
+                      : ""
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                className="px-4 py-2 rounded border disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

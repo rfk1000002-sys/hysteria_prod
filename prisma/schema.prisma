@@ -173,15 +173,7 @@ model Category {
   requiredPermission   Permission? @relation(fields: [requiredPermissionId], references: [id])
 
   items CategoryItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  
-  items       CategoryItem[]
-
-  events      Event[]
-  
+    
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   
@@ -213,6 +205,8 @@ model CategoryItem {
 
   isActive Boolean @default(true)
 
+  events Event[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -266,27 +260,17 @@ model TeamMember {
   @@index([order])
 }
 
-enum EventStatus {
-  DRAFT
-  UPCOMING
-  ONGOING
-  FINISHED
-}
-
 model Event {
   id            Int       @id @default(autoincrement())
-
   title         String    @db.VarChar(255)
   slug          String    @unique @db.VarChar(255)
-
   description   String?   @db.Text
   organizer     String?   @db.VarChar(255)
-
   poster        String?   @db.VarChar(500)
 
-  // RELASI KE CATEGORY
-  category      Category  @relation(fields: [categoryId], references: [id])
-  categoryId    Int
+  // RELASI KE CATEGORYITEM
+  categoryItemId Int
+  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id])
 
   // WAKTU
   startAt       DateTime
@@ -295,13 +279,11 @@ model Event {
   // LOKASI
   location      String?   @db.VarChar(255)
   mapsEmbedSrc  String?   @db.Text
-  mapsShortLink String?   @db.VarChar(500)
 
   // LINK
   registerLink  String?   @db.VarChar(500)
-
-  // STATUS EVENT
-  status        EventStatus @default(DRAFT)
+  driveLink       String?   @db.VarChar(500)
+  youtubeLink     String?   @db.VarChar(500)
 
   // PUBLISH
   isPublished   Boolean   @default(false)
@@ -309,7 +291,7 @@ model Event {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@index([categoryId])
-  @@index([status])
+  @@index([categoryItemId])
   @@index([startAt])
+  @@index([isPublished])
 }

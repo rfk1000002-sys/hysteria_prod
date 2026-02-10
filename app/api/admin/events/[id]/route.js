@@ -53,29 +53,43 @@ export async function PUT(req, { params }) {
       );
     }
 
-    let startAt;
+    const data = {
+      title: body.title,
+      description: body.description,
+      organizer: body.organizer,
+      categoryItemId: body.categoryItemId
+        ? Number(body.categoryItemId)
+        : undefined,
+      location: body.location,
+      registerLink: body.registerLink,
+      mapsEmbedSrc: body.mapsEmbedSrc,
+      poster: body.poster || null,
+      driveLink: body.driveLink ?? null,
+      youtubeLink: body.youtubeLink ?? null,
+      isPublished:
+        typeof body.isPublished === "boolean"
+          ? body.isPublished
+          : undefined,
+    };
 
+    // START & END (SENSITIF JAM)
     if (body.startDate && body.startTime) {
-      startAt = new Date(`${body.startDate}T${body.startTime}`);
+      data.startAt = new Date(`${body.startDate}T${body.startTime}`);
     } else if (body.startAt) {
-      startAt = new Date(body.startAt);
+      data.startAt = new Date(body.startAt);
+    }
+
+    if (body.endDate && body.endTime) {
+      data.endAt = new Date(`${body.endDate}T${body.endTime}`);
+    } else if (body.endAt) {
+      data.endAt = new Date(body.endAt);
     }
 
     const event = await prisma.event.update({
       where: { id: eventId },
-      data: {
-        title: body.title,
-        description: body.description,
-        organizer: body.organizer,
-        categoryId: Number(body.categoryId),
-        startAt,
-        location: body.location,
-        registerLink: body.registerLink,
-        mapsEmbedSrc: body.mapsEmbedSrc,
-        poster: body.poster || null,
-      },
+      data,
     });
-
+    
     return NextResponse.json(event);
   } catch (error) {
     console.error("UPDATE EVENT ERROR:", error);

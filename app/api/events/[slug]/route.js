@@ -7,8 +7,12 @@ export async function GET(req, { params }) {
   const event = await prisma.event.findUnique({
     where: { slug },
     include: {
-      category: true,
-    },
+      categoryItem: {
+        include: {
+          category: true, 
+        },
+      },
+    }
   });
 
   if (!event) {
