@@ -1,1 +1,0 @@
-//  dynamic page: /platform/<category>
