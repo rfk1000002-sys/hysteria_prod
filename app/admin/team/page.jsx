@@ -499,7 +499,7 @@ export default function TeamManagementPage() {
       label: "Foto",
       type: "file",
       accept: "image/*",
-      help: "Unggah foto anggota untuk menghasilkan URL secara otomatis.",
+      help: "Unggah foto ukuran foto 1:1 untuk hasil terbaik. maksimal 2MB.",
     },
     { name: "email", label: "Email", type: "text" },
     { name: "instagram", label: "Instagram", type: "text", placeholder: "username atau URL" },
