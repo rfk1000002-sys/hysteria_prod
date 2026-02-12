@@ -36,15 +36,13 @@ export default function ListCategorySection({
               {/* kategori text */}
               <div className="mt-4 flex items-center justify-between">
                 <h3 className="text-base sm:text-sm font-semibold text-black">{it.title}</h3>
-                <svg
-                  className="w-5 h-5 text-black opacity-70 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <Image
+                  src="/svg/right_arrow.svg"
+                  alt={`${it.title} arrow`}
+                  width={20}
+                  height={20}
+                  className="opacity-80 group-hover:translate-x-1 transition-transform mr-3"
+                />
               </div>
             </a>
           ))}
