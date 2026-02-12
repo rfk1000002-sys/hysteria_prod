@@ -23,8 +23,8 @@ const optionalEmail = () =>
   );
 
 // Max media upload size (bytes)
-export const MAX_MEDIA_SIZE = 0.2 * 1024 * 1024; // 0.2 MB
-export const MAX_MEDIA_SIZE_MB = 0.2;
+export const MAX_MEDIA_SIZE = 5 * 1024 * 1024; // 5 MB
+export const MAX_MEDIA_SIZE_MB = 5;
 
 // Schema to validate uploaded media files (may be an object from multipart parser or an array/FileList)
 const mediaFileSchema = z
