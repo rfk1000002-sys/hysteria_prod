@@ -45,31 +45,7 @@ export default function Header({ onMenuToggle }) {
   const [categoryCache, setCategoryCache] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const isHome = pathname === "/";
-
-  // Load category data
-  async function loadCategory(slug) {
-    if (categoryCache[slug]) return;
-
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/categories/${slug}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      
-      const data = await res.json();
-      setCategoryCache(prev => ({ 
-        ...prev, 
-        [slug]: {
-          title: data.data.title,
-          items: data.data.items
-        }
-      }));
-    } catch (err) {
-      console.error('Error loading category:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // const isHome = pathname === "/";
 
   function handleMouseLeave() {
     // Delay untuk smooth UX
@@ -95,8 +71,8 @@ export default function Header({ onMenuToggle }) {
   // Hide header for admin routes
   if (pathname.startsWith("/admin")) return null;
 
-  const showBg = !isHome || !isAtTop;
-  const headerPositionClass = isHome ? "fixed top-0 left-0 right-0 z-50" : "relative z-10";
+  const showBg = !isAtTop;
+  const headerPositionClass = "fixed top-0 left-0 right-0 z-50";
 
   return (
     <header
