@@ -12,6 +12,7 @@ export default function ListCategorySection({
 
   return (
     <section className="px-4 py-8 sm:py-8 md:py-8 lg:py-8 text-black">
+      {/* <div className='mb-4 text-black text-center font-semibold text-3xl'>Kategori</div> */}
       <div className="mx-auto w-full max-w-[1100px] sm:max-w-[1200px] md:max-w-[1400px] lg:max-w-[1800px] px-0 sm:px-2 md:px-4">
         {/* item wrapper: responsive grid columns */}
         {/* <div className="px-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 border border-zinc-400"> */}
