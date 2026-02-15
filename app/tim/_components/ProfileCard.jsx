@@ -62,7 +62,7 @@ const SocialIcons = ({ email, instagram }) => {
 
 export default function ProfileCard({ name, role, imageUrl, email, instagram }) {
   // Fallback image if none provided
-  const imgSrc = imageUrl || "/image/placeholder-profile.png";
+  const imgSrc = imageUrl || "/image/team-placeholder.webp";
 
   return (
     <div className="flex flex-col items-start bg-white rounded-[10px] shadow-[0px_0px_20px_-3px_rgba(0,0,0,0.25)] overflow-hidden w-full max-w-[375px] h-full min-h-[500px] hover:shadow-xl transition-shadow duration-300">
