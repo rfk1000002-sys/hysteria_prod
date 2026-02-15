@@ -11,7 +11,7 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// Data Postingan (TIDAK BERUBAH)
+// ... (DATA_POSTINGAN TETAP SAMA, TIDAK PERLU DIUBAH) ...
 const DATA_POSTINGAN = [
   {
     id: 1,
@@ -88,7 +88,7 @@ export default function ForumSection() {
   const handleMouseDown = (e) => {
     setIsDown(true);
     if(scrollRef.current) {
-        scrollRef.current.style.scrollBehavior = 'auto'; 
+        scrollRef.current.style.scrollBehavior = 'auto'; // Instant scroll saat drag
         setStartX(e.pageX - scrollRef.current.offsetLeft);
         setScrollLeft(scrollRef.current.scrollLeft);
     }
@@ -118,7 +118,9 @@ export default function ForumSection() {
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.children.length > 0) {
       const scrollPos = scrollRef.current.scrollLeft;
-      const itemWidth = scrollRef.current.children[0].clientWidth; 
+      // Ambil lebar item pertama (karena ada spacer, pastikan ambil item card)
+      const firstCard = scrollRef.current.children[0];
+      const itemWidth = firstCard ? firstCard.clientWidth : 300; 
       const totalItemWidth = itemWidth + 24; 
       
       const index = Math.round(scrollPos / totalItemWidth);
@@ -128,7 +130,8 @@ export default function ForumSection() {
 
   const scrollToSlide = (index) => {
     if (scrollRef.current && scrollRef.current.children.length > 0) {
-      const itemWidth = scrollRef.current.children[0].clientWidth;
+      const firstCard = scrollRef.current.children[0];
+      const itemWidth = firstCard ? firstCard.clientWidth : 300;
       const gap = 24; 
       
       scrollRef.current.style.scrollBehavior = 'smooth';
@@ -143,11 +146,7 @@ export default function ForumSection() {
     <section className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mb-20">
       
       {/* Header */}
-      {/* UPDATE DI SINI: 
-          - Mengganti 'md:items-end' menjadi 'md:items-center' agar sejajar vertikal
-      */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        
         <h2 className={`${poppins.className} text-[28px] md:text-[32px] font-bold text-black mb-4 md:mb-0`}>
           Forum
         </h2>
@@ -168,13 +167,14 @@ export default function ForumSection() {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         onScroll={handleScroll}
-        className={`flex gap-6 overflow-x-auto pb-12 pt-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 overscroll-x-none touch-pan-y
-          ${isDown ? 'cursor-grabbing' : 'cursor-grab'}
+        // PERBAIKAN 1: Matikan snap saat isDown true
+        className={`flex gap-6 overflow-x-auto pb-12 pt-4 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 overscroll-x-none touch-pan-y
+          ${isDown ? 'cursor-grabbing' : 'cursor-grab snap-x snap-mandatory'} 
         `}
         style={{ 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none',
-            scrollBehavior: 'smooth',
+            // scrollBehavior diatur via inline style di event handler, jadi aman
             overscrollBehaviorX: 'none'
         }} 
       >
@@ -188,15 +188,15 @@ export default function ForumSection() {
                 src={post.image}
                 alt={post.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none" // Tambah pointer-events-none
                 sizes="(max-width: 768px) 300px, 340px"
             />
 
             {/* Default Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none" />
 
             {/* Default Content */}
-            <div className="absolute inset-0 p-6 flex flex-col justify-end text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-4">
+            <div className="absolute inset-0 p-6 flex flex-col justify-end text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-4 pointer-events-none">
                <h3 className="text-2xl font-black leading-tight uppercase mb-2 drop-shadow-lg line-clamp-2">
                    {post.title}
                </h3>
@@ -236,12 +236,14 @@ export default function ForumSection() {
       </div>
 
       {/* Pagination Dots */}
-      <div className="flex justify-center items-center gap-4 mt-8">
+      {/* PERBAIKAN 2: Tambahkan 'h-6' (atau ukuran fix lainnya) di sini */}
+      <div className="flex justify-center items-center gap-4 mt-8 h-6">
         {DATA_POSTINGAN.map((_, index) => (
           <button
             key={index}
             onClick={() => scrollToSlide(index)}
-            className={`rounded-full transition-all duration-300
+            // Tambahkan shrink-0 agar dot tidak gepeng
+            className={`rounded-full transition-all duration-300 flex-shrink-0
               ${activeIndex === index 
                 ? "w-4 h-4 bg-[#D63384] opacity-100" 
                 : "w-2 h-2 bg-[#D63384] opacity-40 hover:opacity-100" 

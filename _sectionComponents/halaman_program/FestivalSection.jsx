@@ -1,7 +1,8 @@
-// components/FestivalSection.jsx
+// _components/halaman_program/FestivalSection.jsx
 "use client";
 
 import Image from "next/image";
+import Link from "next/link"; // Import Link
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -9,62 +10,67 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// Data untuk section ini (SAMA SEPERTI KODE ANDA)
+// Data Festival
 const FESTIVALS = [
   {
     id: 1,
     title: "Festival Kampung",
     image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=800&q=80",
-    link: "#",
+    // UPDATE: Link diarahkan ke folder yang baru dibuat
+    link: "/program/festival_kampung", 
   },
   {
     id: 2,
     title: "Festival Kota",
     image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-    link: "#",
+    link: "#", // Belum ada halaman
   },
   {
     id: 3,
     title: "Biennale",
     image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=800&q=80",
-    link: "#",
+    link: "#", // Belum ada halaman
   },
 ];
 
 export default function FestivalSection() {
   return (
-    // PERUBAHAN HANYA DI SINI:
-    // Menambahkan class container standard agar sejajar dengan Hero Section:
-    // 1. w-full max-w-[1440px] mx-auto (Agar lebar dan tengahnya sama)
-    // 2. px-6 md:px-10 lg:px-20 (Padding kiri-kanan yang sama persis)
     <section className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mb-20">
       
-      {/* JUDUL SECTION (TETAP SAMA) */}
+      {/* JUDUL SECTION */}
       <h2
         className={`${poppins.className} text-[28px] md:text-[32px] font-bold text-black mb-8`}
       >
         Festival dan Pameran
       </h2>
 
-      {/* GRID LAYOUT (TETAP SAMA) */}
+      {/* GRID LAYOUT */}
       <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[500px]">
         
         {/* --- KOLOM KIRI (ITEM BESAR/UTAMA) --- */}
-        <div className="relative w-full lg:w-3/5 h-[300px] lg:h-full rounded-2xl overflow-hidden group cursor-pointer shadow-md">
-           <FestivalCard item={FESTIVALS[0]} />
+        <div className="relative w-full lg:w-3/5 h-[300px] lg:h-full rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-shadow duration-300">
+            {/* Bungkus dengan Link */}
+            <Link href={FESTIVALS[0].link} className="block w-full h-full">
+               <FestivalCardContent item={FESTIVALS[0]} />
+            </Link>
         </div>
 
         {/* --- KOLOM KANAN (2 ITEM KECIL DITUMPUK) --- */}
         <div className="w-full lg:w-2/5 flex flex-col gap-6 h-full">
           
           {/* Item Atas */}
-          <div className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group cursor-pointer shadow-md">
-            <FestivalCard item={FESTIVALS[1]} />
+          <div className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-shadow duration-300">
+             {/* Jika linknya '#', ganti div biasa atau biarkan Link (akan scroll ke top) */}
+             <Link href={FESTIVALS[1].link} className="block w-full h-full">
+                <FestivalCardContent item={FESTIVALS[1]} />
+             </Link>
           </div>
 
           {/* Item Bawah */}
-          <div className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group cursor-pointer shadow-md">
-            <FestivalCard item={FESTIVALS[2]} />
+          <div className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-shadow duration-300">
+             <Link href={FESTIVALS[2].link} className="block w-full h-full">
+                <FestivalCardContent item={FESTIVALS[2]} />
+             </Link>
           </div>
 
         </div>
@@ -73,11 +79,11 @@ export default function FestivalSection() {
   );
 }
 
-// Sub-komponen Card (TIDAK ADA PERUBAHAN)
-function FestivalCard({ item }) {
+// Sub-komponen Konten Card (Dipisah agar bisa dibungkus Link)
+function FestivalCardContent({ item }) {
   return (
     <>
-      {/* Background Image dengan efek zoom saat hover */}
+      {/* Background Image dengan efek zoom saat hover pada parent group */}
       <div className="absolute inset-0 w-full h-full">
          <Image 
             src={item.image} 
@@ -89,14 +95,17 @@ function FestivalCard({ item }) {
       </div>
 
       {/* Overlay Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
 
       {/* Konten (Teks & Tombol) */}
-      <div className="absolute inset-0 p-6 flex items-end justify-between z-10">
+      <div className="absolute inset-0 p-6 flex items-end justify-between z-10 pointer-events-none"> 
+        {/* pointer-events-none agar klik tembus ke Link pembungkus */}
+        
         <h3 className={`${poppins.className} text-white text-xl md:text-2xl font-bold drop-shadow-md`}>
           {item.title}
         </h3>
-        <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:translate-x-2 group-hover:bg-[#D63384] group-hover:text-white text-[#D63384]">
+        
+        <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transform transition-all duration-300 group-hover:translate-x-2 group-hover:bg-[#D63384] text-[#D63384] group-hover:text-white">
           <svg
             width="20"
             height="20"
