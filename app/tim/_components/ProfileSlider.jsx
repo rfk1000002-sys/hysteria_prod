@@ -3,7 +3,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import ProfileCard from "./ProfileCard";
 
-export default function ProfileSlider({ profiles, title }) {
+export default function ProfileSlider({ profiles, title, slug }) {
   const scrollContainerRef = useRef(null);
 
   const scroll = (direction) => {
@@ -34,7 +34,7 @@ export default function ProfileSlider({ profiles, title }) {
           />
         </button>
 
-        <h2 className="text-center font-bold text-[32px] md:text-[40px] leading-[1.5] text-black font-poppins">{title}</h2>
+        <h2 className="text-center font-bold text-[32px] md:text-[40px] leading-[1.5] text-black font-poppins" id={slug}>{title}</h2>
 
         <button
           onClick={() => scroll("right")}
