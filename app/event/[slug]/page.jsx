@@ -4,7 +4,7 @@ import { prisma } from "../../../lib/prisma";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getEventStatus } from "../../../lib/event-status";
+import { getEventStatus, EVENT_STATUS_LABEL } from "../../../lib/event-status";
 
 export default async function EventDetailPage({ params }) {
   const { slug } = await params;
@@ -40,7 +40,29 @@ export default async function EventDetailPage({ params }) {
   return (
     <div className="w-full">
       {/* HERO GRADIENT */}
-      <section className="w-full h-[260px] bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-500" />
+      <section className="relative w-full h-[260px] bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-500">
+        {/* BACK BUTTON */}
+        <Link
+          href="/event"
+          className="absolute top-6 left-6 z-10
+                    inline-flex items-center justify-center
+                    w-10 h-10 rounded-full text-white transition"
+          aria-label="Kembali"
+        >
+          <svg
+            viewBox="0 0 32 32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            className="w-9 h-9"
+          >
+            <line x1="26" y1="16" x2="6" y2="16" />
+            <line x1="12" y1="10" x2="6" y2="16" />
+            <line x1="12" y1="22" x2="6" y2="16" />
+          </svg>
+        </Link>
+      </section>
 
       {/* CONTENT */}
       <div className="max-w-7xl mx-auto px-6 -mt-32 space-y-16">
@@ -80,7 +102,7 @@ export default async function EventDetailPage({ params }) {
             <p className="text-sm">
               Status Event:{" "}
               <span className="inline-block px-3 py-1 rounded-full bg-pink-600 text-white text-xs">
-                {status}
+                {EVENT_STATUS_LABEL[status]}
               </span>
             </p>
           </div>
@@ -125,7 +147,7 @@ export default async function EventDetailPage({ params }) {
 
             <div>
               <h3 className="font-semibold mb-2">Jadwal Pelaksanaan</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600"> Mulai : 
                 {new Date(event.startAt).toLocaleDateString("id-ID", {
                   weekday: "long",
                   day: "numeric",
@@ -133,12 +155,18 @@ export default async function EventDetailPage({ params }) {
                   year: "numeric",
                 })}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600"> Waktu : 
                 {new Date(event.startAt).toLocaleTimeString("id-ID", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}{" "}
-                WIB
+                {" – "}
+                {event.endAt
+                  ? `${new Date(event.endAt).toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })} WIB`
+                  : "Selesai"}
               </p>
             </div>
 
@@ -207,30 +235,91 @@ export default async function EventDetailPage({ params }) {
           </div>
 
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {otherEvents.map((event) => (
-              <Link
-                key={event.id}
-                href={`/event/${event.slug}`}
-                className="min-w-[260px] relative rounded-xl overflow-hidden shadow group"
-              >
-                <div className="relative h-[340px]">
-                  <Image
-                    src={event.poster || "/placeholder-event.jpg"}
-                    alt={event.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition"
-                  />
-                </div>
+            {otherEvents.map((event) => {
+              const eventStatus = getEventStatus(event.startAt, event.endAt);
 
-                <div className="absolute inset-0 p-4 flex flex-col justify-end
-                  bg-gradient-to-t from-black/70 via-black/40 to-transparent">
-                  <h3 className="text-white font-semibold text-sm">
-                    {event.title}
-                  </h3>
-                </div>
-              </Link>
-            ))}
+              return (
+                <Link
+                  key={event.id}
+                  href={`/event/${event.slug}`}
+                  className="group min-w-[260px] relative rounded-xl overflow-hidden shadow-lg"
+                >
+                  {/* POSTER */}
+                  <div className="relative h-[340px]">
+                    <Image
+                      src={event.poster || "/placeholder-event.jpg"}
+                      alt={event.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
 
+                  {/* OVERLAY – MUNCUL SAAT HOVER */}
+                  <div
+                    className="absolute inset-0 flex flex-col justify-end p-4
+                              bg-gradient-to-t from-black/80 via-black/50 to-transparent
+                              opacity-0 group-hover:opacity-100
+                              transition-all duration-300"
+                  >
+                    {/* STATUS */}
+                    <span className="inline-block w-fit mb-2 px-3 py-1 rounded-full
+                                    bg-pink-600 text-white text-xs">
+                      {eventStatus}
+                    </span>
+
+                    <h3 className="text-white font-semibold text-sm mb-2">
+                      {event.title}
+                    </h3>
+
+                    {/* TANGGAL */}
+                    <p className="text-xs text-gray-200 mb-3">
+                      {new Date(event.startAt).toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+
+                    {/* BUTTON */}
+                    {eventStatus === "UPCOMING" && event.registerLink && (
+                      <form action={event.registerLink} target="_blank">
+                        <button
+                          type="submit"
+                          className="w-full px-4 py-2 rounded-md
+                                    bg-pink-600 text-white text-sm
+                                    hover:bg-pink-700 transition"
+                        >
+                          Daftar Sekarang
+                        </button>
+                      </form>
+                    )}
+
+                    {eventStatus === "ONGOING" && (
+                      <button
+                        disabled
+                        className="w-full px-4 py-2 rounded-md
+                                  bg-yellow-500 text-white text-sm cursor-not-allowed"
+                      >
+                        Sedang Berlangsung
+                      </button>
+                    )}
+
+                    {eventStatus === "FINISHED" && (
+                      <button
+                        disabled
+                        className="w-full px-4 py-2 rounded-md
+                                  bg-gray-400 text-white text-sm cursor-not-allowed"
+                      >
+                        Event Telah Selesai
+                      </button>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+
+            {/* CARD LIHAT SEMUA */}
             <Link
               href="/event"
               className="min-w-[260px] flex items-center justify-center
@@ -241,7 +330,6 @@ export default async function EventDetailPage({ params }) {
             </Link>
           </div>
         </section>
-
       </div>
     </div>
   );

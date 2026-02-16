@@ -111,14 +111,26 @@ export default function EventTable() {
                 </td>
 
                 <td className="px-4 py-3 text-black">
-                  {startDate.toLocaleDateString("id-ID")}
-                  <br />
-                  <span className="text-sm">
-                    {startDate.toLocaleTimeString("id-ID", {
+                  <div>
+                    {new Intl.DateTimeFormat("id-ID", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                      timeZone: "Asia/Jakarta",
+                    }).format(startDate)}
+                  </div>
+
+                  <div className="text-sm">
+                    {new Intl.DateTimeFormat("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}
-                  </span>
+                      hour12: false,
+                      timeZone: "Asia/Jakarta",
+                    })
+                      .format(startDate)
+                      .replace(":", ".")}{" "}
+                    WIB
+                  </div>
                 </td>
 
                 <td className="px-4 py-3 text-black">
@@ -126,9 +138,15 @@ export default function EventTable() {
                 </td>
 
                 <td className="px-4 py-3">
-                  <span className="px-3 py-1 rounded-full text-sm bg-gray-200 text-black">
-                    {event.isPublished}
-                  </span>
+                  {event.isPublished ? (
+                    <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700 border border-green-300">
+                      Published
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600 border border-gray-300">
+                      Draft
+                    </span>
+                  )}
                 </td>
 
                 <td className="px-4 py-3 text-center space-x-2">

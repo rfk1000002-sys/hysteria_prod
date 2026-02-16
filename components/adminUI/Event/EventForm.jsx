@@ -86,7 +86,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   // FETCH CATEGORIES
   useEffect(() => {
     const fetchCategoryItems = async () => {
-      const res = await fetch("/api/categories/program-hysteria");
+      const res = await fetch("/api/categories/platform");
       const json = await res.json();
 
       const items = json?.data?.items || [];

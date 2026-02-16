@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,19 +19,18 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
+  /* =========================
+     SYNC STATE DARI URL
+  ========================== */
+  useEffect(() => {
+    setQ(searchParams.get("q") || "");
+    setStatus(searchParams.get("status") || "all");
+    setSort(searchParams.get("sort") || "latest");
+  }, [searchParams]);
 
-  const paginatedEvents = events
-  .map(event => ({
-    ...event,
-    status: getEventStatus(event.startAt, event.endAt),
-  }))
-  .slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
-
-  /* UPDATE URL */
+  /* =========================
+     UPDATE URL
+  ========================== */
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -39,29 +38,65 @@ export default function EventsPage() {
     if (sort !== "latest") params.set("sort", sort);
 
     router.replace(`/event?${params.toString()}`);
-    setPage(1); 
-  }, [q, status, sort]);
+    setPage(1);
+  }, [q, status, sort, router]);
 
-  /* FETCH DATA */
+  /* =========================
+     FETCH DATA
+  ========================== */
   useEffect(() => {
     async function loadEvents() {
-      setLoading(true);
-      const res = await fetch(
-        `/api/events?q=${q}&status=${status}&sort=${sort}`
-      );
-      const data = await res.json();
-      setEvents(data);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `/api/events?q=${q}&status=${status}&sort=${sort}`
+        );
+        const data = await res.json();
+        setEvents(data);
+      } catch (err) {
+        console.error(err);
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadEvents();
   }, [q, status, sort]);
 
-  useEffect(() => {
-    setQ(searchParams.get("q") || "");
-    setStatus(searchParams.get("status") || "all");
-    setSort(searchParams.get("sort") || "latest");
-  }, []);
+  /* =========================
+     PROSES STATUS EVENT
+     - statusLogic : UPPERCASE
+     - statusFilter: lowercase
+  ========================== */
+  const processedEvents = useMemo(() => {
+    return events.map((event) => {
+      const statusLogic = getEventStatus(event.startAt, event.endAt);
+
+      return {
+        ...event,
+        status: statusLogic, // untuk UI logic
+        statusFilter: statusLogic.toLowerCase(), // untuk filter
+      };
+    });
+  }, [events]);
+
+  /* =========================
+     FILTER BERDASARKAN STATUS
+  ========================== */
+  const filteredEvents =
+    status === "all"
+      ? processedEvents
+      : processedEvents.filter(
+          (event) => event.statusFilter === status
+        );
+
+  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
+
+  const paginatedEvents = filteredEvents.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -100,7 +135,7 @@ export default function EventsPage() {
       {/* CONTENT */}
       {loading ? (
         <p className="text-gray-500">Memuat event...</p>
-      ) : !events.length ? (
+      ) : !filteredEvents.length ? (
         <p className="text-gray-500">Event tidak ditemukan.</p>
       ) : (
         <>
@@ -121,10 +156,11 @@ export default function EventsPage() {
                   />
                 </div>
 
-                <div className="absolute inset-0 p-5 flex flex-col justify-end
+                <div
+                  className="absolute inset-0 p-5 flex flex-col justify-end
                   bg-gradient-to-t from-black/70 via-black/40 to-transparent
-                  opacity-0 group-hover:opacity-100 transition duration-300">
-
+                  opacity-0 group-hover:opacity-100 transition duration-300"
+                >
                   <div className="flex flex-wrap gap-2 mb-2">
                     {event.categoryItem?.title && (
                       <span className="text-xs bg-pink-600 text-white px-3 py-1 rounded-full">
@@ -171,7 +207,7 @@ export default function EventsPage() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        window.open(event.registerLink, "_blank"); // bisa diklik juga
+                        window.open(event.registerLink, "_blank");
                       }}
                       className="mt-4 px-5 py-2.5 rounded-lg
                                 bg-yellow-500 text-white text-sm
