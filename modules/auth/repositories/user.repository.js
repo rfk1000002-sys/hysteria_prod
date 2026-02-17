@@ -1,52 +1,52 @@
-import { prisma } from '../../../lib/prisma.js'
+import { prisma } from '../../../lib/prisma.js';
 
 export async function findUserByEmail(email) {
-	return prisma.user.findUnique({
-		where: { email },
-		include: {
-			status: true,
-			roles: { 
-				include: { 
-					role: {
-						include: {
-							rolePermissions: {
-								include: {
-									permission: true
-								}
-							}
-						}
-					}
-				} 
-			},
-		},
-	})
+  return prisma.user.findUnique({
+    where: { email },
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export async function findUserById(id) {
-	return prisma.user.findUnique({
-		where: { id },
-		include: {
-			status: true,
-			roles: { 
-				include: { 
-					role: {
-						include: {
-							rolePermissions: {
-								include: {
-									permission: true
-								}
-							}
-						}
-					}
-				} 
-			},
-		},
-	})
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 }
 
 export async function updateLastLogin(id) {
-	return prisma.user.update({
-		where: { id },
-		data: { lastLoginAt: new Date() },
-	})
+  return prisma.user.update({
+    where: { id },
+    data: { lastLoginAt: new Date() },
+  });
 }

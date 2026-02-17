@@ -1,13 +1,22 @@
-"use client";
+'use client';
 
-import React from "react";
-import TextField from "@mui/material/TextField";
-import InputAdornment from "@mui/material/InputAdornment";
-import IconButton from "@mui/material/IconButton";
-import SearchIcon from "@mui/icons-material/Search";
+import React from 'react';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import SearchIcon from '@mui/icons-material/Search';
 
 const SearchField = React.forwardRef(function SearchField(
-  { placeholder = "Search...", className = "", value, onChange, name, showAdornment = true, endAdornment = null, ...props },
+  {
+    placeholder = 'Search...',
+    className = '',
+    value,
+    onChange,
+    name,
+    showAdornment = true,
+    endAdornment = null,
+    ...props
+  },
   ref
 ) {
   const inputProps = {};

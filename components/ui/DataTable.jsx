@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
@@ -11,7 +11,13 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import CircularProgress from '@mui/material/CircularProgress';
 
-export default function DataTable({ columns = [], rows = [], loading = false, getRowId = (r) => r.id, onRowClick = null }) {
+export default function DataTable({
+  columns = [],
+  rows = [],
+  loading = false,
+  getRowId = (r) => r.id,
+  onRowClick = null,
+}) {
   const headerRefs = useRef([]);
   const [colWidths, setColWidths] = useState(() =>
     columns.map((col, i) => {
@@ -62,7 +68,8 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
   }, [onMouseMove]);
 
   const handleMouseDown = (e, index) => {
-    const startWidth = headerRefs.current[index]?.getBoundingClientRect().width || colWidths[index] || 120;
+    const startWidth =
+      headerRefs.current[index]?.getBoundingClientRect().width || colWidths[index] || 120;
     resizingRef.current = { index, startX: e.clientX, startWidth };
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -76,7 +83,7 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
       const effectiveFreeze = !!col.freeze && (!isMobile || i === 0);
       if (effectiveFreeze) {
         leftOffsets[i] = acc;
-        acc += (colWidths[i] ?? 0);
+        acc += colWidths[i] ?? 0;
       } else {
         leftOffsets[i] = undefined;
       }
@@ -91,7 +98,10 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
 
   return (
     <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <TableContainer component={Paper} className="bg-white rounded-none sm:rounded-lg border-0 sm:border border-zinc-200">
+      <TableContainer
+        component={Paper}
+        className="bg-white rounded-none sm:rounded-lg border-0 sm:border border-zinc-200"
+      >
         <Table
           size="small"
           aria-label="data table"
@@ -125,7 +135,10 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
                     key={col.field}
                     ref={(el) => (headerRefs.current[i] = el)}
                     align={col.headerAlign || col.align || 'left'}
-                    className={col.headerClassName || 'px-3 sm:px-6 py-2 sm:py-3 text-xs font-bold text-zinc-900 uppercase tracking-wider'}
+                    className={
+                      col.headerClassName ||
+                      'px-3 sm:px-6 py-2 sm:py-3 text-xs font-bold text-zinc-900 uppercase tracking-wider'
+                    }
                     sx={{
                       whiteSpace: { xs: 'normal', sm: 'nowrap' },
                       overflow: 'hidden',
@@ -137,15 +150,45 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
                       ...stickySx,
                     }}
                   >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', width: '100%', position: 'relative' }}>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{col.headerName}</span>
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        width: '100%',
+                        position: 'relative',
+                      }}
+                    >
+                      <span
+                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+                      >
+                        {col.headerName}
+                      </span>
                       <div
                         onMouseDown={(e) => handleMouseDown(e, i)}
-                        style={{ position: 'absolute', right: -8, top: 0, bottom: 0, width: 12, cursor: 'col-resize', zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 2 }}
+                        style={{
+                          position: 'absolute',
+                          right: -8,
+                          top: 0,
+                          bottom: 0,
+                          width: 12,
+                          cursor: 'col-resize',
+                          zIndex: 6,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          paddingRight: 2,
+                        }}
                         role="separator"
                         aria-orientation="horizontal"
                       >
-                        <div style={{ width: 1, height: '60%', background: 'rgba(148,163,184,0.4)', pointerEvents: 'none' }} />
+                        <div
+                          style={{
+                            width: 1,
+                            height: '60%',
+                            background: 'rgba(148,163,184,0.4)',
+                            pointerEvents: 'none',
+                          }}
+                        />
                       </div>
                     </div>
                   </TableCell>
@@ -157,13 +200,21 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
           <TableBody className="bg-white divide-y divide-zinc-200">
             {loading && rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" className="px-3 sm:px-6 py-6 sm:py-8">
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  className="px-3 sm:px-6 py-6 sm:py-8"
+                >
                   <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" className="px-3 sm:px-6 py-6 sm:py-8 text-center text-zinc-500 text-xs sm:text-sm">
+                <TableCell
+                  colSpan={columns.length}
+                  align="center"
+                  className="px-3 sm:px-6 py-6 sm:py-8 text-center text-zinc-500 text-xs sm:text-sm"
+                >
                   No records found
                 </TableCell>
               </TableRow>
@@ -195,12 +246,18 @@ export default function DataTable({ columns = [], rows = [], loading = false, ge
                           }),
                         }
                       : {};
-                    const firstBorder = i === 0 ? { borderLeft: (theme) => `1px solid ${theme.palette.divider}` } : {};
+                    const firstBorder =
+                      i === 0
+                        ? { borderLeft: (theme) => `1px solid ${theme.palette.divider}` }
+                        : {};
                     return (
                       <TableCell
                         key={col.field}
                         align={col.align || 'left'}
-                        className={col.className || 'px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-zinc-900'}
+                        className={
+                          col.className ||
+                          'px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-zinc-900'
+                        }
                         sx={{
                           whiteSpace: { xs: 'normal', sm: 'nowrap' },
                           overflow: 'hidden',

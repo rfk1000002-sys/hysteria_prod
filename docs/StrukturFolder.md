@@ -1,4 +1,3 @@
-
 # Struktur Folder — Hysteria
 
 Berikut struktur folder project Hysteria yang menggunakan arsitektur modular:
@@ -64,7 +63,7 @@ hysteria/
 │   │   │   └── token.service.js
 │   │   └── validators/           # Input validation schemas
 │   │       └── login.validator.js
-│   └── user/                     # User management module 
+│   └── user/                     # User management module
 │
 ├── prisma/                       # Prisma ORM
 │   ├── schema.prisma             # Database schema
@@ -123,6 +122,7 @@ modules/<nama-modul>/
 4. **Domain Layer** (`modules/*/domain/`) — Business rules & constants
 
 **Flow Data:**
+
 ```
 User Request → API Route → Service → Repository → Database
                     ↓           ↓           ↓
@@ -132,13 +132,16 @@ User Request → API Route → Service → Repository → Database
 ### Folder Utama & Tanggung Jawab
 
 #### `app/` — Next.js App Router
+
 - **Pages**: File `page.jsx` untuk routing
 - **Layouts**: File `layout.jsx` untuk layout wrapper
 - **API Routes**: File di `app/api/*/router.js` untuk backend endpoints
 - Gunakan route groups `(name)` jika ingin grouping tanpa mempengaruhi URL
 
 #### `modules/` — Domain Modules (DDD)
+
 **Module Auth contoh implementasi:**
+
 - `domain/` — Konstanta & enum (ROLE, STATUS, error codes)
 - `guards/` — Middleware untuk authorization checks
 - `repositories/` — Query database menggunakan Prisma
@@ -146,6 +149,7 @@ User Request → API Route → Service → Repository → Database
 - `validators/` — Schema validation untuk input
 
 **Prinsip:**
+
 - Setiap module harus independen dan reusable
 - Repository hanya berkomunikasi dengan database
 - Service mengorkestrasikan flow dan business rules
@@ -153,6 +157,7 @@ User Request → API Route → Service → Repository → Database
 - Validators memvalidasi input sebelum masuk ke service
 
 #### `lib/` — Shared Utilities
+
 - `prisma.js` — Singleton Prisma Client (mencegah multiple connections)
 - `jwt.js` — JWT token generation & verification
 - `hash.js` — Password hashing (bcrypt/argon2)
@@ -160,6 +165,7 @@ User Request → API Route → Service → Repository → Database
 - `response.js` — Standard API response format
 
 **Pattern:**
+
 ```js
 // lib/response.js
 export const success = (data, message) => ({ success: true, data, message });
@@ -167,17 +173,21 @@ export const error = (message, code) => ({ success: false, error: message, code 
 ```
 
 #### `config/` — Configuration Files
+
 - Konfigurasi yang tidak berubah per environment
 - Auth settings, cookie options, app constants
 - **Jangan simpan secrets** — gunakan `.env` untuk sensitive data
 
 #### `middleware/` — Next.js Middleware
+
 - Global middleware yang dijalankan sebelum request masuk ke route
 - Auth middleware untuk protected routes
 - Rate limiting, logging, request validation
 
 #### `components/` — React Components
+
 **Rekomendasi struktur:**
+
 ```
 components/
 ├── ui/              # Primitives (Button, Input, Card, Modal)
@@ -189,12 +199,14 @@ components/
 ```
 
 #### `prisma/` — Database Management
+
 - `schema.prisma` — Database schema definition
 - `migrations/` — Version-controlled database changes
 - `seed/` — Database seeding scripts (numbered untuk urutan)
 - `generated/` — Auto-generated Prisma Client types
 
 **Migration workflow:**
+
 ```bash
 npx prisma migrate dev --name nama_migration
 npx prisma migrate deploy  # Production
@@ -203,6 +215,7 @@ npx prisma migrate deploy  # Production
 ### Best Practices
 
 #### 1. Module Independence
+
 ```js
 // ✅ Good: Module self-contained
 // modules/auth/index.js
@@ -215,6 +228,7 @@ import { ProductService } from '../../product/services/product.service.js';
 ```
 
 #### 2. Repository Pattern
+
 ```js
 // ✅ Good: Repository handles all DB queries
 // modules/auth/repositories/user.repository.js
@@ -230,6 +244,7 @@ const user = await prisma.user.findUnique({ where: { email } });
 ```
 
 #### 3. Service Layer
+
 ```js
 // ✅ Good: Service orchestrates business logic
 export class AuthService {
@@ -241,29 +256,31 @@ export class AuthService {
   async login(email, password) {
     const user = await this.userRepository.findByEmail(email);
     if (!user) throw new Error('User not found');
-    
+
     const valid = await this.passwordService.verify(password, user.password);
     if (!valid) throw new Error('Invalid password');
-    
+
     return this.tokenService.generate(user);
   }
 }
 ```
 
 #### 4. Validation First
+
 ```js
 // ✅ Good: Validate di API route sebelum service
 // app/api/auth/login/router.js
 export async function POST(request) {
   const body = await request.json();
   const validated = loginValidator.parse(body); // Zod/Joi
-  
+
   const result = await authService.login(validated);
   return Response.json(result);
 }
 ```
 
 #### 5. Error Handling
+
 ```js
 // lib/response.js
 export class AppError extends Error {
@@ -314,20 +331,22 @@ import { AuthService } from '@/modules/auth/services/auth.service.js';
 
 **Hysteria (Modular + DDD)** vs **Feature-First**:
 
-| Aspek | Hysteria (Current) | Feature-First |
-|-------|-------------------|---------------|
-| Struktur | `modules/<domain>` | `features/<feature>` |
-| Fokus | Business domain | User features |
-| Backend Logic | Terpisah jelas (repo, service) | Lebih flexible |
-| Scalability | Excellent untuk apps kompleks | Good untuk medium apps |
-| Learning Curve | Medium-High | Low-Medium |
+| Aspek          | Hysteria (Current)             | Feature-First          |
+| -------------- | ------------------------------ | ---------------------- |
+| Struktur       | `modules/<domain>`             | `features/<feature>`   |
+| Fokus          | Business domain                | User features          |
+| Backend Logic  | Terpisah jelas (repo, service) | Lebih flexible         |
+| Scalability    | Excellent untuk apps kompleks  | Good untuk medium apps |
+| Learning Curve | Medium-High                    | Low-Medium             |
 
 **Kapan pakai Modular (Hysteria):**
+
 - Multi-role apps (admin, user, seller)
 - Complex business rules
 - Large team dengan domain experts
 
 **Kapan pakai Feature-First:**
+
 - Prototype atau MVP
 - Small to medium apps
 - Team kecil yang butuh velocity
@@ -337,6 +356,7 @@ import { AuthService } from '@/modules/auth/services/auth.service.js';
 ## Summary
 
 Project Hysteria menggunakan **modular architecture** dengan clear separation of concerns:
+
 - **Presentation** → `app/` (Next.js pages & API)
 - **Business Logic** → `modules/*/services/`
 - **Data Access** → `modules/*/repositories/`
@@ -344,4 +364,3 @@ Project Hysteria menggunakan **modular architecture** dengan clear separation of
 - **Shared Utils** → `lib/`, `config/`
 
 Struktur ini mendukung skalabilitas, maintainability, dan testing yang baik untuk aplikasi enterprise-level.
-

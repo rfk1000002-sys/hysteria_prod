@@ -1,8 +1,16 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useEffect, useReducer, useCallback, useRef, useMemo } from "react";
-import { apiFetch } from "../api-client";
-import Toast from "../../components/ui/Toast";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
+import { apiFetch } from '../api-client';
+import Toast from '../../components/ui/Toast';
 
 // Separate contexts for state and actions
 const AuthStateContext = createContext(null);
@@ -59,11 +67,11 @@ const authReducer = (state, action) => {
 };
 
 const initialState = {
-  csrfToken: "",
+  csrfToken: '',
   isLoading: true,
   isAuthenticated: false,
   user: null,
-  toast: { visible: false, message: "", type: "error" },
+  toast: { visible: false, message: '', type: 'error' },
 };
 
 export function AuthProvider({ children }) {
@@ -78,7 +86,9 @@ export function AuthProvider({ children }) {
   // Helper: Read cookie value
   const getCookie = useCallback((name) => {
     if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(new RegExp('(?:^|; )' + encodeURIComponent(name) + '=([^;]*)'));
+    const match = document.cookie.match(
+      new RegExp('(?:^|; )' + encodeURIComponent(name) + '=([^;]*)')
+    );
     return match ? decodeURIComponent(match[1]) : null;
   }, []);
 
@@ -92,7 +102,7 @@ export function AuthProvider({ children }) {
         return json.data.user;
       }
     } catch (e) {
-      console.error("Failed to refresh user:", e);
+      console.error('Failed to refresh user:', e);
     }
     return null;
   }, []);
@@ -100,14 +110,14 @@ export function AuthProvider({ children }) {
   // Helper: Refresh CSRF token
   const refreshCsrf = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/csrf", { cache: "no-store" });
+      const res = await fetch('/api/auth/csrf', { cache: 'no-store' });
       const json = await res.json();
       if (json?.data?.csrfToken) {
         dispatch({ type: 'SET_CSRF_TOKEN', payload: json.data.csrfToken });
         return json.data.csrfToken;
       }
     } catch (error) {
-      console.error("Failed to refresh CSRF token:", error);
+      console.error('Failed to refresh CSRF token:', error);
     }
     return state.csrfToken;
   }, [state.csrfToken]);
@@ -137,17 +147,17 @@ export function AuthProvider({ children }) {
     const initAuth = async () => {
       try {
         // Try to get CSRF token first
-        const csrfRes = await fetch("/api/auth/csrf", { cache: "no-store" });
+        const csrfRes = await fetch('/api/auth/csrf', { cache: 'no-store' });
         const csrfJson = await csrfRes.json();
-        const csrf = csrfJson?.data?.csrfToken || "";
+        const csrf = csrfJson?.data?.csrfToken || '';
 
         // Try to get current user to check if authenticated
         const userRes = await apiFetch('/api/auth/me', { method: 'GET', credentials: 'include' });
-        
+
         // Check if response is ok (200-299)
         if (userRes.ok) {
           const userJson = await userRes.json().catch(() => null);
-          
+
           if (mounted && userJson?.success && userJson.data?.user) {
             dispatch({
               type: 'INIT_SUCCESS',
@@ -160,7 +170,7 @@ export function AuthProvider({ children }) {
             return; // Early return on success
           }
         }
-        
+
         // If we reach here, user is not authenticated (401, 403, or invalid response)
         if (mounted) {
           dispatch({
@@ -175,7 +185,7 @@ export function AuthProvider({ children }) {
       } catch (error) {
         // Only log if it's not a network/fetch error
         if (error.name !== 'TypeError') {
-          console.error("Failed to initialize auth:", error);
+          console.error('Failed to initialize auth:', error);
         }
         if (mounted) {
           dispatch({ type: 'INIT_FAILURE' });
@@ -199,13 +209,13 @@ export function AuthProvider({ children }) {
       isRefreshingRef.current = true;
 
       try {
-        const res = await fetch("/api/auth/refresh", {
-          method: "POST",
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "x-csrf-token": state.csrfToken,
+            'Content-Type': 'application/json',
+            'x-csrf-token': state.csrfToken,
           },
-          credentials: "include",
+          credentials: 'include',
         });
 
         if (res.ok) {
@@ -214,12 +224,12 @@ export function AuthProvider({ children }) {
           if (expiry) tokenExpiryRef.current = expiry;
           scheduleNextRefresh(tokenExpiryRef.current);
         } else {
-          console.error("Token refresh failed:", res.status);
+          console.error('Token refresh failed:', res.status);
           dispatch({ type: 'SET_AUTHENTICATED', payload: false });
-          if (typeof window !== "undefined") window.location.href = "/auth/login";
+          if (typeof window !== 'undefined') window.location.href = '/auth/login';
         }
       } catch (error) {
-        console.error("Token refresh error:", error);
+        console.error('Token refresh error:', error);
         dispatch({ type: 'SET_AUTHENTICATED', payload: false });
       } finally {
         isRefreshingRef.current = false;
@@ -257,13 +267,13 @@ export function AuthProvider({ children }) {
     };
 
     const handleForceLogout = (e) => {
-      const message = e?.detail?.message || "Sesi Anda kedaluwarsa. Silakan login kembali.";
-      dispatch({ type: 'SET_TOAST', payload: { visible: true, message, type: "error" } });
+      const message = e?.detail?.message || 'Sesi Anda kedaluwarsa. Silakan login kembali.';
+      dispatch({ type: 'SET_TOAST', payload: { visible: true, message, type: 'error' } });
     };
 
     const handleSessionExpired = (e) => {
-      const message = e?.detail?.message || "Sesi berakhir. Silakan login kembali.";
-      dispatch({ type: 'SET_TOAST', payload: { visible: true, message, type: "error" } });
+      const message = e?.detail?.message || 'Sesi berakhir. Silakan login kembali.';
+      dispatch({ type: 'SET_TOAST', payload: { visible: true, message, type: 'error' } });
     };
 
     // Check for persisted logout message
@@ -274,36 +284,42 @@ export function AuthProvider({ children }) {
         sessionStorage.removeItem('auth:logoutMessage');
       }
     } catch (e) {
-      console.error("Failed to read logout message:", e);
+      console.error('Failed to read logout message:', e);
     }
 
     window.addEventListener('token-refreshed', onTokenRefreshed);
-    window.addEventListener("force-logout", handleForceLogout);
-    window.addEventListener("session-expired", handleSessionExpired);
+    window.addEventListener('force-logout', handleForceLogout);
+    window.addEventListener('session-expired', handleSessionExpired);
 
     return () => {
       window.removeEventListener('token-refreshed', onTokenRefreshed);
-      window.removeEventListener("force-logout", handleForceLogout);
-      window.removeEventListener("session-expired", handleSessionExpired);
+      window.removeEventListener('force-logout', handleForceLogout);
+      window.removeEventListener('session-expired', handleSessionExpired);
     };
   }, [refreshUser]);
 
   // Memoize state object to prevent unnecessary re-renders
-  const stateValue = useMemo(() => ({
-    csrfToken: state.csrfToken,
-    isLoading: state.isLoading,
-    isAuthenticated: state.isAuthenticated,
-    user: state.user,
-  }), [state.csrfToken, state.isLoading, state.isAuthenticated, state.user]);
+  const stateValue = useMemo(
+    () => ({
+      csrfToken: state.csrfToken,
+      isLoading: state.isLoading,
+      isAuthenticated: state.isAuthenticated,
+      user: state.user,
+    }),
+    [state.csrfToken, state.isLoading, state.isAuthenticated, state.user]
+  );
 
   // Memoize actions object to prevent unnecessary re-renders
-  const actionsValue = useMemo(() => ({
-    refreshCsrf,
-    apiCall,
-    setAuthenticated,
-    setUser,
-    refreshUser,
-  }), [refreshCsrf, apiCall, setAuthenticated, setUser, refreshUser]);
+  const actionsValue = useMemo(
+    () => ({
+      refreshCsrf,
+      apiCall,
+      setAuthenticated,
+      setUser,
+      refreshUser,
+    }),
+    [refreshCsrf, apiCall, setAuthenticated, setUser, refreshUser]
+  );
 
   return (
     <AuthStateContext.Provider value={stateValue}>

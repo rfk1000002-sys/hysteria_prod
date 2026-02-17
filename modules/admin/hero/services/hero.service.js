@@ -1,6 +1,10 @@
 import { AppError } from '../../../../lib/response.js';
 import * as heroRepository from '../repositories/hero.repository.js';
-import { validateHeroData, createHeroSchema, updateHeroSchema } from '../validators/hero.validator.js';
+import {
+  validateHeroData,
+  createHeroSchema,
+  updateHeroSchema,
+} from '../validators/hero.validator.js';
 import logger from '../../../../lib/logger.js';
 import Uploads from '../../../../lib/upload/uploads.js';
 import { createWithUpload, updateWithUpload } from '../../../../lib/upload/transactionalUpload.js';
@@ -28,11 +32,11 @@ export async function getAllHeroes(options = {}) {
  */
 export async function getHeroById(id) {
   const hero = await heroRepository.findHeroById(id);
-  
+
   if (!hero) {
     throw new AppError('Hero not found', 404);
   }
-  
+
   return hero;
 }
 
@@ -63,11 +67,7 @@ export async function createHero(data) {
   } catch (error) {
     // Log incoming payload together with validation errors for easier debugging
     logger.warn('Hero validation failed', { payload: data, error: error.errors });
-    throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
-      400,
-      'VALIDATION_ERROR'
-    );
+    throw new AppError(error.errors?.[0]?.message || 'Invalid hero data', 400, 'VALIDATION_ERROR');
   }
 
   try {
@@ -96,11 +96,7 @@ export async function updateHero(id, data) {
     validatedData = validateHeroData(data, updateHeroSchema);
   } catch (error) {
     logger.warn('Hero update validation failed', { heroId: id, error: error.errors });
-    throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
-      400,
-      'VALIDATION_ERROR'
-    );
+    throw new AppError(error.errors?.[0]?.message || 'Invalid hero data', 400, 'VALIDATION_ERROR');
   }
 
   // Remove undefined fields
@@ -114,7 +110,10 @@ export async function updateHero(id, data) {
 
   try {
     const hero = await heroRepository.updateHero(id, updateData);
-    logger.info('Hero updated successfully', { heroId: id, updatedFields: Object.keys(updateData) });
+    logger.info('Hero updated successfully', {
+      heroId: id,
+      updatedFields: Object.keys(updateData),
+    });
 
     // If the update provides a new `source` (or empties it) and the existing `source`
     // pointed to an uploaded file managed by our Uploads implementation, attempt
@@ -128,23 +127,43 @@ export async function updateHero(id, data) {
       const looksLikeManaged = (src) => {
         if (!src) return false;
         // Local-managed uploads are saved under '/uploads/...' or 'uploads/...'
-        if (src.startsWith('/uploads/') || src.startsWith('uploads/') || src.includes('/uploads/')) return true;
+        if (src.startsWith('/uploads/') || src.startsWith('uploads/') || src.includes('/uploads/'))
+          return true;
         // S3: compare against configured public URL, or typical s3 URL patterns
-        if (process.env.S3_PUBLIC_URL && src.startsWith(process.env.S3_PUBLIC_URL.replace(/\/$/, ''))) return true;
+        if (
+          process.env.S3_PUBLIC_URL &&
+          src.startsWith(process.env.S3_PUBLIC_URL.replace(/\/$/, ''))
+        )
+          return true;
         if (/s3\.amazonaws\.com/.test(src) || /s3[.-]/.test(src)) return true;
         return false;
       };
 
-      if (newSourceProvided && oldSource && oldSource !== String(updateData.source) && looksLikeManaged(oldSource)) {
+      if (
+        newSourceProvided &&
+        oldSource &&
+        oldSource !== String(updateData.source) &&
+        looksLikeManaged(oldSource)
+      ) {
         try {
           await uploads.deleteFile(oldSource);
-          logger.info('Deleted previous hero upload after source update', { heroId: id, deletedSource: oldSource });
+          logger.info('Deleted previous hero upload after source update', {
+            heroId: id,
+            deletedSource: oldSource,
+          });
         } catch (err) {
-          logger.warn('Failed to delete previous hero upload after source update', { heroId: id, deletedSource: oldSource, error: err && err.message });
+          logger.warn('Failed to delete previous hero upload after source update', {
+            heroId: id,
+            deletedSource: oldSource,
+            error: err && err.message,
+          });
         }
       }
     } catch (err) {
-      logger.warn('Could not perform uploaded-file cleanup after hero update', { heroId: id, error: err && err.message });
+      logger.warn('Could not perform uploaded-file cleanup after hero update', {
+        heroId: id,
+        error: err && err.message,
+      });
     }
 
     return hero;
@@ -173,7 +192,11 @@ export async function deleteHero(id) {
           await uploads.deleteFile(hero.source);
           logger.info('Deleted hero media file', { heroId: id, source: hero.source });
         } catch (err) {
-          logger.warn('Failed to delete hero media file, continuing with DB delete', { heroId: id, source: hero.source, error: err.message });
+          logger.warn('Failed to delete hero media file, continuing with DB delete', {
+            heroId: id,
+            source: hero.source,
+            error: err.message,
+          });
         }
       }
     } catch (err) {
@@ -217,7 +240,7 @@ export async function setActiveHero(id) {
  * 3. Upload file
  * 4. Update DB with uploaded file URL
  * 5. Rollback DB if upload fails
- * 
+ *
  * @param {Object} data - Hero data (title, description, isActive)
  * @param {Object} file - File object from formidable
  * @returns {Promise<Object>} - Created hero with uploaded file URL
@@ -230,11 +253,7 @@ export async function createHeroWithFile(data, file) {
     validated = validateHeroData(data, schema);
   } catch (error) {
     logger.warn('Hero validation failed (with file)', { payload: data, error: error.errors });
-    throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
-      400,
-      'VALIDATION_ERROR'
-    );
+    throw new AppError(error.errors?.[0]?.message || 'Invalid hero data', 400, 'VALIDATION_ERROR');
   }
 
   const uploads = new Uploads();
@@ -266,8 +285,7 @@ export async function createHeroWithFile(data, file) {
           where: { id },
           data: { source: url },
         }),
-      deleteRecord: async (id) =>
-        prisma.heroSection.delete({ where: { id } }),
+      deleteRecord: async (id) => prisma.heroSection.delete({ where: { id } }),
     },
     file
   );
@@ -282,7 +300,7 @@ export async function createHeroWithFile(data, file) {
  * 5. Update DB with new file URL
  * 6. Delete old file
  * 7. Rollback DB if upload fails
- * 
+ *
  * @param {number} id - Hero ID
  * @param {Object} data - Update data (title, description, isActive)
  * @param {Object} file - File object from formidable
@@ -295,12 +313,12 @@ export async function updateHeroWithFile(id, data, file) {
   try {
     validated = validateHeroData(data, schema);
   } catch (error) {
-    logger.warn('Hero update validation failed (with file)', { heroId: id, payload: data, error: error.errors });
-    throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
-      400,
-      'VALIDATION_ERROR'
-    );
+    logger.warn('Hero update validation failed (with file)', {
+      heroId: id,
+      payload: data,
+      error: error.errors,
+    });
+    throw new AppError(error.errors?.[0]?.message || 'Invalid hero data', 400, 'VALIDATION_ERROR');
   }
 
   // Remove undefined fields

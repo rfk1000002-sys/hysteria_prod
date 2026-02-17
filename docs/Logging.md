@@ -5,6 +5,7 @@ Logger telah diimplementasikan di seluruh aplikasi menggunakan **Winston**.
 ## Lokasi File Log
 
 Log disimpan di folder `logs/`:
+
 - `logs/app.log` - Semua log (info, warn, error)
 - `logs/error.log` - Hanya error log
 
@@ -16,34 +17,34 @@ File log **tidak** di-commit ke git (sudah ada di `.gitignore`).
 
 ```javascript
 // CommonJS (untuk seed files, scripts)
-const logger = require('../lib/logger')
+const logger = require('../lib/logger');
 
 // ES Modules (untuk API routes, services)
-import logger from '../lib/logger.js'
+import logger from '../lib/logger.js';
 ```
 
 ### Level Logging
 
 ```javascript
 // Info - untuk operasi normal
-logger.info('User logged in', { userId: 123, email: 'user@example.com' })
+logger.info('User logged in', { userId: 123, email: 'user@example.com' });
 
 // Warning - untuk kondisi yang perlu perhatian tapi tidak kritis
-logger.warn('Invalid login attempt', { email: 'test@example.com' })
+logger.warn('Invalid login attempt', { email: 'test@example.com' });
 
 // Error - untuk error yang harus ditangani
-logger.error('Database connection failed', { error: err.message, stack: err.stack })
+logger.error('Database connection failed', { error: err.message, stack: err.stack });
 ```
 
 ### Helper Functions (API Routes)
 
 ```javascript
-import { logInfo, logWarning, logError } from '../lib/api-logger.js'
+import { logInfo, logWarning, logError } from '../lib/api-logger.js';
 
 // Logging dengan context
-logInfo('Processing request', { userId: 123 })
-logWarning('Rate limit approaching', { ip: '127.0.0.1' })
-logError('Payment failed', error, { orderId: 456 })
+logInfo('Processing request', { userId: 123 });
+logWarning('Rate limit approaching', { ip: '127.0.0.1' });
+logError('Payment failed', error, { orderId: 456 });
 ```
 
 ### Auto-Logging di API Routes
@@ -51,30 +52,34 @@ logError('Payment failed', error, { orderId: 456 })
 Gunakan `withApiLogging` untuk logging otomatis request/response:
 
 ```javascript
-import { withApiLogging } from '../../../../lib/api-logger.js'
+import { withApiLogging } from '../../../../lib/api-logger.js';
 
 export const POST = withApiLogging(async (request) => {
   // Your handler code
-  return NextResponse.json({ success: true })
-}, 'CreateUser')
+  return NextResponse.json({ success: true });
+}, 'CreateUser');
 ```
 
 ## File yang Sudah Menggunakan Logger
 
 ### API Routes
+
 - ✅ `app/api/auth/login/route.js`
 - ✅ `app/api/auth/logout/route.js`
 - ✅ `app/api/auth/refresh/route.js`
 
 ### Services
+
 - ✅ `modules/auth/services/auth.service.js`
 - ✅ `modules/auth/services/refresh-token.service.js`
 
 ### Utilities
+
 - ✅ `EXP/db.js`
 - ✅ `lib/response.js` (auto-logging untuk semua error responses)
 
 ### Seed Files
+
 - ✅ `prisma/seed/001-create-test-pg.js`
 - ✅ `prisma/seed/002-test-pg.js`
 - ✅ `prisma/seed/003-create-more-test-pg.js`
@@ -86,6 +91,7 @@ export const POST = withApiLogging(async (request) => {
 ## Konfigurasi
 
 Edit `lib/logger.js` untuk mengubah:
+
 - Log level (default: `info`)
 - Format log
 - Lokasi file output
@@ -94,6 +100,7 @@ Edit `lib/logger.js` untuk mengubah:
 ### Environment Variable
 
 Set log level via environment:
+
 ```bash
 LOG_LEVEL=debug npm run dev
 ```
@@ -103,11 +110,13 @@ Level yang tersedia: `error`, `warn`, `info`, `http`, `verbose`, `debug`, `silly
 ## Contoh Log Output
 
 **Console:**
+
 ```
 info: User logged in successfully {"email":"admin@example.com","userId":1}
 ```
 
 **File (logs/app.log):**
+
 ```
 2026-01-17 14:43:02 info: User logged in successfully {"email":"admin@example.com","userId":1}
 2026-01-17 14:43:35 warn: Login attempt with invalid password {"email":"hacker@example.com"}

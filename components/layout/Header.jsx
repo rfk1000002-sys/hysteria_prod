@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import SearchButton from "../ui/SearchButton";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import SearchButton from '../ui/SearchButton';
 
 export default function Header({ onMenuToggle }) {
-  const pathname = usePathname() || "";
+  const pathname = usePathname() || '';
   const [isAtTop, setIsAtTop] = useState(true);
 
-  const isHome = pathname === "/";
+  const isHome = pathname === '/';
 
   useEffect(() => {
     const onScroll = () => {
@@ -18,21 +18,21 @@ export default function Header({ onMenuToggle }) {
     };
 
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // Hide header for admin routes
-  if (pathname.startsWith("/admin")) return null;
+  if (pathname.startsWith('/admin')) return null;
 
   const showBg = !isHome || !isAtTop;
-  const headerPositionClass = isHome ? "fixed top-0 left-0 right-0 z-50" : "relative z-10";
+  const headerPositionClass = isHome ? 'fixed top-0 left-0 right-0 z-50' : 'relative z-10';
 
   return (
     <header
       style={{
-        backgroundColor: showBg ? 'rgba(0, 0, 0, 0.4)' : 'transparent',
-        borderBottom: showBg ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent'
+        backgroundColor: showBg ? '#E83C91E5' : 'transparent',
+        borderBottom: showBg ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid transparent',
       }}
       className={`${headerPositionClass} transition-all duration-200`}
     >
@@ -58,8 +58,9 @@ export default function Header({ onMenuToggle }) {
         <div className="flex items-center justify-end gap-4">
           {/* Search */}
           <SearchButton
-            onSearch={(q) => console.log("search", q)}
-            buttonClassName="p-2 rounded-md text-zinc-700 dark:text-zinc-50"
+            onSearch={(q) => console.log('search', q)}
+            buttonClassName="p-2 rounded-full bg-white"
+            buttonStyle={{ color: '#E83C91E5' }}
             openWrapperClassName="min-w-[220px]"
             inputClassName="min-w-[180px]"
             closeButtonClassName="p-1"
@@ -82,7 +83,8 @@ export default function Header({ onMenuToggle }) {
           <button
             onClick={onMenuToggle}
             aria-label="Toggle menu"
-            className="p-2 rounded-md text-zinc-700 dark:text-zinc-50 cursor-pointer"
+            className="p-2 rounded-full bg-white cursor-pointer"
+            style={{ color: '#E83C91E5' }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

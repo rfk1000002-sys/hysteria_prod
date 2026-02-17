@@ -6,12 +6,13 @@ export default function ContactMap({ contactData }) {
   // 3. Klik tombol "Share" / "Bagikan"
   // 4. Pilih tab "Embed a map" / "Sematkan peta"
   // 5. Copy URL dari iframe yang diberikan
-  const defaultMapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126559.80427893577!2d110.32047802407377!3d-6.993126356472846!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b4ec52229d7%3A0xc791d6abc9236c7!2sSemarang%2C%20Kota%20Semarang%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1738157000000!5m2!1sid!2sid";
-  
+  const defaultMapUrl =
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126559.80427893577!2d110.32047802407377!3d-6.993126356472846!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e708b4ec52229d7%3A0xc791d6abc9236c7!2sSemarang%2C%20Kota%20Semarang%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1738157000000!5m2!1sid!2sid';
+
   // Fungsi untuk ekstrak URL dari tag iframe jika data berisi HTML
   const extractMapUrl = (data) => {
     if (!data) return defaultMapUrl;
-    
+
     // Jika data berisi tag iframe, ekstrak URL dari atribut src
     if (data.includes('<iframe')) {
       const srcMatch = data.match(/src=["']([^"']+)["']/);
@@ -19,11 +20,11 @@ export default function ContactMap({ contactData }) {
         return srcMatch[1];
       }
     }
-    
+
     // Jika sudah berupa URL, gunakan langsung
     return data;
   };
-  
+
   const mapUrl = extractMapUrl(contactData?.mapsEmbedUrl);
 
   return (

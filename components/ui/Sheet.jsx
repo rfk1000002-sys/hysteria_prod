@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react'
-import Drawer from '@mui/material/Drawer'
-import Box from '@mui/material/Box'
-import IconButton from '@mui/material/IconButton'
-import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
-import CloseIcon from '@mui/icons-material/Close'
+import React, { useEffect, useRef } from 'react';
+import Drawer from '@mui/material/Drawer';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Shared Sheet component (bottom sheet) using MUI Drawer.
 // Props:
@@ -85,8 +85,8 @@ export default function Sheet({
         },
       }}
       ModalProps={{
-        sx: { 
-          display: 'flex', 
+        sx: {
+          display: 'flex',
           alignItems: 'stretch',
           position: 'fixed !important',
           top: '0 !important',
@@ -120,10 +120,21 @@ export default function Sheet({
         className: paperClassName,
       }}
     >
-      <Box className={className} sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 0, m: 0 }}>
+      <Box
+        className={className}
+        sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 0, m: 0 }}
+      >
         {title !== null && (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 3, py: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 3,
+                py: 2,
+              }}
+            >
               <Typography variant="h6" component="div" sx={{ fontWeight: 700, fontSize: 18 }}>
                 {title}
               </Typography>
@@ -137,11 +148,11 @@ export default function Sheet({
           </>
         )}
 
-        <Box sx={{ p: title !== null ? { xs: 3, md: 2 } : 0, overflow: 'auto', flex: 1 }}>{children}</Box>
+        <Box sx={{ p: title !== null ? { xs: 3, md: 2 } : 0, overflow: 'auto', flex: 1 }}>
+          {children}
+        </Box>
 
-        {footer && (
-          <Box sx={{ borderTop: 1, borderColor: 'divider', p: 2 }}>{footer}</Box>
-        )}
+        {footer && <Box sx={{ borderTop: 1, borderColor: 'divider', p: 2 }}>{footer}</Box>}
       </Box>
     </Drawer>
   );

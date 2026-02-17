@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React from "react";
-import TextField from "@mui/material/TextField";
+import React from 'react';
+import TextField from '@mui/material/TextField';
 
 export default function EmailField({
-  name = "email",
-  label = "Email",
+  name = 'email',
+  label = 'Email',
   register,
   error,
-  placeholder = "nama@domain.com",
+  placeholder = 'nama@domain.com',
   ...props
 }) {
   return (

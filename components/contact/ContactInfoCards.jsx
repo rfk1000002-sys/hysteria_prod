@@ -1,9 +1,13 @@
-import { MapPin, Clock3 } from "lucide-react";
+import { MapPin, Clock3 } from 'lucide-react';
 
 export default function ContactInfoCards({ contactData }) {
-  const locationTitle = contactData?.locationTitle || "Gerobak Artkos x Hysteria";
-  const locationAddress = contactData?.locationAddress || "Jl. Stonen No.29, Bendan Ngisor, Kec. Gajahmungkur,\nKota Semarang, Jawa Tengah 50233";
-  const operationalHours = contactData?.operationalHours || "Senin - Jumat: 09:00 - 17:00 WIB\nSabtu: 10:00 - 15:00 WIB\nMinggu & Libur: Tutup";
+  const locationTitle = contactData?.locationTitle || 'Gerobak Artkos x Hysteria';
+  const locationAddress =
+    contactData?.locationAddress ||
+    'Jl. Stonen No.29, Bendan Ngisor, Kec. Gajahmungkur,\nKota Semarang, Jawa Tengah 50233';
+  const operationalHours =
+    contactData?.operationalHours ||
+    'Senin - Jumat: 09:00 - 17:00 WIB\nSabtu: 10:00 - 15:00 WIB\nMinggu & Libur: Tutup';
 
   return (
     <section className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-2">
@@ -18,9 +22,7 @@ export default function ContactInfoCards({ contactData }) {
         <h2 className="text-center text-2xl font-extrabold text-[#43334C]">Lokasi Kami</h2>
         <div className="mt-[20px] mb-[20px] text-center text-sm leading-6">
           <div className="font-semibold">{locationTitle}</div>
-          <div className="opacity-95 whitespace-pre-line">
-            {locationAddress}
-          </div>
+          <div className="opacity-95 whitespace-pre-line">{locationAddress}</div>
         </div>
       </div>
 

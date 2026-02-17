@@ -1,26 +1,26 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 const books = [
   {
     id: 1,
-    title: "Belajar React",
-    author: "Jane Doe",
+    title: 'Belajar React',
+    author: 'Jane Doe',
     year: 2023,
-    desc: "Panduan ringkas untuk membangun aplikasi modern dengan React.",
+    desc: 'Panduan ringkas untuk membangun aplikasi modern dengan React.',
   },
   {
     id: 2,
-    title: "Next.js Praktis",
-    author: "Budi Santoso",
+    title: 'Next.js Praktis',
+    author: 'Budi Santoso',
     year: 2024,
-    desc: "Tips dan trik menggunakan Next.js dengan App Router.",
+    desc: 'Tips dan trik menggunakan Next.js dengan App Router.',
   },
   {
     id: 3,
-    title: "Desain Antarmuka",
-    author: "Ayu Putri",
+    title: 'Desain Antarmuka',
+    author: 'Ayu Putri',
     year: 2022,
-    desc: "Prinsip dasar desain UI/UX untuk aplikasi web.",
+    desc: 'Prinsip dasar desain UI/UX untuk aplikasi web.',
   },
 ];
 
@@ -38,7 +38,9 @@ export default function BukuPage() {
                 Sampul
               </div>
               <h2 className="text-xl font-semibold">{b.title}</h2>
-              <p className="text-sm text-zinc-300">{b.author} — {b.year}</p>
+              <p className="text-sm text-zinc-300">
+                {b.author} — {b.year}
+              </p>
               <p className="mt-2 text-zinc-400 text-sm">{b.desc}</p>
             </article>
           ))}

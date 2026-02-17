@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
 
 /**
  * Card Component - Komponen kartu yang dinamis dan dapat disesuaikan
- * 
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Konten utama card
  * @param {string} props.title - Judul card (opsional)
@@ -57,13 +57,13 @@ export default function Card({
 
   // Base styles - default text color untuk readability
   const baseStyles = 'rounded-lg transition-all duration-200 overflow-hidden text-zinc-900';
-  
+
   // Variant styles
   const variantStyles = {
     default: 'bg-white border border-zinc-200',
     outlined: 'bg-transparent border-2 border-zinc-300',
     elevated: 'bg-white shadow-lg border border-zinc-100',
-    filled: 'bg-zinc-50 border border-zinc-200'
+    filled: 'bg-zinc-50 border border-zinc-200',
   };
 
   // Color variants - Menggunakan psikologi warna untuk status
@@ -78,22 +78,21 @@ export default function Card({
     // Error: Merah - bahaya, error, gagal
     error: 'border-red-300 bg-red-50',
     // Info: Cyan/Sky - informasi, netral, tenang
-    info: 'border-cyan-300 bg-cyan-50'
+    info: 'border-cyan-300 bg-cyan-50',
   };
 
   // Size variants for padding
   const sizeStyles = {
     sm: { header: 'px-4 py-3', body: 'p-4', footer: 'px-4 py-3' },
     md: { header: 'px-6 py-4', body: 'p-6', footer: 'px-6 py-4' },
-    lg: { header: 'px-8 py-6', body: 'p-8', footer: 'px-8 py-6' }
+    lg: { header: 'px-8 py-6', body: 'p-8', footer: 'px-8 py-6' },
   };
 
   const padding = sizeStyles[size];
 
   // Hover styles
-  const hoverStyles = hoverable || onClick 
-    ? 'hover:shadow-md hover:border-zinc-300 cursor-pointer' 
-    : '';
+  const hoverStyles =
+    hoverable || onClick ? 'hover:shadow-md hover:border-zinc-300 cursor-pointer' : '';
 
   // Combined className
   const cardClassName = `${baseStyles} ${variantStyles[variant]} ${color !== 'default' ? colorStyles[color] : ''} ${hoverStyles} ${className}`;
@@ -121,13 +120,10 @@ export default function Card({
 
   // Image element
   const imageElement = image && (
-    <div className={`${imagePosition === 'top' ? imageHeight : isHorizontal ? 'w-1/3' : ''} overflow-hidden ${imagePosition === 'top' ? '' : 'flex-shrink-0'} relative`}>
-      <Image 
-        src={image} 
-        alt={title || 'Card image'} 
-        fill
-        className="object-cover"
-      />
+    <div
+      className={`${imagePosition === 'top' ? imageHeight : isHorizontal ? 'w-1/3' : ''} overflow-hidden ${imagePosition === 'top' ? '' : 'flex-shrink-0'} relative`}
+    >
+      <Image src={image} alt={title || 'Card image'} fill className="object-cover" />
     </div>
   );
 
@@ -137,11 +133,7 @@ export default function Card({
       {/* Header Section */}
       {(header || title || icon || actions || badge) && (
         <div className={`${padding.header} border-b border-zinc-200 relative`}>
-          {badge && (
-            <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-              {badge}
-            </div>
-          )}
+          {badge && <div className="absolute top-2 sm:top-3 right-2 sm:right-3">{badge}</div>}
           {header ? (
             header
           ) : (
@@ -150,14 +142,14 @@ export default function Card({
                 {icon && <div className="flex-shrink-0">{icon}</div>}
                 <div className="flex-1 min-w-0">
                   {title && (
-                    <h3 className={`font-semibold text-zinc-900 truncate ${size === 'sm' ? 'text-sm sm:text-base' : size === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'}`}>
+                    <h3
+                      className={`font-semibold text-zinc-900 truncate ${size === 'sm' ? 'text-sm sm:text-base' : size === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'}`}
+                    >
                       {title}
                     </h3>
                   )}
                   {subtitle && (
-                    <p className="text-xs sm:text-sm text-zinc-500 mt-1 line-clamp-2">
-                      {subtitle}
-                    </p>
+                    <p className="text-xs sm:text-sm text-zinc-500 mt-1 line-clamp-2">{subtitle}</p>
                   )}
                 </div>
                 {collapsible && (
@@ -170,29 +162,30 @@ export default function Card({
                     style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
                 )}
               </div>
-              {actions && <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">{actions}</div>}
+              {actions && (
+                <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">{actions}</div>
+              )}
             </div>
           )}
         </div>
-      )}  
+      )}
 
       {/* Content Section */}
-      {!isCollapsed && (
-        <div className={noPadding ? '' : padding.body}>
-          {children}
-        </div>
-      )}
+      {!isCollapsed && <div className={noPadding ? '' : padding.body}>{children}</div>}
 
       {/* Footer Section */}
       {!isCollapsed && footer && (
-        <div className={`${padding.footer} bg-zinc-50 border-t border-zinc-200`}>
-          {footer}
-        </div>
+        <div className={`${padding.footer} bg-zinc-50 border-t border-zinc-200`}>{footer}</div>
       )}
     </>
   );
@@ -203,9 +196,7 @@ export default function Card({
       {isHorizontal ? (
         <div className="flex">
           {imagePosition === 'left' && imageElement}
-          <div className="flex-1 flex flex-col">
-            {contentWrapper}
-          </div>
+          <div className="flex-1 flex flex-col">{contentWrapper}</div>
           {imagePosition === 'right' && imageElement}
         </div>
       ) : (
@@ -226,13 +217,11 @@ export function CardHeader({ children, className = '', size = 'md' }) {
   const sizeStyles = {
     sm: 'px-4 py-3',
     md: 'px-6 py-4',
-    lg: 'px-8 py-6'
+    lg: 'px-8 py-6',
   };
-  
+
   return (
-    <div className={`${sizeStyles[size]} border-b border-zinc-200 ${className}`}>
-      {children}
-    </div>
+    <div className={`${sizeStyles[size]} border-b border-zinc-200 ${className}`}>{children}</div>
   );
 }
 
@@ -243,9 +232,9 @@ export function CardBody({ children, className = '', size = 'md', noPadding = fa
   const sizeStyles = {
     sm: 'p-4',
     md: 'p-6',
-    lg: 'p-8'
+    lg: 'p-8',
   };
-  
+
   return (
     <div className={`${noPadding ? '' : sizeStyles[size]} text-zinc-900 ${className}`}>
       {children}
@@ -260,9 +249,9 @@ export function CardFooter({ children, className = '', size = 'md' }) {
   const sizeStyles = {
     sm: 'px-4 py-3',
     md: 'px-6 py-4',
-    lg: 'px-8 py-6'
+    lg: 'px-8 py-6',
   };
-  
+
   return (
     <div className={`${sizeStyles[size]} bg-zinc-50 border-t border-zinc-200 ${className}`}>
       {children}
@@ -277,13 +266,11 @@ export function CardTitle({ children, className = '', size = 'md' }) {
   const sizeStyles = {
     sm: 'text-base',
     md: 'text-lg',
-    lg: 'text-xl'
+    lg: 'text-xl',
   };
-  
+
   return (
-    <h3 className={`${sizeStyles[size]} font-semibold text-zinc-900 ${className}`}>
-      {children}
-    </h3>
+    <h3 className={`${sizeStyles[size]} font-semibold text-zinc-900 ${className}`}>{children}</h3>
   );
 }
 
@@ -291,11 +278,7 @@ export function CardTitle({ children, className = '', size = 'md' }) {
  * CardDescription Component - Description helper
  */
 export function CardDescription({ children, className = '' }) {
-  return (
-    <p className={`text-sm text-zinc-500 mt-1 ${className}`}>
-      {children}
-    </p>
-  );
+  return <p className={`text-sm text-zinc-500 mt-1 ${className}`}>{children}</p>;
 }
 
 /**
@@ -304,12 +287,7 @@ export function CardDescription({ children, className = '' }) {
 export function CardImage({ src, alt = 'Card image', className = '', height = 'h-48' }) {
   return (
     <div className={`${height} overflow-hidden relative ${className}`}>
-      <Image 
-        src={src} 
-        alt={alt} 
-        fill
-        className="object-cover"
-      />
+      <Image src={src} alt={alt} fill className="object-cover" />
     </div>
   );
 }
@@ -324,11 +302,13 @@ export function CardBadge({ children, variant = 'default', className = '' }) {
     success: 'bg-green-100 text-green-700',
     warning: 'bg-orange-100 text-orange-700',
     error: 'bg-red-100 text-red-700',
-    info: 'bg-cyan-100 text-cyan-700'
+    info: 'bg-cyan-100 text-cyan-700',
   };
-  
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+    >
       {children}
     </span>
   );
@@ -338,12 +318,13 @@ export function CardBadge({ children, variant = 'default', className = '' }) {
  * CardStats Component - Stats display helper
  */
 export function CardStats({ label, value, trend, trendDirection, icon, className = '' }) {
-  const trendColor = trendDirection === 'up' 
-    ? 'text-green-600' 
-    : trendDirection === 'down' 
-    ? 'text-red-600' 
-    : 'text-zinc-500';
-    
+  const trendColor =
+    trendDirection === 'up'
+      ? 'text-green-600'
+      : trendDirection === 'down'
+        ? 'text-red-600'
+        : 'text-zinc-500';
+
   return (
     <div className={`flex items-center justify-between ${className}`}>
       <div className="flex-1">
@@ -357,11 +338,7 @@ export function CardStats({ label, value, trend, trendDirection, icon, className
           </p>
         )}
       </div>
-      {icon && (
-        <div className="ml-4 text-zinc-400">
-          {icon}
-        </div>
-      )}
+      {icon && <div className="ml-4 text-zinc-400">{icon}</div>}
     </div>
   );
 }

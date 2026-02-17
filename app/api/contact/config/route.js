@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { respondSuccess, respondError } from "../../../../lib/response";
-import logger from "../../../../lib/logger.js";
-import { prisma } from "../../../../lib/prisma.js";
+import { NextResponse } from 'next/server';
+import { respondSuccess, respondError } from '../../../../lib/response';
+import logger from '../../../../lib/logger.js';
+import { prisma } from '../../../../lib/prisma.js';
 
 // POST - Update contact configuration
 export async function POST(request) {
@@ -21,8 +21,8 @@ export async function POST(request) {
     } = body;
 
     // Validasi nomor WhatsApp
-    if (whatsappNumber && !/^\d{10,}$/.test(whatsappNumber.replace(/[^0-9]/g, ""))) {
-      return respondError("Nomor WhatsApp tidak valid", 400);
+    if (whatsappNumber && !/^\d{10,}$/.test(whatsappNumber.replace(/[^0-9]/g, ''))) {
+      return respondError('Nomor WhatsApp tidak valid', 400);
     }
 
     // Cari atau buat contact section yang aktif
@@ -34,11 +34,11 @@ export async function POST(request) {
       // Jika tidak ada, buat baru
       contact = await prisma.contactSection.create({
         data: {
-          whatsappNumber: whatsappNumber || "628121272483",
-          locationTitle: locationTitle || "Lokasi Kami",
-          locationAddress: locationAddress || "Indonesia",
-          operationalHours: operationalHours || "09:00 - 18:00",
-          mapsEmbedUrl: mapsEmbedUrl || "https://www.google.com/maps/embed",
+          whatsappNumber: whatsappNumber || '628121272483',
+          locationTitle: locationTitle || 'Lokasi Kami',
+          locationAddress: locationAddress || 'Indonesia',
+          operationalHours: operationalHours || '09:00 - 18:00',
+          mapsEmbedUrl: mapsEmbedUrl || 'https://www.google.com/maps/embed',
           instagramUrl,
           twitterUrl,
           facebookUrl,
@@ -67,22 +67,22 @@ export async function POST(request) {
       });
     }
 
-    logger.info("Contact configuration updated", { id: contact.id });
+    logger.info('Contact configuration updated', { id: contact.id });
 
     return respondSuccess(
       {
         contact,
-        message: "Konfigurasi kontak berhasil diperbarui",
+        message: 'Konfigurasi kontak berhasil diperbarui',
       },
       200
     );
   } catch (error) {
-    console.error("Error updating contact config:", error);
-    logger.error("POST /api/contact/config error:", {
+    console.error('Error updating contact config:', error);
+    logger.error('POST /api/contact/config error:', {
       error: error.message,
       stack: error.stack,
     });
 
-    return respondError("Gagal memperbarui konfigurasi kontak", 500);
+    return respondError('Gagal memperbarui konfigurasi kontak', 500);
   }
 }

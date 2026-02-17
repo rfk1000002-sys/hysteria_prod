@@ -1,8 +1,17 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
-export default function ManageRolesModal({ open, roleUser, availableRoles = [], selectedRoles = new Set(), toggleRole, onClose, onSave, loading }) {
+export default function ManageRolesModal({
+  open,
+  roleUser,
+  availableRoles = [],
+  selectedRoles = new Set(),
+  toggleRole,
+  onClose,
+  onSave,
+  loading,
+}) {
   if (!open || !roleUser) return null;
 
   return (

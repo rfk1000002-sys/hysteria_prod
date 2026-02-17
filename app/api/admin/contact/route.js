@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import { respondSuccess, respondError, AppError } from "../../../../lib/response";
-import { requireAuthWithPermission } from "../../../../lib/helper/permission.helper";
-import logger from "../../../../lib/logger.js";
-import * as contactService from "../../../../modules/admin/contact/services/contact.service.js";
+import { NextResponse } from 'next/server';
+import { respondSuccess, respondError, AppError } from '../../../../lib/response';
+import { requireAuthWithPermission } from '../../../../lib/helper/permission.helper';
+import logger from '../../../../lib/logger.js';
+import * as contactService from '../../../../modules/admin/contact/services/contact.service.js';
 
 // GET - Fetch all contact sections
 export async function GET(request) {
@@ -12,7 +12,7 @@ export async function GET(request) {
     logger.info('API GET /api/admin/contact called', { url: request.url });
 
     const { searchParams } = new URL(request.url);
-    
+
     const options = {
       perPage: 10,
       cursor: null,
@@ -40,18 +40,20 @@ export async function GET(request) {
 
     const result = await contactService.getAllContacts(options);
 
-    logger.info('Fetched contacts', { count: Array.isArray(result.contacts) ? result.contacts.length : undefined });
+    logger.info('Fetched contacts', {
+      count: Array.isArray(result.contacts) ? result.contacts.length : undefined,
+    });
 
     return respondSuccess(result, 200);
   } catch (error) {
-    console.error("Error fetching contacts:", error);
-    logger.error("GET /api/admin/contact error:", { error: error.message, stack: error.stack });
-    
+    console.error('Error fetching contacts:', error);
+    logger.error('GET /api/admin/contact error:', { error: error.message, stack: error.stack });
+
     if (error instanceof AppError) {
       return respondError(error.message, error.statusCode);
     }
-    
-    return respondError("Internal server error", 500);
+
+    return respondError('Internal server error', 500);
   }
 }
 
@@ -69,13 +71,13 @@ export async function POST(request) {
 
     return respondSuccess(newContact, 201);
   } catch (error) {
-    console.error("Error creating contact:", error);
-    logger.error("POST /api/admin/contact error:", { error: error.message, stack: error.stack });
+    console.error('Error creating contact:', error);
+    logger.error('POST /api/admin/contact error:', { error: error.message, stack: error.stack });
 
     if (error instanceof AppError) {
       return respondError(error.message, error.statusCode);
     }
 
-    return respondError("Internal server error", 500);
+    return respondError('Internal server error', 500);
   }
 }

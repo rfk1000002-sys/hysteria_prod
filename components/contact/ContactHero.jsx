@@ -5,8 +5,7 @@ export default function ContactHero() {
       <p className="mt-6 max-w-2xl text-sm leading-6 text-black">
         Kami selalu terbuka untuk kolaborasi, pertanyaan, dan dukungan.
         <br />
-        Kunjungi kantor kami untuk berdiskusi langsung tentang kolaborasi dan
-        proyek seni sosial.
+        Kunjungi kantor kami untuk berdiskusi langsung tentang kolaborasi dan proyek seni sosial.
       </p>
     </section>
   );

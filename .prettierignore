@@ -1,0 +1,20 @@
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+out
+
+# Logs
+logs
+*.log
+
+# Prisma migrations
+prisma/migrations
+
+# Public uploads and generated assets
+public/uploads
+public/images
+
+# Misc
+.DS_Store

@@ -6,12 +6,13 @@
 const logger = require('../../lib/logger');
 
 const seeds = [
-  // require('./004-seed-roles.js'),
-  // require('./005-seed-statuses.js'),
-  // require('./006-create-admin-user.js'),
-  // require('./008-seed-basic-permissions.js'),
+  require('./004-seed-roles.js'),
+  require('./005-seed-statuses.js'),
+  require('./006-create-admin-user.js'),
+  require('./008-seed-basic-permissions.js'),
   require('./009-nav-category.js'),
   require('./010-seed-contact.js'),
+  require('./011-seed-collaboration-permissions.js'),
 ];
 
 async function main() {

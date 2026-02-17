@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { Geist, Geist_Mono } from "next/font/google";
-import { Poppins } from "next/font/google";
-import { useState } from "react";
-import "./globals.css";
-import Providers from "./providers";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import MobileMenu from "../components/layout/MobileMenu";
+import { Geist, Geist_Mono } from 'next/font/google';
+import { Poppins } from 'next/font/google';
+import { useState } from 'react';
+import './globals.css';
+import Providers from './providers';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
+import MobileMenu from '../components/layout/MobileMenu';
 
 const poppins = Poppins({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-poppins",
+  weight: ['400', '500', '600', '700', '800'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
 });
 
 // const geistSans = Geist({
@@ -38,9 +38,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen flex flex-col">
         <Providers>
           <Header onMenuToggle={() => setMenuOpen(!menuOpen)} />
-            <main>
-              {children}
-            </main>
+          <main>{children}</main>
           <Footer />
           <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
         </Providers>

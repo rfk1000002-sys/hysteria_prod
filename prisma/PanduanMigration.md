@@ -1,4 +1,3 @@
-
 # Panduan Migration Prisma — Singkat
 
 1. Siapkan `.env` dengan `DATABASE_URL`. ini kalo db nya local
@@ -40,7 +39,7 @@ npx prisma migrate status
 npx prisma migrate reset   # HATI-HATI: hapus semua data
 ```
 
-Perintah cepat: 
+Perintah cepat:
 `- npx prisma init`,
 `- npx prisma generate`,
 `- npx prisma migrate dev --nama_file`,

@@ -34,8 +34,10 @@ export async function GET(request) {
 
     return respondSuccess({ statuses });
   } catch (error) {
-    logger.error('Error fetching user statuses', { error: error && error.message ? error.message : error })
-    return respondError(error)
+    logger.error('Error fetching user statuses', {
+      error: error && error.message ? error.message : error,
+    });
+    return respondError(error);
   }
 }
 
@@ -47,16 +49,13 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = await requireAuthWithPermission(request, 'status.create');
-    
+
     const body = await request.json();
     const { key, name, description } = body;
 
     // Validation
     if (!key || !name) {
-      return respondError(
-        { message: 'Key and name are required' },
-        { status: 400 }
-      );
+      return respondError({ message: 'Key and name are required' }, { status: 400 });
     }
 
     // Check if key already exists
@@ -65,10 +64,7 @@ export async function POST(request) {
     });
 
     if (existing) {
-      return respondError(
-        { message: 'Status key already exists' },
-        { status: 409 }
-      );
+      return respondError({ message: 'Status key already exists' }, { status: 409 });
     }
 
     const status = await prisma.userStatus.create({
@@ -94,7 +90,9 @@ export async function POST(request) {
 
     return respondSuccess(status, { status: 201 });
   } catch (error) {
-    logger.error('Error creating user status', { error: error && error.message ? error.message : error });
+    logger.error('Error creating user status', {
+      error: error && error.message ? error.message : error,
+    });
     return respondError(error);
   }
 }
@@ -107,15 +105,12 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const user = await requireAuthWithPermission(request, 'status.update');
-    
+
     const body = await request.json();
     const { id, key, name, description } = body;
 
     if (!id) {
-      return respondError(
-        { message: 'Status ID is required' },
-        { status: 400 }
-      );
+      return respondError({ message: 'Status ID is required' }, { status: 400 });
     }
 
     // Check if status exists
@@ -124,10 +119,7 @@ export async function PUT(request) {
     });
 
     if (!existing) {
-      return respondError(
-        { message: 'Status not found' },
-        { status: 404 }
-      );
+      return respondError({ message: 'Status not found' }, { status: 404 });
     }
 
     // If key is being changed, check for conflicts
@@ -137,10 +129,7 @@ export async function PUT(request) {
       });
 
       if (keyConflict) {
-        return respondError(
-          { message: 'Status key already exists' },
-          { status: 409 }
-        );
+        return respondError({ message: 'Status key already exists' }, { status: 409 });
       }
     }
 
@@ -168,7 +157,9 @@ export async function PUT(request) {
 
     return respondSuccess(status);
   } catch (error) {
-    logger.error('Error updating user status', { error: error && error.message ? error.message : error });
+    logger.error('Error updating user status', {
+      error: error && error.message ? error.message : error,
+    });
     return respondError(error);
   }
 }
@@ -181,15 +172,12 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const user = await requireAuthWithPermission(request, 'status.delete');
-    
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
     if (!id) {
-      return respondError(
-        { message: 'Status ID is required' },
-        { status: 400 }
-      );
+      return respondError({ message: 'Status ID is required' }, { status: 400 });
     }
 
     // Check if status exists and has users
@@ -206,22 +194,23 @@ export async function DELETE(request) {
     });
 
     if (!status) {
-      return respondError(
-        { message: 'Status not found' },
-        { status: 404 }
-      );
+      return respondError({ message: 'Status not found' }, { status: 404 });
     }
 
     if (status._count.users > 0) {
       return respondError(
-        { message: `Cannot delete status. ${status._count.users} user(s) are currently using this status` },
+        {
+          message: `Cannot delete status. ${status._count.users} user(s) are currently using this status`,
+        },
         { status: 409 }
       );
     }
 
     if (status._count.histories > 0) {
       return respondError(
-        { message: `Cannot delete status. This status has ${status._count.histories} historical record(s)` },
+        {
+          message: `Cannot delete status. This status has ${status._count.histories} historical record(s)`,
+        },
         { status: 409 }
       );
     }
@@ -237,7 +226,9 @@ export async function DELETE(request) {
 
     return respondSuccess({ message: 'Status deleted successfully' });
   } catch (error) {
-    logger.error('Error deleting user status', { error: error && error.message ? error.message : error });
+    logger.error('Error deleting user status', {
+      error: error && error.message ? error.message : error,
+    });
     return respondError(error);
   }
 }

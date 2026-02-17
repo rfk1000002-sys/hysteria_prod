@@ -1,9 +1,9 @@
-import { signAccessToken, verifyAccessToken } from '../../../lib/jwt.js'
+import { signAccessToken, verifyAccessToken } from '../../../lib/jwt.js';
 
 export function createAccessToken(payload) {
-	return signAccessToken(payload)
+  return signAccessToken(payload);
 }
 
 export function parseAccessToken(token) {
-	return verifyAccessToken(token)
+  return verifyAccessToken(token);
 }

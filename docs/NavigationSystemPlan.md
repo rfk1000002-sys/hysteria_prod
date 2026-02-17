@@ -8,6 +8,7 @@
 ## 📋 Ringkasan Eksekutif
 
 Saat ini navigasi website hardcoded di komponen React. Plan ini merancang sistem navigasi dinamis yang:
+
 - **Top-level navigation tetap hardcoded** (Beranda, Tentang Kami, Program Hysteria, Platform, Event, Artikel, Kontak Kami)
 - **Level 2 & 3+ (kategori & sub-kategori) dinamis dari database**
 - Mendukung **hirarki unlimited depth** menggunakan self-referential relationships
@@ -32,47 +33,47 @@ model Category {
   description String?        @db.Text
   order       Int            @default(0)
   isActive    Boolean        @default(true)
-  
+
   // Optional: Permission gating untuk visibility kategori
   requiredPermissionId Int?
   requiredPermission   Permission? @relation(fields: [requiredPermissionId], references: [id])
-  
+
   items       CategoryItem[]
-  
+
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  
+
   @@index([slug])
   @@index([order])
 }
 
 model CategoryItem {
   id         Int       @id @default(autoincrement())
-  
+
   // Relasi ke category parent
   category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int
-  
+
   // Self-referential untuk hirarki multi-level
   parent     CategoryItem?  @relation("CatChildren", fields: [parentId], references: [id], onDelete: Cascade)
   parentId   Int?
   children   CategoryItem[] @relation("CatChildren")
-  
+
   title      String         @db.VarChar(255)
   slug       String?        @db.VarChar(255)
   url        String?        @db.VarChar(500)
-  
+
   // Order untuk sorting
   order      Int            @default(0)
-  
+
   // Metadata flexible (JSON)
   meta       Json?          @db.JsonB
-  
+
   isActive   Boolean        @default(true)
-  
+
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
-  
+
   @@index([categoryId])
   @@index([parentId])
   @@index([order])
@@ -180,49 +181,49 @@ Category: "artikel"
 
 ### 1. Categories Table
 
-| id  | title            | slug              | order | isActive | requiredPermissionId |
-| --- | ---------------- | ----------------- | ----- | -------- | -------------------- |
-| 1   | Program Hysteria | program-hysteria  | 0     | true     | null                 |
-| 2   | Platform         | platform          | 1     | true     | null                 |
-| 3   | Artikel          | artikel           | 2     | true     | null                 |
+| id  | title            | slug             | order | isActive | requiredPermissionId |
+| --- | ---------------- | ---------------- | ----- | -------- | -------------------- |
+| 1   | Program Hysteria | program-hysteria | 0     | true     | null                 |
+| 2   | Platform         | platform         | 1     | true     | null                 |
+| 3   | Artikel          | artikel          | 2     | true     | null                 |
 
 ### 2. CategoryItems Table (Contoh untuk Program Hysteria)
 
-| id  | categoryId | parentId | title                     | slug                    | url                                  | order |
-| --- | ---------- | -------- | ------------------------- | ----------------------- | ------------------------------------ | ----- |
-| 1   | 1          | null     | Festival dan Pameran      | festival-dan-pameran    | /program/festival                    | 0     |
-| 2   | 1          | 1        | Festival Kampung          | festival-kampung        | /program/festival/kampung            | 0     |
-| 3   | 1          | 2        | Festival Kampung Baharu   | kampung-baharu          | /program/festival/kampung/baharu     | 0     |
-| 4   | 1          | 2        | Gebyarun Bustaman         | gebyarun-bustaman       | /program/festival/kampung/gebyarun   | 1     |
-| 5   | 1          | 2        | Ngajak Gitlok             | ngajak-gitlok           | /program/festival/kampung/gitlok     | 2     |
-| 6   | 1          | 1        | Festival Kota             | festival-kota           | /program/festival/kota               | 1     |
-| 7   | 1          | 6        | Zine Fest                 | zine-fest               | /program/festival/kota/zine-fest     | 0     |
-| 8   | 1          | 6        | Rilis Fest                | rilis-fest              | /program/festival/kota/rilis-fest    | 1     |
-| 9   | 1          | 1        | Biennale                  | biennale                | /program/festival/biennale           | 2     |
-| 10  | 1          | 9        | Rumah Luka                | rumah-luka              | /program/festival/biennale/rumah     | 0     |
-| 11  | 1          | null     | Forum                     | forum                   | /program/forum                       | 1     |
-| 12  | 1          | 11       | Temu Jejaring             | temu-jejaring           | /program/forum/temu-jejaring         | 0     |
-| 13  | 1          | 11       | Buah tangan               | buah-tangan             | /program/forum/buah-tangan           | 1     |
-| 14  | 1          | null     | Podcast                   | podcast                 | /program/podcast                     | 2     |
-| 15  | 1          | 14       | Sorel di Sekitar          | sorel-di-sekitar        | /program/podcast/sorel               | 0     |
-| 16  | 1          | 14       | Kartu Pos                 | kartu-pos               | /program/podcast/kartu-pos           | 1     |
+| id  | categoryId | parentId | title                   | slug                 | url                                | order |
+| --- | ---------- | -------- | ----------------------- | -------------------- | ---------------------------------- | ----- |
+| 1   | 1          | null     | Festival dan Pameran    | festival-dan-pameran | /program/festival                  | 0     |
+| 2   | 1          | 1        | Festival Kampung        | festival-kampung     | /program/festival/kampung          | 0     |
+| 3   | 1          | 2        | Festival Kampung Baharu | kampung-baharu       | /program/festival/kampung/baharu   | 0     |
+| 4   | 1          | 2        | Gebyarun Bustaman       | gebyarun-bustaman    | /program/festival/kampung/gebyarun | 1     |
+| 5   | 1          | 2        | Ngajak Gitlok           | ngajak-gitlok        | /program/festival/kampung/gitlok   | 2     |
+| 6   | 1          | 1        | Festival Kota           | festival-kota        | /program/festival/kota             | 1     |
+| 7   | 1          | 6        | Zine Fest               | zine-fest            | /program/festival/kota/zine-fest   | 0     |
+| 8   | 1          | 6        | Rilis Fest              | rilis-fest           | /program/festival/kota/rilis-fest  | 1     |
+| 9   | 1          | 1        | Biennale                | biennale             | /program/festival/biennale         | 2     |
+| 10  | 1          | 9        | Rumah Luka              | rumah-luka           | /program/festival/biennale/rumah   | 0     |
+| 11  | 1          | null     | Forum                   | forum                | /program/forum                     | 1     |
+| 12  | 1          | 11       | Temu Jejaring           | temu-jejaring        | /program/forum/temu-jejaring       | 0     |
+| 13  | 1          | 11       | Buah tangan             | buah-tangan          | /program/forum/buah-tangan         | 1     |
+| 14  | 1          | null     | Podcast                 | podcast              | /program/podcast                   | 2     |
+| 15  | 1          | 14       | Sorel di Sekitar        | sorel-di-sekitar     | /program/podcast/sorel             | 0     |
+| 16  | 1          | 14       | Kartu Pos               | kartu-pos            | /program/podcast/kartu-pos         | 1     |
 
 ### 3. CategoryItems untuk Platform
 
-| id  | categoryId | parentId | title              | slug               | url                              | order |
-| --- | ---------- | -------- | ------------------ | ------------------ | -------------------------------- | ----- |
-| 20  | 2          | null     | Hysteria Artlab    | hysteria-artlab    | /platform/artlab                 | 0     |
-| 21  | 2          | 20       | Merchandise        | merchandise        | /platform/artlab/merchandise     | 0     |
-| 22  | 2          | 20       | Podcast Artlab     | podcast-artlab     | /platform/artlab/podcast         | 1     |
-| 23  | 2          | 20       | Workshop           | workshop           | /platform/artlab/workshop        | 2     |
-| 24  | 2          | null     | Ditampart          | ditampart          | /platform/ditampart              | 1     |
-| 25  | 2          | 24       | 3D                 | 3d                 | /platform/ditampart/3d           | 0     |
-| 26  | 2          | 24       | Mockup dan Poster  | mockup-poster      | /platform/ditampart/mockup       | 1     |
-| 27  | 2          | null     | Laki Masak         | laki-masak         | /platform/laki-masak             | 2     |
-| 28  | 2          | 27       | Meramu             | meramu             | /platform/laki-masak/meramu      | 0     |
-| 29  | 2          | 27       | Homecooked         | homecooked         | /platform/laki-masak/homecooked  | 1     |
-| 30  | 2          | null     | Pekakota           | pekakota           | /platform/pekakota               | 3     |
-| 31  | 2          | null     | Bukit Buku         | bukit-buku         | /platform/bukit-buku             | 4     |
+| id  | categoryId | parentId | title             | slug            | url                             | order |
+| --- | ---------- | -------- | ----------------- | --------------- | ------------------------------- | ----- |
+| 20  | 2          | null     | Hysteria Artlab   | hysteria-artlab | /platform/artlab                | 0     |
+| 21  | 2          | 20       | Merchandise       | merchandise     | /platform/artlab/merchandise    | 0     |
+| 22  | 2          | 20       | Podcast Artlab    | podcast-artlab  | /platform/artlab/podcast        | 1     |
+| 23  | 2          | 20       | Workshop          | workshop        | /platform/artlab/workshop       | 2     |
+| 24  | 2          | null     | Ditampart         | ditampart       | /platform/ditampart             | 1     |
+| 25  | 2          | 24       | 3D                | 3d              | /platform/ditampart/3d          | 0     |
+| 26  | 2          | 24       | Mockup dan Poster | mockup-poster   | /platform/ditampart/mockup      | 1     |
+| 27  | 2          | null     | Laki Masak        | laki-masak      | /platform/laki-masak            | 2     |
+| 28  | 2          | 27       | Meramu            | meramu          | /platform/laki-masak/meramu     | 0     |
+| 29  | 2          | 27       | Homecooked        | homecooked      | /platform/laki-masak/homecooked | 1     |
+| 30  | 2          | null     | Pekakota          | pekakota        | /platform/pekakota              | 3     |
+| 31  | 2          | null     | Bukit Buku        | bukit-buku      | /platform/bukit-buku            | 4     |
 
 ### 4. CategoryItems untuk Artikel
 
@@ -241,11 +242,13 @@ Category: "artikel"
 ### Endpoint 1: GET /api/categories/:slug
 
 **Request:**
+
 ```http
 GET /api/categories/program-hysteria
 ```
 
 **Response:** (tree structure dengan children rekursif)
+
 ```json
 {
   "id": 1,
@@ -328,6 +331,7 @@ GET /api/categories/program-hysteria
 ### Endpoint 2: GET /api/categories (Admin)
 
 **Response:** List semua categories
+
 ```json
 {
   "categories": [
@@ -341,6 +345,7 @@ GET /api/categories/program-hysteria
 ### Endpoint 3: POST /api/admin/categories/:id/items (Admin)
 
 **Request:**
+
 ```json
 {
   "title": "Festival Baru",
@@ -352,6 +357,7 @@ GET /api/categories/program-hysteria
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -374,32 +380,26 @@ GET /api/categories/program-hysteria
 **File:** `components/layout/MenuPanel.jsx`
 
 **Perubahan:**
+
 - Top-level links tetap hardcoded (Beranda, Tentang Kami, Kontak Kami)
 - Links dengan kategori (Program Hysteria, Platform, Artikel) jadi `<button>` yang trigger `loadCategory(slug)`
 - Panel kiri menampilkan hasil fetch dari `/api/categories/:slug` secara recursive
 
 **Komponen Recursive:**
+
 ```jsx
 function RenderCategoryItems({ items, onClose, depth = 0 }) {
   if (!items || items.length === 0) return null;
-  
+
   return (
     <div className={`ml-${depth * 4}`}>
-      {items.map(item => (
+      {items.map((item) => (
         <div key={item.id} className="mb-2">
-          <a 
-            href={item.url} 
-            onClick={onClose} 
-            className="text-sm font-medium hover:underline"
-          >
+          <a href={item.url} onClick={onClose} className="text-sm font-medium hover:underline">
             {item.title}
           </a>
           {item.children && item.children.length > 0 && (
-            <RenderCategoryItems 
-              items={item.children} 
-              onClose={onClose} 
-              depth={depth + 1} 
-            />
+            <RenderCategoryItems items={item.children} onClose={onClose} depth={depth + 1} />
           )}
         </div>
       ))}
@@ -413,6 +413,7 @@ function RenderCategoryItems({ items, onClose, depth = 0 }) {
 **File:** `components/layout/Header.jsx`
 
 **Implementasi:**
+
 - Dropdown menu untuk kategori
 - Hover trigger fetch category items
 - Multi-column layout untuk sub-categories (seperti mega menu)
@@ -427,11 +428,11 @@ async function loadCategory(slug) {
     setItems(categoryCache[slug]);
     return;
   }
-  
+
   const res = await fetch(`/api/categories/${slug}`);
   const data = await res.json();
-  
-  setCategoryCache(prev => ({ ...prev, [slug]: data.items }));
+
+  setCategoryCache((prev) => ({ ...prev, [slug]: data.items }));
   setItems(data.items);
 }
 ```
@@ -443,6 +444,7 @@ async function loadCategory(slug) {
 ### Page: `/admin/section/navigation`
 
 **Fitur:**
+
 1. **Category List** - Tabel kategori dengan jumlah items
 2. **Tree View** - Expandable tree untuk melihat hirarki
 3. **Drag & Drop** - Reorder items dalam level yang sama
@@ -456,29 +458,25 @@ async function loadCategory(slug) {
 5. **Bulk Actions** - Delete multiple items, activate/deactivate
 
 **Komponen Admin:**
+
 ```jsx
 // components/adminUI/CategoryTreeEditor.jsx
 function CategoryTreeEditor({ categoryId }) {
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  
+
   // Fetch items
   useEffect(() => {
     fetch(`/api/admin/categories/${categoryId}/items`)
-      .then(r => r.json())
-      .then(data => setItems(data.items));
+      .then((r) => r.json())
+      .then((data) => setItems(data.items));
   }, [categoryId]);
-  
+
   // Render tree dengan indentation dan expand/collapse
   return (
     <div className="tree-view">
-      {items.map(item => (
-        <TreeNode 
-          key={item.id} 
-          item={item} 
-          onEdit={setSelectedItem}
-          onDelete={handleDelete}
-        />
+      {items.map((item) => (
+        <TreeNode key={item.id} item={item} onEdit={setSelectedItem} onDelete={handleDelete} />
       ))}
     </div>
   );
@@ -492,17 +490,20 @@ function CategoryTreeEditor({ categoryId }) {
 ### Phase 1: Database Setup (Hari 1)
 
 1. **Update Prisma Schema**
+
    ```bash
    # Edit prisma/schema.prisma
    # Tambahkan model Category dan CategoryItem
    ```
 
 2. **Create Migration**
+
    ```bash
    npx prisma migrate dev --name add_navigation_system
    ```
 
 3. **Create Seed File**
+
    ```bash
    # Edit prisma/seed/navigation.seed.ts
    # Populate categories dan items sesuai struktur di atas

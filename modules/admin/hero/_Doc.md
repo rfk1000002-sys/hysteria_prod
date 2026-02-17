@@ -53,6 +53,7 @@ modules/hero/
 ### URL Validation
 
 **Valid URLs:**
+
 ```javascript
 ✅ https://images.pexels.com/photos/123/image.jpeg
 ✅ https://example.com/video.mp4
@@ -61,6 +62,7 @@ modules/hero/
 ```
 
 **Invalid URLs:**
+
 ```javascript
 ❌ https://www.pexels.com/video/xxx-123/  // Page URL
 ❌ https://www.pexels.com/photo/xxx-123/  // Page URL
@@ -71,6 +73,7 @@ modules/hero/
 ### Schemas
 
 #### createHeroSchema
+
 ```javascript
 {
   source: string (validated media URL),
@@ -81,6 +84,7 @@ modules/hero/
 ```
 
 #### updateHeroSchema
+
 ```javascript
 {
   source: string (optional),
@@ -91,6 +95,7 @@ modules/hero/
 ```
 
 #### heroQuerySchema
+
 ```javascript
 {
   perPage: number (1-100, default: 10),
@@ -117,7 +122,7 @@ try {
     source: 'https://images.pexels.com/photos/123/image.jpeg',
     title: 'Beautiful Nature',
     description: 'A stunning view of mountains',
-    isActive: true
+    isActive: true,
   });
   console.log('Hero created:', hero.id);
 } catch (error) {
@@ -131,7 +136,7 @@ try {
 const result = await heroService.getAllHeroes({
   perPage: 10,
   cursor: null,
-  isActive: true
+  isActive: true,
 });
 
 console.log('Heroes:', result.heroes);
@@ -144,7 +149,7 @@ console.log('Next cursor:', result.nextCursor);
 ```javascript
 await heroService.updateHero(24, {
   source: 'https://images.pexels.com/photos/456/new-image.jpeg',
-  title: 'Updated Title'
+  title: 'Updated Title',
 });
 ```
 
@@ -176,8 +181,8 @@ try {
 } catch (error) {
   if (error instanceof AppError) {
     console.log(error.message); // "Hero not found"
-    console.log(error.status);  // 404
-    console.log(error.code);    // Error code
+    console.log(error.status); // 404
+    console.log(error.code); // Error code
   }
 }
 ```
@@ -192,14 +197,14 @@ try {
 
 ```javascript
 // URL Validation
-"Invalid URL format"
-"URL must be a direct media file (.mp4, .jpg, etc.) or from a supported CDN"
-"Please use direct media URLs, not page URLs"
+'Invalid URL format';
+'URL must be a direct media file (.mp4, .jpg, etc.) or from a supported CDN';
+'Please use direct media URLs, not page URLs';
 
 // Field Validation
-"Title must be at least 3 characters"
-"Description must be at least 10 characters"
-"No valid fields to update"
+'Title must be at least 3 characters';
+'Description must be at least 10 characters';
+'No valid fields to update';
 ```
 
 ## Logging
@@ -241,19 +246,22 @@ node test/check-hero-data.mjs
 Jika upgrade dari direct prisma calls:
 
 **Before:**
+
 ```javascript
 const hero = await prisma.heroSection.findFirst({
-  where: { isActive: true }
+  where: { isActive: true },
 });
 ```
 
 **After:**
+
 ```javascript
 import * as heroService from './modules/hero/services/hero.service.js';
 const hero = await heroService.getActiveHero();
 ```
 
 Benefits:
+
 - ✅ Built-in validation
 - ✅ Error handling
 - ✅ Logging

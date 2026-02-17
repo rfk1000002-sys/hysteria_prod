@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -19,11 +19,26 @@ export default function PlatformKami() {
 
       {(() => {
         const items = [
-          { src: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80', title: 'Hysteria Artlab' },
-          { src: 'https://images.unsplash.com/photo-1502920917128-1aa500764b0d?auto=format&fit=crop&w=1200&q=80', title: 'Peka Kota' },
-          { src: 'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80', title: 'Laki Masak' },
-          { src: 'https://images.unsplash.com/photo-1473186578172-c141e6798cf4?auto=format&fit=crop&w=1200&q=80', title: 'Bukit Buku' },
-          { src: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80', title: 'Ditam Part' },
+          {
+            src: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+            title: 'Hysteria Artlab',
+          },
+          {
+            src: 'https://images.unsplash.com/photo-1502920917128-1aa500764b0d?auto=format&fit=crop&w=1200&q=80',
+            title: 'Peka Kota',
+          },
+          {
+            src: 'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80',
+            title: 'Laki Masak',
+          },
+          {
+            src: 'https://images.unsplash.com/photo-1473186578172-c141e6798cf4?auto=format&fit=crop&w=1200&q=80',
+            title: 'Bukit Buku',
+          },
+          {
+            src: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80',
+            title: 'Ditam Part',
+          },
         ];
 
         const placeholder =
@@ -34,7 +49,9 @@ export default function PlatformKami() {
 
           return (
             <article className="relative rounded-lg overflow-hidden" aria-label={item.title}>
-              <div style={{ position: 'relative', width: '100%', paddingTop: tall ? '66.66%' : '40%' }}>
+              <div
+                style={{ position: 'relative', width: '100%', paddingTop: tall ? '66.66%' : '40%' }}
+              >
                 <Image
                   src={src}
                   alt={item.title}
@@ -48,7 +65,9 @@ export default function PlatformKami() {
               </div>
 
               <div className="absolute left-3 right-3 bottom-3 flex">
-                <span className="bg-black/60 text-white px-3 py-1 rounded text-sm font-semibold">{item.title}</span>
+                <span className="bg-black/60 text-white px-3 py-1 rounded text-sm font-semibold">
+                  {item.title}
+                </span>
               </div>
             </article>
           );

@@ -1,6 +1,7 @@
 # Upload System Documentation
 
 ## Overview
+
 Sistem upload yang dapat digunakan untuk semua CRUD yang membutuhkan file upload. Mendukung local storage dan S3.
 
 ## File Structure
@@ -48,24 +49,24 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
 
 ```javascript
 // app/api/admin/hero/route.js
-import { parseMultipartForm, validateFileMimeType } from "../../../../lib/upload/multipart";
-import Uploads from "../../../../lib/upload/uploads";
-import * as heroService from "../../../../modules/hero/services/hero.service.js";
+import { parseMultipartForm, validateFileMimeType } from '../../../../lib/upload/multipart';
+import Uploads from '../../../../lib/upload/uploads';
+import * as heroService from '../../../../modules/hero/services/hero.service.js';
 
 export async function POST(request) {
-  const contentType = request.headers.get("content-type") || "";
+  const contentType = request.headers.get('content-type') || '';
   let body = {};
   let sourceUrl = null;
 
   // Support both JSON and multipart
-  if (contentType.includes("multipart/form-data")) {
+  if (contentType.includes('multipart/form-data')) {
     const { fields, files } = await parseMultipartForm(request);
     body = fields;
 
     // Upload file jika ada
     if (files && files.length > 0) {
-      if (!validateFileMimeType(files[0], ["image/*", "video/*"])) {
-        return NextResponse.json({ error: "Invalid file type" }, { status: 415 });
+      if (!validateFileMimeType(files[0], ['image/*', 'video/*'])) {
+        return NextResponse.json({ error: 'Invalid file type' }, { status: 415 });
       }
 
       const uploads = new Uploads();
@@ -74,7 +75,7 @@ export async function POST(request) {
     }
 
     // Convert string boolean
-    if (body.isActive) body.isActive = body.isActive === "true";
+    if (body.isActive) body.isActive = body.isActive === 'true';
   } else {
     body = await request.json();
   }
@@ -91,8 +92,8 @@ export async function POST(request) {
 
 ```javascript
 // app/api/admin/products/upload/route.js
-import { parseMultipartForm } from "../../../../../lib/multipart";
-import Uploads from "../../../../../lib/uploads";
+import { parseMultipartForm } from '../../../../../lib/multipart';
+import Uploads from '../../../../../lib/uploads';
 
 export async function POST(request) {
   const { files } = await parseMultipartForm(request);
@@ -110,17 +111,17 @@ export async function POST(request) {
 
 ```javascript
 // app/api/admin/articles/route.js
-import { parseMultipartForm } from "../../../../lib/multipart";
-import Uploads from "../../../../lib/uploads";
+import { parseMultipartForm } from '../../../../lib/multipart';
+import Uploads from '../../../../lib/uploads';
 
 export async function POST(request) {
-  const contentType = request.headers.get("content-type") || "";
+  const contentType = request.headers.get('content-type') || '';
 
   let body = {};
   let imageUrl = null;
 
   // Check if multipart (has file upload)
-  if (contentType.includes("multipart/form-data")) {
+  if (contentType.includes('multipart/form-data')) {
     const { fields, files } = await parseMultipartForm(request);
     body = fields;
 
@@ -152,8 +153,8 @@ export async function POST(request) {
 
 ```javascript
 // app/api/admin/gallery/upload/route.js
-import { parseMultipartForm } from "../../../../../lib/upload/multipart";
-import Uploads from "../../../../../lib/upload/uploads";
+import { parseMultipartForm } from '../../../../../lib/upload/multipart';
+import Uploads from '../../../../../lib/upload/uploads';
 
 export async function POST(request) {
   const { files } = await parseMultipartForm(request, {
@@ -184,34 +185,34 @@ function HeroUploadForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    
+
     // Tambahkan file jika ada
     const file = e.target.file.files[0];
     if (file) {
-      formData.append("file", file);
+      formData.append('file', file);
     }
-    
+
     // Tambahkan fields lain
-    formData.append("title", "Hero Title");
-    formData.append("description", "Hero Description");
-    formData.append("isActive", "true");
-    
+    formData.append('title', 'Hero Title');
+    formData.append('description', 'Hero Description');
+    formData.append('isActive', 'true');
+
     // Atau, jika pakai URL eksternal tanpa upload file
     // formData.append("source", "https://example.com/image.jpg");
-    
+
     // Create hero dengan file upload dalam satu request
-    const response = await fetch("/api/admin/hero", {
-      method: "POST",
+    const response = await fetch('/api/admin/hero', {
+      method: 'POST',
       body: formData,
       // Jangan set Content-Type - browser akan set otomatis dengan boundary
     });
-    
+
     const data = await response.json();
     if (data.success) {
-      console.log("Hero created:", data.data);
+      console.log('Hero created:', data.data);
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       <input type="file" name="file" accept="image/*,video/*" />
@@ -224,13 +225,13 @@ function HeroUploadForm() {
 
 // Alternatif: Gunakan JSON jika hanya pakai URL (tanpa upload file)
 async function createHeroWithURL() {
-  const response = await fetch("/api/admin/hero", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch('/api/admin/hero', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      source: "https://example.com/image.jpg",
-      title: "Hero Title",
-      description: "Hero Description",
+      source: 'https://example.com/image.jpg',
+      title: 'Hero Title',
+      description: 'Hero Description',
       isActive: true,
     }),
   });
@@ -242,14 +243,14 @@ async function createHeroWithURL() {
 
 ```javascript
 // app/api/admin/articles/route.js
-import { parseMultipartForm } from "../../../../lib/upload/multipart";
-import Uploads from "../../../../lib/upload/uploads";
+import { parseMultipartForm } from '../../../../lib/upload/multipart';
+import Uploads from '../../../../lib/upload/uploads';
 
 export async function POST(request) {
-  const contentType = request.headers.get("content-type") || "";
+  const contentType = request.headers.get('content-type') || '';
   let body = {};
 
-  if (contentType.includes("multipart/form-data")) {
+  if (contentType.includes('multipart/form-data')) {
     const { fields, files } = await parseMultipartForm(request);
     body = fields;
 
@@ -271,10 +272,10 @@ export async function POST(request) {
 // PUT juga sama
 export async function PUT(request, { params }) {
   const { id } = await params;
-  const contentType = request.headers.get("content-type") || "";
+  const contentType = request.headers.get('content-type') || '';
   let body = {};
 
-  if (contentType.includes("multipart/form-data")) {
+  if (contentType.includes('multipart/form-data')) {
     const { fields, files } = await parseMultipartForm(request);
     body = fields;
 
@@ -295,6 +296,7 @@ export async function PUT(request, { params }) {
 ## API Response Format
 
 ### Success Response
+
 ```json
 {
   "success": true,
@@ -313,6 +315,7 @@ export async function PUT(request, { params }) {
 ```
 
 ### Error Response
+
 ```json
 {
   "success": false,
@@ -324,9 +327,11 @@ export async function PUT(request, { params }) {
 ## Helper Functions
 
 ### parseMultipartForm(request, options)
+
 Parse multipart/form-data from Next.js Request object.
 
 **Options:**
+
 - `maxFileSize`: number (bytes)
 - `multiples`: boolean (allow multiple files)
 - `filter`: function (custom file filter)
@@ -334,25 +339,31 @@ Parse multipart/form-data from Next.js Request object.
 **Returns:** `{ fields: Object, files: Array }`
 
 ### validateFileMimeType(file, allowedTypes)
+
 Validate file MIME type.
 
 **Example:**
+
 ```javascript
-validateFileMimeType(file, ['image/*', 'video/mp4'])
+validateFileMimeType(file, ['image/*', 'video/mp4']);
 ```
 
 ### validateFileSize(file, maxSize)
+
 Validate file size.
 
 ### Uploads Class Methods
 
 #### `handleUpload(file)`
+
 Upload regular file with image optimization.
 
 #### `handleUploadProduct(file, extension?)`
+
 Upload and resize to square (500x500) with white background.
 
 #### `getFileMetadata(file)`
+
 Extract file metadata.
 
 ## Testing
@@ -377,7 +388,7 @@ curl -X POST http://localhost:3000/api/admin/hero/upload \
 
 1. **Separation of Concerns**: Upload file terpisah dari create/update CRUD. Client upload dulu, dapat URL, baru POST/PUT dengan URL.
 
-2. **Security**: 
+2. **Security**:
    - Selalu validasi MIME type di server
    - Set max file size
    - Gunakan permission checks

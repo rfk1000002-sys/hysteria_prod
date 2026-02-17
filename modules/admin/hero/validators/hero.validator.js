@@ -25,10 +25,16 @@ const mediaUrlSchema = z
 
       // Check if it's a direct media file or a valid image CDN URL
       const isDirectFile = /\.(mp4|webm|ogg|jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(url);
-      const isImageCDN = /^https:\/\/(images\.pexels\.com|images\.unsplash\.com|.*cloudinary\.com|.*imgur\.com)/i.test(url);
+      const isImageCDN =
+        /^https:\/\/(images\.pexels\.com|images\.unsplash\.com|.*cloudinary\.com|.*imgur\.com)/i.test(
+          url
+        );
 
       // Also allow YouTube links (standard, short, embed, and nocookie domains)
-      const isYouTube = /^https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/|youtube-nocookie\.com\/embed\/)/i.test(url);
+      const isYouTube =
+        /^https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/|youtube-nocookie\.com\/embed\/)/i.test(
+          url
+        );
 
       return isDirectFile || isImageCDN || isYouTube;
     },
@@ -56,18 +62,21 @@ export const MAX_MEDIA_SIZE_MB = 5;
 const mediaFileSchema = z
   .any()
   .optional()
-  .refine((file) => {
-    if (file === undefined || file === null) return true;
-    const f = Array.isArray(file) ? file[0] : file;
-    // If it's a string (path) we cannot validate size here, allow it
-    if (typeof f === 'string') return true;
-    if (!f || typeof f !== 'object') return false;
-    if (typeof f.size === 'number') return f.size <= MAX_MEDIA_SIZE;
-    // If no size property, allow (some adapters might not provide it)
-    return true;
-  }, {
-    message: `Maks ${MAX_MEDIA_SIZE_MB} MB`,
-  });
+  .refine(
+    (file) => {
+      if (file === undefined || file === null) return true;
+      const f = Array.isArray(file) ? file[0] : file;
+      // If it's a string (path) we cannot validate size here, allow it
+      if (typeof f === 'string') return true;
+      if (!f || typeof f !== 'object') return false;
+      if (typeof f.size === 'number') return f.size <= MAX_MEDIA_SIZE;
+      // If no size property, allow (some adapters might not provide it)
+      return true;
+    },
+    {
+      message: `Maks ${MAX_MEDIA_SIZE_MB} MB`,
+    }
+  );
 
 /**
  * Schema for creating a new hero section
@@ -113,31 +122,33 @@ export const updateHeroSchema = z.object({
 /**
  * Schema for query parameters
  */
-export const heroQuerySchema = z.object({
-  perPage: z
-    .string()
-    .optional()
-    .default('10')
-    .transform((val) => parseInt(val, 10))
-    .pipe(z.number().int().min(1).max(100)),
-  cursor: z
-    .string()
-    .optional()
-    .transform((val) => val ? parseInt(val, 10) : undefined)
-    .pipe(z.number().int().positive().optional()),
-  isActive: z
-    .string()
-    .optional()
-    .transform((val) => val === 'true' ? true : val === 'false' ? false : undefined)
-    .pipe(z.boolean().optional()),
-}).transform((data) => {
-  // Remove undefined values
-  const result = {};
-  if (data.perPage !== undefined) result.perPage = data.perPage;
-  if (data.cursor !== undefined) result.cursor = data.cursor;
-  if (data.isActive !== undefined) result.isActive = data.isActive;
-  return result;
-});
+export const heroQuerySchema = z
+  .object({
+    perPage: z
+      .string()
+      .optional()
+      .default('10')
+      .transform((val) => parseInt(val, 10))
+      .pipe(z.number().int().min(1).max(100)),
+    cursor: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val, 10) : undefined))
+      .pipe(z.number().int().positive().optional()),
+    isActive: z
+      .string()
+      .optional()
+      .transform((val) => (val === 'true' ? true : val === 'false' ? false : undefined))
+      .pipe(z.boolean().optional()),
+  })
+  .transform((data) => {
+    // Remove undefined values
+    const result = {};
+    if (data.perPage !== undefined) result.perPage = data.perPage;
+    if (data.cursor !== undefined) result.cursor = data.cursor;
+    if (data.isActive !== undefined) result.isActive = data.isActive;
+    return result;
+  });
 
 /**
  * Helper function to validate hero data

@@ -17,14 +17,16 @@ export async function GET(request, { params }) {
     const userId = parseInt(resolvedParams.id, 10);
 
     if (!userId || isNaN(userId)) {
-      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Invalid user ID' })
+      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Invalid user ID' });
     }
 
     const history = await getUserStatusHistory(userId);
 
     return respondSuccess({ history });
   } catch (error) {
-    logger.error('Error fetching user status history', { error: error && error.message ? error.message : error })
-    return respondError(error)
+    logger.error('Error fetching user status history', {
+      error: error && error.message ? error.message : error,
+    });
+    return respondError(error);
   }
 }

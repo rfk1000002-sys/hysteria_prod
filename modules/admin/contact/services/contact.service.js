@@ -1,6 +1,6 @@
-import { prisma } from "../../../../lib/prisma.js";
-import { AppError } from "../../../../lib/response.js";
-import logger from "../../../../lib/logger.js";
+import { prisma } from '../../../../lib/prisma.js';
+import { AppError } from '../../../../lib/response.js';
+import logger from '../../../../lib/logger.js';
 
 /**
  * Create a new contact section
@@ -17,26 +17,27 @@ export async function createContact(data) {
 
     const contact = await prisma.contactSection.create({
       data: {
-        mapsEmbedUrl: data.mapsEmbedUrl || "",
-        locationTitle: data.locationTitle || "",
-        locationAddress: data.locationAddress || "",
-        operationalHours: data.operationalHours || "",
-        whatsappNumber: data.whatsappNumber || "",
-        phoneNumber: data.phoneNumber || "",
-        instagramUrl: data.instagramUrl && data.instagramUrl.trim() !== "" ? data.instagramUrl : null,
-        twitterUrl: data.twitterUrl && data.twitterUrl.trim() !== "" ? data.twitterUrl : null,
-        facebookUrl: data.facebookUrl && data.facebookUrl.trim() !== "" ? data.facebookUrl : null,
-        linkedinUrl: data.linkedinUrl && data.linkedinUrl.trim() !== "" ? data.linkedinUrl : null,
-        youtubeUrl: data.youtubeUrl && data.youtubeUrl.trim() !== "" ? data.youtubeUrl : null,
+        mapsEmbedUrl: data.mapsEmbedUrl || '',
+        locationTitle: data.locationTitle || '',
+        locationAddress: data.locationAddress || '',
+        operationalHours: data.operationalHours || '',
+        whatsappNumber: data.whatsappNumber || '',
+        phoneNumber: data.phoneNumber || '',
+        instagramUrl:
+          data.instagramUrl && data.instagramUrl.trim() !== '' ? data.instagramUrl : null,
+        twitterUrl: data.twitterUrl && data.twitterUrl.trim() !== '' ? data.twitterUrl : null,
+        facebookUrl: data.facebookUrl && data.facebookUrl.trim() !== '' ? data.facebookUrl : null,
+        linkedinUrl: data.linkedinUrl && data.linkedinUrl.trim() !== '' ? data.linkedinUrl : null,
+        youtubeUrl: data.youtubeUrl && data.youtubeUrl.trim() !== '' ? data.youtubeUrl : null,
         isActive: data.isActive ?? false,
       },
     });
 
     return contact;
   } catch (error) {
-    logger.error("Error in createContact:", error);
-    console.error("Full error:", error);
-    throw new AppError("Failed to create contact: " + error.message, 500);
+    logger.error('Error in createContact:', error);
+    console.error('Full error:', error);
+    throw new AppError('Failed to create contact: ' + error.message, 500);
   }
 }
 
@@ -56,29 +57,30 @@ export async function updateContact(id, data) {
     const contact = await prisma.contactSection.update({
       where: { id },
       data: {
-        mapsEmbedUrl: data.mapsEmbedUrl || "",
-        locationTitle: data.locationTitle || "",
-        locationAddress: data.locationAddress || "",
-        operationalHours: data.operationalHours || "",
-        whatsappNumber: data.whatsappNumber || "",
-        phoneNumber: data.phoneNumber || "",
-        instagramUrl: data.instagramUrl && data.instagramUrl.trim() !== "" ? data.instagramUrl : null,
-        twitterUrl: data.twitterUrl && data.twitterUrl.trim() !== "" ? data.twitterUrl : null,
-        facebookUrl: data.facebookUrl && data.facebookUrl.trim() !== "" ? data.facebookUrl : null,
-        linkedinUrl: data.linkedinUrl && data.linkedinUrl.trim() !== "" ? data.linkedinUrl : null,
-        youtubeUrl: data.youtubeUrl && data.youtubeUrl.trim() !== "" ? data.youtubeUrl : null,
+        mapsEmbedUrl: data.mapsEmbedUrl || '',
+        locationTitle: data.locationTitle || '',
+        locationAddress: data.locationAddress || '',
+        operationalHours: data.operationalHours || '',
+        whatsappNumber: data.whatsappNumber || '',
+        phoneNumber: data.phoneNumber || '',
+        instagramUrl:
+          data.instagramUrl && data.instagramUrl.trim() !== '' ? data.instagramUrl : null,
+        twitterUrl: data.twitterUrl && data.twitterUrl.trim() !== '' ? data.twitterUrl : null,
+        facebookUrl: data.facebookUrl && data.facebookUrl.trim() !== '' ? data.facebookUrl : null,
+        linkedinUrl: data.linkedinUrl && data.linkedinUrl.trim() !== '' ? data.linkedinUrl : null,
+        youtubeUrl: data.youtubeUrl && data.youtubeUrl.trim() !== '' ? data.youtubeUrl : null,
         isActive: data.isActive,
       },
     });
 
     return contact;
   } catch (error) {
-    logger.error("Error in updateContact:", error);
-    console.error("Full error:", error);
-    if (error.code === "P2025") {
-      throw new AppError("Contact not found", 404);
+    logger.error('Error in updateContact:', error);
+    console.error('Full error:', error);
+    if (error.code === 'P2025') {
+      throw new AppError('Contact not found', 404);
     }
-    throw new AppError("Failed to update contact: " + error.message, 500);
+    throw new AppError('Failed to update contact: ' + error.message, 500);
   }
 }
 
@@ -91,11 +93,11 @@ export async function deleteContact(id) {
       where: { id },
     });
   } catch (error) {
-    logger.error("Error in deleteContact:", error);
-    if (error.code === "P2025") {
-      throw new AppError("Contact not found", 404);
+    logger.error('Error in deleteContact:', error);
+    if (error.code === 'P2025') {
+      throw new AppError('Contact not found', 404);
     }
-    throw new AppError("Failed to delete contact", 500);
+    throw new AppError('Failed to delete contact', 500);
   }
 }
 
@@ -115,7 +117,7 @@ export async function getAllContacts(options = {}) {
       where,
       take: perPage + 1,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     const hasMore = contacts.length > perPage;
@@ -128,8 +130,8 @@ export async function getAllContacts(options = {}) {
       hasMore,
     };
   } catch (error) {
-    logger.error("Error in getAllContacts:", error);
-    throw new AppError("Failed to fetch contacts", 500);
+    logger.error('Error in getAllContacts:', error);
+    throw new AppError('Failed to fetch contacts', 500);
   }
 }
 
@@ -143,7 +145,7 @@ export async function toggleContactStatus(id) {
     });
 
     if (!contact) {
-      throw new AppError("Contact not found", 404);
+      throw new AppError('Contact not found', 404);
     }
 
     const newStatus = !contact.isActive;
@@ -163,8 +165,8 @@ export async function toggleContactStatus(id) {
 
     return updatedContact;
   } catch (error) {
-    logger.error("Error in toggleContactStatus:", error);
+    logger.error('Error in toggleContactStatus:', error);
     if (error instanceof AppError) throw error;
-    throw new AppError("Failed to toggle contact status", 500);
+    throw new AppError('Failed to toggle contact status', 500);
   }
 }

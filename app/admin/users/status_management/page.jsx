@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../../../lib/context/auth-context";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../../../lib/context/auth-context';
 import PermissionGate from '../../../../components/adminUI/PermissionGate.jsx';
 import SearchField from '../../../../components/adminUI/SearchField.jsx';
 import DataTable from '../../../../components/ui/DataTable.jsx';
@@ -21,14 +21,14 @@ export default function StatusManagement() {
   const [statuses, setStatuses] = useState([]);
   const [filteredStatuses, setFilteredStatuses] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('');
 
   const [toast, setToast] = useState({ message: '', type: 'info', visible: false });
-  
+
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     key: '',
@@ -55,8 +55,8 @@ export default function StatusManagement() {
     }
   }, [apiCall]);
 
-  useEffect(() => { 
-    fetchStatuses(); 
+  useEffect(() => {
+    fetchStatuses();
   }, [fetchStatuses]);
 
   // Filter statuses based on search
@@ -65,10 +65,11 @@ export default function StatusManagement() {
       setFilteredStatuses(statuses);
     } else {
       const searchLower = searchInput.toLowerCase();
-      const filtered = statuses.filter(status => 
-        status.key?.toLowerCase().includes(searchLower) ||
-        status.name?.toLowerCase().includes(searchLower) ||
-        status.description?.toLowerCase().includes(searchLower)
+      const filtered = statuses.filter(
+        (status) =>
+          status.key?.toLowerCase().includes(searchLower) ||
+          status.name?.toLowerCase().includes(searchLower) ||
+          status.description?.toLowerCase().includes(searchLower)
       );
       setFilteredStatuses(filtered);
     }
@@ -95,7 +96,7 @@ export default function StatusManagement() {
         throw new Error(error.error?.message || 'Failed to create status');
       }
       const json = await res.json();
-      setStatuses(prev => [...prev, json.data]);
+      setStatuses((prev) => [...prev, json.data]);
       setFormData({ key: '', name: '', description: '' });
       setShowCreateModal(false);
       setToast({ message: 'Status created successfully', type: 'success', visible: true });
@@ -118,7 +119,7 @@ export default function StatusManagement() {
         name: formData.name,
         description: formData.description,
       };
-      
+
       const res = await apiCall('/api/admin/user-statuses', {
         method: 'PUT',
         body: JSON.stringify(updateData),
@@ -128,7 +129,7 @@ export default function StatusManagement() {
         throw new Error(error.error?.message || 'Failed to update status');
       }
       const json = await res.json();
-      setStatuses(prev => prev.map(s => s.id === json.data.id ? json.data : s));
+      setStatuses((prev) => prev.map((s) => (s.id === json.data.id ? json.data : s)));
       setShowEditModal(false);
       setEditingStatus(null);
       setToast({ message: 'Status updated successfully', type: 'success', visible: true });
@@ -141,7 +142,10 @@ export default function StatusManagement() {
   };
 
   const handleDelete = async (status) => {
-    if (!confirm(`Are you sure to delete status "${status.name}"?\n\nThis action cannot be undone.`)) return;
+    if (
+      !confirm(`Are you sure to delete status "${status.name}"?\n\nThis action cannot be undone.`)
+    )
+      return;
     try {
       setLoading(true);
       const res = await apiCall(`/api/admin/user-statuses?id=${status.id}`, { method: 'DELETE' });
@@ -149,7 +153,7 @@ export default function StatusManagement() {
         const error = await res.json();
         throw new Error(error.error?.message || 'Failed to delete status');
       }
-      setStatuses(prev => prev.filter(s => s.id !== status.id));
+      setStatuses((prev) => prev.filter((s) => s.id !== status.id));
       setToast({ message: 'Status deleted successfully', type: 'success', visible: true });
     } catch (err) {
       console.error(err);
@@ -176,23 +180,17 @@ export default function StatusManagement() {
 
   const columns = [
     { field: 'id', headerName: 'ID', freeze: true },
-    { 
-      field: 'key', 
-      headerName: 'Key', 
-      render: (r) => (
-        <span className="font-mono font-semibold text-zinc-900">{r.key}</span>
-      ),
-      freeze: true 
+    {
+      field: 'key',
+      headerName: 'Key',
+      render: (r) => <span className="font-mono font-semibold text-zinc-900">{r.key}</span>,
+      freeze: true,
     },
     { field: 'name', headerName: 'Name', freeze: true },
-    { 
-      field: 'description', 
+    {
+      field: 'description',
       headerName: 'Description',
-      render: (r) => (
-        <span className="text-sm text-zinc-600">
-          {r.description || '-'}
-        </span>
-      ),
+      render: (r) => <span className="text-sm text-zinc-600">{r.description || '-'}</span>,
     },
     {
       field: 'userCount',
@@ -217,10 +215,13 @@ export default function StatusManagement() {
       headerName: 'Actions',
       render: (r) => (
         <div className="flex gap-1 justify-center">
-          <PermissionGate requiredPermissions={"status.update"} disableOnDenied>
-            <IconButton 
-              size="small" 
-              onClick={(e) => { e.stopPropagation(); openEditModal(r); }} 
+          <PermissionGate requiredPermissions={'status.update'} disableOnDenied>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                openEditModal(r);
+              }}
               className="text-blue-600"
               title="Edit status"
             >
@@ -228,10 +229,13 @@ export default function StatusManagement() {
             </IconButton>
           </PermissionGate>
 
-          <PermissionGate requiredPermissions={"status.delete"} disableOnDenied>
-            <IconButton 
-              size="small" 
-              onClick={(e) => { e.stopPropagation(); handleDelete(r); }} 
+          <PermissionGate requiredPermissions={'status.delete'} disableOnDenied>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(r);
+              }}
               className="text-red-600"
               title="Delete status"
               disabled={r._count?.users > 0}
@@ -251,19 +255,23 @@ export default function StatusManagement() {
         <div className="space-y-4 text-sm text-zinc-800">
           <div className="space-y-2">
             <div>
-              <strong>Key:</strong> 
+              <strong>Key:</strong>
               <span className="ml-2 font-mono bg-zinc-100 px-2 py-1 rounded">{row.key}</span>
             </div>
-            <div><strong>Name:</strong> {row.name || '-'}</div>
-            <div><strong>Description:</strong> {row.description || '-'}</div>
             <div>
-              <strong>Users with this status:</strong> 
+              <strong>Name:</strong> {row.name || '-'}
+            </div>
+            <div>
+              <strong>Description:</strong> {row.description || '-'}
+            </div>
+            <div>
+              <strong>Users with this status:</strong>
               <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                 {row._count?.users || 0}
               </span>
             </div>
             <div>
-              <strong>Created at:</strong> 
+              <strong>Created at:</strong>
               {row.createdAt ? new Date(row.createdAt).toLocaleString() : '-'}
             </div>
           </div>
@@ -271,9 +279,9 @@ export default function StatusManagement() {
       ),
       footer: ({ onClose }) => (
         <div className="flex justify-end gap-2">
-          <PermissionGate requiredPermissions={"status.update"}>
-            <button 
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700" 
+          <PermissionGate requiredPermissions={'status.update'}>
+            <button
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
               onClick={() => {
                 onClose();
                 openEditModal(row);
@@ -282,7 +290,9 @@ export default function StatusManagement() {
               Edit
             </button>
           </PermissionGate>
-          <button className="px-3 py-1 text-sm" onClick={onClose}>Close</button>
+          <button className="px-3 py-1 text-sm" onClick={onClose}>
+            Close
+          </button>
         </div>
       ),
       size: 'md',
@@ -290,22 +300,24 @@ export default function StatusManagement() {
   };
 
   return (
-    <PermissionGate requiredPermissions={["status.get"]}>
+    <PermissionGate requiredPermissions={['status.get']}>
       <div className="mx-4 sm:mx-6 lg:mx-12 p-6 bg-white rounded-lg shadow-sm max-w-full">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-zinc-900">User Status Management</h1>
-          <p className="text-sm text-zinc-600 mt-1">Manage available user statuses for the system</p>
+          <p className="text-sm text-zinc-600 mt-1">
+            Manage available user statuses for the system
+          </p>
         </div>
 
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
           <form onSubmit={handleSearch} className="flex-1">
             <div className="flex gap-2">
-              <SearchField 
-                value={searchInput} 
-                onChange={(e) => setSearchInput(e.target.value)} 
-                placeholder="Search by key, name, or description..." 
+              <SearchField
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by key, name, or description..."
                 showAdornment={false}
-                endAdornment={(
+                endAdornment={
                   <IconButton
                     type="submit"
                     size="small"
@@ -315,12 +327,12 @@ export default function StatusManagement() {
                   >
                     <SearchIcon fontSize="small" />
                   </IconButton>
-                )}
+                }
               />
             </div>
           </form>
 
-          <PermissionGate requiredPermissions={"status.create"} disableOnDenied>
+          <PermissionGate requiredPermissions={'status.create'} disableOnDenied>
             <Button
               variant="contained"
               color="primary"
@@ -335,13 +347,13 @@ export default function StatusManagement() {
         <div className="mb-4 text-sm text-zinc-600">
           Showing {filteredStatuses.length} of {statuses.length} statuses
         </div>
-        
+
         <div className="max-w-full overflow-auto">
-          <DataTable 
-            columns={columns} 
-            rows={filteredStatuses} 
-            loading={loading} 
-            onRowClick={handleRowClick} 
+          <DataTable
+            columns={columns}
+            rows={filteredStatuses}
+            loading={loading}
+            onRowClick={handleRowClick}
           />
         </div>
 
@@ -360,16 +372,19 @@ export default function StatusManagement() {
           mode="edit"
           formData={formData}
           setFormData={setFormData}
-          onClose={() => { setShowEditModal(false); setEditingStatus(null); }}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingStatus(null);
+          }}
           onSubmit={handleUpdate}
           loading={loading}
         />
 
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          visible={toast.visible} 
-          onClose={() => setToast({ ...toast, visible: false })} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          onClose={() => setToast({ ...toast, visible: false })}
         />
       </div>
     </PermissionGate>

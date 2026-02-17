@@ -1,11 +1,19 @@
-"use client";
+'use client';
 
-import React from "react";
-import EmailField from "../ui/EmailField.jsx";
-import PasswordField from "../ui/PasswordField.jsx";
+import React from 'react';
+import EmailField from '../ui/EmailField.jsx';
+import PasswordField from '../ui/PasswordField.jsx';
 import TextField from '@mui/material/TextField';
 
-export default function UserModal({ open, mode = 'create', formData, setFormData, onClose, onSubmit, loading }) {
+export default function UserModal({
+  open,
+  mode = 'create',
+  formData,
+  setFormData,
+  onClose,
+  onSubmit,
+  loading,
+}) {
   if (!open) return null;
 
   const title = mode === 'create' ? 'Create New User' : 'Edit User';

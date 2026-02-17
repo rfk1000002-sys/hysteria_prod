@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import ContactConfigForm from "../../../components/adminUI/ContactConfigForm";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import ContactConfigForm from '../../../components/adminUI/ContactConfigForm';
 
 export default function ContactMessagesPage() {
   const router = useRouter();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("UNREAD");
+  const [statusFilter, setStatusFilter] = useState('UNREAD');
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [replyText, setReplyText] = useState("");
+  const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("config"); // Default ke tab config
+  const [activeTab, setActiveTab] = useState('config'); // Default ke tab config
 
   // Fetch messages
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function ContactMessagesPage() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const query = new URLSearchParams({ status: statusFilter, limit: "50" });
+      const query = new URLSearchParams({ status: statusFilter, limit: '50' });
       const res = await fetch(`/api/contact/messages?${query}`);
       const json = await res.json();
 
@@ -30,7 +30,7 @@ export default function ContactMessagesPage() {
         setMessages(json.data.messages);
       }
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      console.error('Error fetching messages:', error);
     } finally {
       setLoading(false);
     }
@@ -43,24 +43,24 @@ export default function ContactMessagesPage() {
 
       if (json?.success) {
         setSelectedMessage(json.data.message);
-        setReplyText(json.data.message.reply || "");
+        setReplyText(json.data.message.reply || '');
       }
     } catch (error) {
-      console.error("Error fetching message:", error);
+      console.error('Error fetching message:', error);
     }
   };
 
   const handleSubmitReply = async () => {
     if (!replyText.trim()) {
-      alert("Pesan reply tidak boleh kosong");
+      alert('Pesan reply tidak boleh kosong');
       return;
     }
 
     try {
       setSubmitting(true);
       const res = await fetch(`/api/contact/messages/${selectedMessage.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reply: replyText }),
       });
 
@@ -68,34 +68,34 @@ export default function ContactMessagesPage() {
 
       if (json?.success) {
         setSelectedMessage(json.data.message);
-        alert("Reply berhasil disimpan");
+        alert('Reply berhasil disimpan');
         fetchMessages();
       } else {
-        alert("Gagal menyimpan reply");
+        alert('Gagal menyimpan reply');
       }
     } catch (error) {
-      console.error("Error submitting reply:", error);
-      alert("Terjadi kesalahan");
+      console.error('Error submitting reply:', error);
+      alert('Terjadi kesalahan');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteMessage = async (id) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus pesan ini?")) return;
+    if (!confirm('Apakah Anda yakin ingin menghapus pesan ini?')) return;
 
     try {
-      const res = await fetch(`/api/contact/messages/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/contact/messages/${id}`, { method: 'DELETE' });
       const json = await res.json();
 
       if (json?.success) {
         setSelectedMessage(null);
         fetchMessages();
-        alert("Pesan berhasil dihapus");
+        alert('Pesan berhasil dihapus');
       }
     } catch (error) {
-      console.error("Error deleting message:", error);
-      alert("Gagal menghapus pesan");
+      console.error('Error deleting message:', error);
+      alert('Gagal menghapus pesan');
     }
   };
 
@@ -104,21 +104,21 @@ export default function ContactMessagesPage() {
       {/* Tabs */}
       <div className="flex gap-2 border-b border-zinc-200">
         <button
-          onClick={() => setActiveTab("config")}
+          onClick={() => setActiveTab('config')}
           className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${
-            activeTab === "config"
-              ? "border-[#E93C8E] text-[#E93C8E]"
-              : "border-transparent text-zinc-600 hover:text-zinc-900"
+            activeTab === 'config'
+              ? 'border-[#E93C8E] text-[#E93C8E]'
+              : 'border-transparent text-zinc-600 hover:text-zinc-900'
           }`}
         >
           ⚙️ Konfigurasi Kontak
         </button>
         <button
-          onClick={() => setActiveTab("messages")}
+          onClick={() => setActiveTab('messages')}
           className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${
-            activeTab === "messages"
-              ? "border-[#E93C8E] text-[#E93C8E]"
-              : "border-transparent text-zinc-600 hover:text-zinc-900"
+            activeTab === 'messages'
+              ? 'border-[#E93C8E] text-[#E93C8E]'
+              : 'border-transparent text-zinc-600 hover:text-zinc-900'
           }`}
         >
           📬 Pesan Masuk
@@ -126,10 +126,10 @@ export default function ContactMessagesPage() {
       </div>
 
       {/* Config Tab */}
-      {activeTab === "config" && <ContactConfigForm />}
+      {activeTab === 'config' && <ContactConfigForm />}
 
       {/* Messages Tab */}
-      {activeTab === "messages" && (
+      {activeTab === 'messages' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Messages List */}
           <div className="lg:col-span-1 bg-white rounded-lg shadow">
@@ -138,20 +138,20 @@ export default function ContactMessagesPage() {
 
               {/* Filter */}
               <div className="space-y-2">
-                {["UNREAD", "READ", "REPLIED", "ARCHIVED"].map((status) => (
+                {['UNREAD', 'READ', 'REPLIED', 'ARCHIVED'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
                     className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       statusFilter === status
-                        ? "bg-[#E93C8E] text-white"
-                        : "bg-gray-100 text-zinc-900 hover:bg-gray-200"
+                        ? 'bg-[#E93C8E] text-white'
+                        : 'bg-gray-100 text-zinc-900 hover:bg-gray-200'
                     }`}
                   >
-                    {status === "UNREAD" && `📬 Belum Dibaca`}
-                    {status === "READ" && `📖 Sudah Dibaca`}
-                    {status === "REPLIED" && `✉️ Sudah Dibalas`}
-                    {status === "ARCHIVED" && `📦 Arsip`}
+                    {status === 'UNREAD' && `📬 Belum Dibaca`}
+                    {status === 'READ' && `📖 Sudah Dibaca`}
+                    {status === 'REPLIED' && `✉️ Sudah Dibalas`}
+                    {status === 'ARCHIVED' && `📦 Arsip`}
                   </button>
                 ))}
               </div>
@@ -171,15 +171,15 @@ export default function ContactMessagesPage() {
                       onClick={() => handleSelectMessage(msg)}
                       className={`w-full text-left p-4 border-l-4 transition-colors ${
                         selectedMessage?.id === msg.id
-                          ? "bg-blue-50 border-l-[#E93C8E]"
-                          : "border-l-transparent hover:bg-gray-50"
+                          ? 'bg-blue-50 border-l-[#E93C8E]'
+                          : 'border-l-transparent hover:bg-gray-50'
                       }`}
                     >
                       <div className="font-semibold text-zinc-900 text-sm">{msg.name}</div>
                       <div className="text-xs text-zinc-600">{msg.email}</div>
                       <div className="text-xs text-zinc-500 mt-1 truncate">{msg.subject}</div>
                       <div className="text-xs text-zinc-400 mt-2">
-                        {new Date(msg.createdAt).toLocaleDateString("id-ID")}
+                        {new Date(msg.createdAt).toLocaleDateString('id-ID')}
                       </div>
                     </button>
                   ))}
@@ -206,25 +206,25 @@ export default function ContactMessagesPage() {
                       <strong>Dari:</strong> {selectedMessage.name} ({selectedMessage.email})
                     </p>
                     <p>
-                      <strong>Tanggal:</strong>{" "}
-                      {new Date(selectedMessage.createdAt).toLocaleDateString("id-ID", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
+                      <strong>Tanggal:</strong>{' '}
+                      {new Date(selectedMessage.createdAt).toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
                       })}
                     </p>
                     <p>
-                      <strong>Status:</strong>{" "}
+                      <strong>Status:</strong>{' '}
                       <span
                         className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                          selectedMessage.status === "UNREAD"
-                            ? "bg-red-100 text-red-800"
-                            : selectedMessage.status === "READ"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"
+                          selectedMessage.status === 'UNREAD'
+                            ? 'bg-red-100 text-red-800'
+                            : selectedMessage.status === 'READ'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-green-100 text-green-800'
                         }`}
                       >
                         {selectedMessage.status}
@@ -236,7 +236,9 @@ export default function ContactMessagesPage() {
                 {/* Message Content */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="text-sm font-semibold text-zinc-900 mb-2">Pesan:</h4>
-                  <p className="text-sm text-zinc-700 whitespace-pre-wrap">{selectedMessage.message}</p>
+                  <p className="text-sm text-zinc-700 whitespace-pre-wrap">
+                    {selectedMessage.message}
+                  </p>
                 </div>
 
                 {/* Reply Section */}
@@ -256,7 +258,7 @@ export default function ContactMessagesPage() {
                       disabled={submitting}
                       className="flex-1 rounded-lg bg-[#E93C8E] text-white px-4 py-2 text-sm font-medium hover:bg-[#d63380] disabled:opacity-50 transition-colors"
                     >
-                      {submitting ? "Menyimpan..." : "Simpan Balasan"}
+                      {submitting ? 'Menyimpan...' : 'Simpan Balasan'}
                     </button>
                     <button
                       onClick={() => handleDeleteMessage(selectedMessage.id)}

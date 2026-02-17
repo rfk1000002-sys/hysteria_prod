@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useRef } from "react";
-import Button from "@mui/material/Button";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import React, { useRef } from 'react';
+import Button from '@mui/material/Button';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 /**
  * Reusable UploadButton for admin UI
@@ -16,11 +16,11 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
  * - disabled: boolean
  */
 export default function UploadButton({
-  accept = "image/*,video/*",
+  accept = 'image/*,video/*',
   multiple = false,
-  label = "Upload",
-  variant = "outlined",
-  size = "small",
+  label = 'Upload',
+  variant = 'outlined',
+  size = 'small',
   onFiles = () => {},
   disabled = false,
   startIcon = <UploadFileIcon />,

@@ -1,52 +1,117 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial } from "../../../components/ui/icon";
+import { useState } from 'react';
+import Image from 'next/image';
+import {
+  IconDashboard,
+  IconUsers,
+  IconSettings,
+  IconSection,
+  IconPlatform,
+  IconEvent,
+  IconPost,
+  IconSocial,
+} from '../../../components/ui/icon';
 
-export default function AdminSidebar({ open, collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
+export default function AdminSidebar({
+  open,
+  collapsed,
+  onClose,
+  onToggleCollapse,
+  onNavigate,
+  currentView,
+}) {
   const [openKeys, setOpenKeys] = useState({});
 
   const menus = [
     { key: 'dashboard', label: 'Dashboard', view: 'dashboard', icon: IconDashboard, enabled: true },
-    { key: 'users', label: 'Users', view: 'users', icon: IconUsers, enabled: true, children: [
-      { key: 'user_management', label: 'User Management', view: 'users.user_management', enabled: true },
-      { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
-      { key: 'status_management', label: 'Status', view: 'users.status_management', enabled: true },
-    ]},
-    { key: 'section', label: 'Section', view: 'section', icon: IconSection, enabled: true, children: [
-      { key: 'hero', label: 'Hero', view: 'section.hero', enabled: true },
-      { key: 'contact', label: 'Contact', view: 'section.contact', enabled: true },
-    ]},
+    {
+      key: 'users',
+      label: 'Users',
+      view: 'users',
+      icon: IconUsers,
+      enabled: true,
+      children: [
+        {
+          key: 'user_management',
+          label: 'User Management',
+          view: 'users.user_management',
+          enabled: true,
+        },
+        { key: 'permission', label: 'Permission', view: 'users.permission', enabled: true },
+        {
+          key: 'status_management',
+          label: 'Status',
+          view: 'users.status_management',
+          enabled: true,
+        },
+      ],
+    },
+    {
+      key: 'section',
+      label: 'Section',
+      view: 'section',
+      icon: IconSection,
+      enabled: true,
+      children: [{ key: 'hero', label: 'Hero', view: 'section.hero', enabled: true }],
+    },
     { key: 'platform', label: 'Platform', view: 'platform', icon: IconPlatform, enabled: false },
     { key: 'event', label: 'Event', view: 'event', icon: IconEvent, enabled: false },
     { key: 'post', label: 'Post', view: 'post', icon: IconPost, enabled: false },
-    { key: 'settings', label: 'Settings', view: 'settings', icon: IconSettings, enabled: true, children: [
-      { key: 'social', label: 'Social', view: 'settings.social', enabled: false },
-    ]},
+    {
+      key: 'settings',
+      label: 'Settings',
+      view: 'settings',
+      icon: IconSettings,
+      enabled: true,
+      children: [
+        { key: 'social', label: 'Social', view: 'settings.social', enabled: false },
+        { key: 'contact', label: 'Contact', view: 'settings.contact', enabled: true },
+        {
+          key: 'collaboration_content',
+          label: 'Collaboration',
+          view: 'settings.collaboration_content',
+          enabled: true,
+        },
+      ],
+    },
   ];
 
-  const toggleOpen = (key) => setOpenKeys(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleOpen = (key) => setOpenKeys((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
-    <div className="h-full overflow-y-auto bg-white flex flex-col">
+    <div className="h-full overflow-y-auto flex flex-col" style={{ backgroundColor: '#E83C91E5' }}>
       {/* Logo dan tombol tutup */}
-      <div className={`px-4 py-4 flex items-center border-b border-zinc-100 ${collapsed ? "justify-center" : "justify-between"}`}>
-        <div className={`flex items-center gap-3 ${collapsed ? "w-full justify-center" : ""}`}>
+      <div
+        className={`px-4 py-4 flex items-center border-b border-white/20 ${collapsed ? 'justify-center' : 'justify-between'}`}
+      >
+        <div className={`flex items-center gap-3 ${collapsed ? 'w-full justify-center' : ''}`}>
           <button
             onClick={onToggleCollapse}
             aria-pressed={collapsed}
             className="flex items-center gap-3 focus:outline-none"
-            title={collapsed ? "Open sidebar" : "Collapse sidebar"}
+            title={collapsed ? 'Open sidebar' : 'Collapse sidebar'}
           >
             <div className={`rounded-full p-1 ${collapsed ? 'bg-[#E83C91]' : 'bg-[#E83C91]'}`}>
-              <Image src="/image/Logo-hysteria.svg" alt="Hysteria logo" width={40} height={40} className="h-8 w-8" priority />
+              <Image
+                src="/image/Logo-hysteria.svg"
+                alt="Hysteria logo"
+                width={40}
+                height={40}
+                className="h-8 w-8"
+                priority
+              />
             </div>
-            {!collapsed && <span className="text-sm font-semibold text-zinc-900">Hysteria</span>}
+            {!collapsed && <span className="text-sm font-semibold text-white">Hysteria</span>}
           </button>
         </div>
-        <div className={`flex items-center gap-2 ${collapsed ? "hidden" : ""}`}>
-          <button onClick={onClose} className="lg:hidden p-2 rounded-md text-zinc-600 hover:bg-zinc-50">Close</button>
+        <div className={`flex items-center gap-2 ${collapsed ? 'hidden' : ''}`}>
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 rounded-md text-white hover:bg-white/20"
+          >
+            Close
+          </button>
         </div>
       </div>
 
@@ -57,13 +122,15 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
             const Icon = item.icon;
             const enabled = !!item.enabled;
             const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-            const isActive = currentView === item.view || (hasChildren && item.children.some(c => c.view === currentView));
+            const isActive =
+              currentView === item.view ||
+              (hasChildren && item.children.some((c) => c.view === currentView));
             const isOpen = !!openKeys[item.key];
-            const baseClass = `group relative flex items-center gap-3 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
-            const enabledClass = isActive 
-              ? `bg-blue-50 text-blue-700` 
-              : `text-zinc-700 hover:bg-zinc-50`;
-            const disabledClass = `text-zinc-400 cursor-not-allowed`;
+            const baseClass = `group relative flex items-center gap-3 rounded-md text-sm font-medium ${collapsed ? 'justify-center px-0 py-3' : 'px-3 py-2'}`;
+            const enabledClass = isActive
+              ? `bg-white/20 text-white font-semibold`
+              : `text-white hover:bg-white/10`;
+            const disabledClass = `text-white/50 cursor-not-allowed`;
 
             const handleClick = () => {
               if (!enabled) return;
@@ -88,17 +155,28 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                     className={`${baseClass} ${enabled ? enabledClass : disabledClass} w-full`}
                     aria-label={item.label}
                   >
-                    <Icon />
+                    <Icon className="text-white" style={{ color: 'white' }} />
                     {!collapsed && (
                       <>
                         <span>{item.label}</span>
                         {hasChildren && (
-                          <svg className={`ml-auto h-4 w-4 transform transition-transform ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fillRule="evenodd" d="M6 4a1 1 0 011.707-.707l6 6a1 1 0 010 1.414l-6 6A1 1 0 016 16.293L11.586 11 6 5.414A1 1 0 016 4z" clipRule="evenodd" />
+                          <svg
+                            className={`ml-auto h-4 w-4 transform transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M6 4a1 1 0 011.707-.707l6 6a1 1 0 010 1.414l-6 6A1 1 0 016 16.293L11.586 11 6 5.414A1 1 0 016 4z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                         {!enabled && (
-                          <span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                          <span className="ml-2 inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
+                            Coming soon
+                          </span>
                         )}
                       </>
                     )}
@@ -112,9 +190,13 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                         return (
                           <li key={child.key}>
                             {(() => {
-                              const childClassBase = 'flex items-center gap-2 w-full text-sm rounded-md px-3 py-2';
-                              const childEnabledClass = childActive ? 'bg-blue-50 text-blue-700' : 'text-zinc-700 hover:bg-zinc-50';
-                              const childDisabledClass = 'text-zinc-400 cursor-not-allowed bg-transparent';
+                              const childClassBase =
+                                'flex items-center gap-2 w-full text-sm rounded-md px-3 py-2';
+                              const childEnabledClass = childActive
+                                ? 'bg-white/20 text-white font-semibold'
+                                : 'text-white hover:bg-white/10';
+                              const childDisabledClass =
+                                'text-white/50 cursor-not-allowed bg-transparent';
                               return (
                                 <button
                                   onClick={() => childEnabled && onNavigate(child.view)}
@@ -127,7 +209,9 @@ export default function AdminSidebar({ open, collapsed, onClose, onToggleCollaps
                                 >
                                   <span className="text-xs">{child.label}</span>
                                   {!childEnabled && (
-                                    <span className="ml-auto inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">Coming soon</span>
+                                    <span className="ml-auto inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white">
+                                      Coming soon
+                                    </span>
                                   )}
                                 </button>
                               );

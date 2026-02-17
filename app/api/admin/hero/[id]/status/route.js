@@ -1,17 +1,20 @@
-import { respondSuccess, respondError, AppError } from "../../../../../../lib/response";
-import { requireAuthWithPermission } from "../../../../../../lib/helper/permission.helper";
-import * as heroService from "../../../../../../modules/admin/hero/services/hero.service.js";
-import logger from "../../../../../../lib/logger.js";
+import { respondSuccess, respondError, AppError } from '../../../../../../lib/response';
+import { requireAuthWithPermission } from '../../../../../../lib/helper/permission.helper';
+import * as heroService from '../../../../../../modules/admin/hero/services/hero.service.js';
+import logger from '../../../../../../lib/logger.js';
 
 // PATCH - update only isActive status for a hero
 export async function PATCH(request, { params }) {
   try {
-    await requireAuthWithPermission(request, "hero.update");
+    await requireAuthWithPermission(request, 'hero.update');
 
     // Resolve params (Next passes params as a Promise in dynamic API routes)
     const resolvedParams = await params;
     // Log request and resolved params for debugging
-    logger.info('API PATCH /api/admin/hero/:id/status called', { url: request.url, params: resolvedParams });
+    logger.info('API PATCH /api/admin/hero/:id/status called', {
+      url: request.url,
+      params: resolvedParams,
+    });
 
     // Normalize id (resolvedParams.id may be string or array)
     const rawId = Array.isArray(resolvedParams?.id) ? resolvedParams.id[0] : resolvedParams?.id;
@@ -35,7 +38,9 @@ export async function PATCH(request, { params }) {
 
     return respondSuccess(updated, 200);
   } catch (error) {
-    logger.error('Error updating hero status', { error: error && (error.stack || error.message || error) });
+    logger.error('Error updating hero status', {
+      error: error && (error.stack || error.message || error),
+    });
     if (error instanceof AppError) return respondError(error);
     return respondError(new AppError('Failed to update hero status', 500));
   }

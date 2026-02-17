@@ -1,37 +1,37 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 const events = [
   {
     id: 1,
-    title: "Workshop React Advanced",
-    date: "25 Januari 2026",
-    location: "Jakarta Convention Center",
-    category: "Workshop",
-    desc: "Pelajari teknik-teknik advanced React untuk membangun aplikasi yang lebih powerful.",
+    title: 'Workshop React Advanced',
+    date: '25 Januari 2026',
+    location: 'Jakarta Convention Center',
+    category: 'Workshop',
+    desc: 'Pelajari teknik-teknik advanced React untuk membangun aplikasi yang lebih powerful.',
   },
   {
     id: 2,
-    title: "Music Festival Hysteria 2026",
-    date: "15 Februari 2026",
-    location: "GBK Senayan",
-    category: "Festival",
-    desc: "Festival musik terbesar tahun ini dengan berbagai artis ternama.",
+    title: 'Music Festival Hysteria 2026',
+    date: '15 Februari 2026',
+    location: 'GBK Senayan',
+    category: 'Festival',
+    desc: 'Festival musik terbesar tahun ini dengan berbagai artis ternama.',
   },
   {
     id: 3,
-    title: "Tech Talk: AI & Web Development",
-    date: "5 Maret 2026",
-    location: "Online",
-    category: "Seminar",
-    desc: "Diskusi tentang bagaimana AI mengubah landscape web development modern.",
+    title: 'Tech Talk: AI & Web Development',
+    date: '5 Maret 2026',
+    location: 'Online',
+    category: 'Seminar',
+    desc: 'Diskusi tentang bagaimana AI mengubah landscape web development modern.',
   },
   {
     id: 4,
-    title: "Konser Indie Night",
-    date: "20 Maret 2026",
-    location: "Rolling Stone Cafe",
-    category: "Konser",
-    desc: "Malam penuh musik indie dari band-band lokal terbaik.",
+    title: 'Konser Indie Night',
+    date: '20 Maret 2026',
+    location: 'Rolling Stone Cafe',
+    category: 'Konser',
+    desc: 'Malam penuh musik indie dari band-band lokal terbaik.',
   },
 ];
 
@@ -49,21 +49,14 @@ export default function EventPage() {
               className="bg-[#0f1724] p-6 rounded-lg shadow hover:bg-[#1a2332] transition-colors"
             >
               <div className="flex justify-between items-start mb-3">
-                <span className="px-3 py-1 bg-blue-600 text-xs rounded-full">
-                  {event.category}
-                </span>
+                <span className="px-3 py-1 bg-blue-600 text-xs rounded-full">{event.category}</span>
                 <span className="text-sm text-zinc-400">{event.date}</span>
               </div>
 
               <h2 className="text-2xl font-semibold mb-2">{event.title}</h2>
-              
+
               <div className="flex items-center text-sm text-zinc-300 mb-3">
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

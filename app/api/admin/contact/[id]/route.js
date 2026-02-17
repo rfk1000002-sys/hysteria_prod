@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import { respondSuccess, respondError, AppError } from "../../../../../lib/response";
-import { requireAuthWithPermission } from "../../../../../lib/helper/permission.helper";
-import logger from "../../../../../lib/logger.js";
-import * as contactService from "../../../../../modules/admin/contact/services/contact.service.js";
+import { NextResponse } from 'next/server';
+import { respondSuccess, respondError, AppError } from '../../../../../lib/response';
+import { requireAuthWithPermission } from '../../../../../lib/helper/permission.helper';
+import logger from '../../../../../lib/logger.js';
+import * as contactService from '../../../../../modules/admin/contact/services/contact.service.js';
 
 // PUT - Update contact section
 export async function PUT(request, { params }) {
@@ -19,14 +19,17 @@ export async function PUT(request, { params }) {
 
     return respondSuccess(updatedContact, 200);
   } catch (error) {
-    console.error("Error updating contact:", error);
-    logger.error("PUT /api/admin/contact/[id] error:", { error: error.message, stack: error.stack });
+    console.error('Error updating contact:', error);
+    logger.error('PUT /api/admin/contact/[id] error:', {
+      error: error.message,
+      stack: error.stack,
+    });
 
     if (error instanceof AppError) {
       return respondError(error.message, error.statusCode);
     }
 
-    return respondError("Internal server error", 500);
+    return respondError('Internal server error', 500);
   }
 }
 
@@ -42,15 +45,18 @@ export async function DELETE(request, { params }) {
 
     logger.info('Contact deleted', { id });
 
-    return respondSuccess({ message: "Contact deleted successfully" }, 200);
+    return respondSuccess({ message: 'Contact deleted successfully' }, 200);
   } catch (error) {
-    console.error("Error deleting contact:", error);
-    logger.error("DELETE /api/admin/contact/[id] error:", { error: error.message, stack: error.stack });
+    console.error('Error deleting contact:', error);
+    logger.error('DELETE /api/admin/contact/[id] error:', {
+      error: error.message,
+      stack: error.stack,
+    });
 
     if (error instanceof AppError) {
       return respondError(error.message, error.statusCode);
     }
 
-    return respondError("Internal server error", 500);
+    return respondError('Internal server error', 500);
   }
 }

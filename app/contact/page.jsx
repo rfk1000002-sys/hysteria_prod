@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
-import ContactHero from "../../components/contact/ContactHero";
-import ContactInfoCards from "../../components/contact/ContactInfoCards";
-import ContactMap from "../../components/contact/ContactMap";
-import SocialMediaSection from "../../components/contact/SocialMediaSection";
-import ContactCTA from "../../components/contact/ContactCTA";
+import { useState, useEffect } from 'react';
+import Header from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
+import ContactHero from '../../components/contact/ContactHero';
+import ContactInfoCards from '../../components/contact/ContactInfoCards';
+import ContactMap from '../../components/contact/ContactMap';
+import SocialMediaSection from '../../components/contact/SocialMediaSection';
+import ContactCTA from '../../components/contact/ContactCTA';
 
 export default function KontakPage() {
   const [contactData, setContactData] = useState(null);
@@ -22,7 +22,7 @@ export default function KontakPage() {
           setContactData(json.data.contact);
         }
       } catch (error) {
-        console.error("Error fetching contact data:", error);
+        console.error('Error fetching contact data:', error);
       } finally {
         setLoading(false);
       }
@@ -43,18 +43,16 @@ export default function KontakPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900">
-      
       {/* CONTENT */}
-      <main >
+      <main>
         <div className="mx-auto max-w-6xl px-6">
-        <ContactHero />
-        <ContactInfoCards contactData={contactData} />
-        <ContactMap contactData={contactData} />
-        <SocialMediaSection contactData={contactData} />
+          <ContactHero />
+          <ContactInfoCards contactData={contactData} />
+          <ContactMap contactData={contactData} />
+          <SocialMediaSection contactData={contactData} />
         </div>
         <ContactCTA contactData={contactData} />
       </main>
-
     </div>
   );
 }

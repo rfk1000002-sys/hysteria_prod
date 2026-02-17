@@ -1,20 +1,24 @@
-import { NextResponse } from "next/server";
-import { respondSuccess, respondError, AppError } from "../../../../lib/response";
-import { requireAuthWithPermission } from "../../../../lib/helper/permission.helper";
-import logger from "../../../../lib/logger.js";
-import { parseMultipartForm, validateFileMimeType, validateFileSize } from "../../../../lib/upload/multipart";
-import * as heroService from "../../../../modules/admin/hero/services/hero.service.js";
+import { NextResponse } from 'next/server';
+import { respondSuccess, respondError, AppError } from '../../../../lib/response';
+import { requireAuthWithPermission } from '../../../../lib/helper/permission.helper';
+import logger from '../../../../lib/logger.js';
+import {
+  parseMultipartForm,
+  validateFileMimeType,
+  validateFileSize,
+} from '../../../../lib/upload/multipart';
+import * as heroService from '../../../../modules/admin/hero/services/hero.service.js';
 
 // GET - Fetch all hero sections
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, "hero.read");
+    await requireAuthWithPermission(request, 'hero.read');
 
     logger.info('API GET /api/admin/hero called', { url: request.url });
 
     // Parse query parameters with defaults
     const { searchParams } = new URL(request.url);
-    
+
     const options = {
       perPage: 10,
       cursor: null,
@@ -43,33 +47,38 @@ export async function GET(request) {
 
     const result = await heroService.getAllHeroes(options);
 
-    logger.info('Fetched heroes', { count: Array.isArray(result.heroes) ? result.heroes.length : undefined });
+    logger.info('Fetched heroes', {
+      count: Array.isArray(result.heroes) ? result.heroes.length : undefined,
+    });
 
     return respondSuccess(result, 200);
   } catch (error) {
-    console.error("Error fetching heroes:", error);
-    console.error("Error stack:", error.stack);
+    console.error('Error fetching heroes:', error);
+    console.error('Error stack:', error.stack);
     if (error instanceof AppError) {
       return respondError(error);
     }
-    return respondError(new AppError("Failed to fetch heroes", 500));
+    return respondError(new AppError('Failed to fetch heroes', 500));
   }
 }
 
 // POST - Create new hero section (supports JSON or multipart with file upload)
 export async function POST(request) {
   try {
-    await requireAuthWithPermission(request, "hero.create");
-    logger.info('API POST /api/admin/hero called', { url: request.url, contentType: request.headers.get('content-type') });
+    await requireAuthWithPermission(request, 'hero.create');
+    logger.info('API POST /api/admin/hero called', {
+      url: request.url,
+      contentType: request.headers.get('content-type'),
+    });
 
-    const contentType = request.headers.get("content-type") || "";
+    const contentType = request.headers.get('content-type') || '';
     let body = {};
 
     // Max upload size in bytes (adjust as needed)
     const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
     // Check if multipart (has file upload)
-    if (contentType.includes("multipart/form-data")) {
+    if (contentType.includes('multipart/form-data')) {
       const { fields, files } = await parseMultipartForm(request, {
         maxFileSize: MAX_UPLOAD_SIZE,
       });
@@ -78,7 +87,7 @@ export async function POST(request) {
 
       // Convert string boolean to actual boolean early
       if (body.isActive !== undefined) {
-        body.isActive = body.isActive === "true" || body.isActive === true;
+        body.isActive = body.isActive === 'true' || body.isActive === true;
       }
 
       // If no file uploaded, just normal create flow
@@ -92,23 +101,30 @@ export async function POST(request) {
       const file = files[0];
 
       // Validate MIME type
-      const allowedTypes = (process.env.UPLOAD_ALLOWED_TYPES || "image/*,video/*")
-        .split(",")
+      const allowedTypes = (process.env.UPLOAD_ALLOWED_TYPES || 'image/*,video/*')
+        .split(',')
         .map((t) => t.trim());
 
       if (!validateFileMimeType(file, allowedTypes)) {
-        return respondError(new AppError(`Invalid file type. Allowed types: ${allowedTypes.join(", ")}`, 415));
+        return respondError(
+          new AppError(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`, 415)
+        );
       }
 
       // Validate size
       const maxSize = MAX_UPLOAD_SIZE;
       if (!validateFileSize(file, maxSize)) {
-        return respondError(new AppError(`File too large. Maximum size: ${maxSize / 1024 / 1024}MB`, 413));
+        return respondError(
+          new AppError(`File too large. Maximum size: ${maxSize / 1024 / 1024}MB`, 413)
+        );
       }
 
       // Use service function for transactional create with upload
       const hero = await heroService.createHeroWithFile(body, file);
-      logger.info('Hero created with file', { heroId: hero?.id, file: file.originalFilename || file.newFilename || file.name });
+      logger.info('Hero created with file', {
+        heroId: hero?.id,
+        file: file.originalFilename || file.newFilename || file.name,
+      });
       return respondSuccess(hero, 201);
     } else {
       // Regular JSON body
@@ -118,10 +134,12 @@ export async function POST(request) {
       return respondSuccess(hero, 201);
     }
   } catch (error) {
-    logger.error('Error creating hero', { error: error && (error.stack || error.message || error) });
+    logger.error('Error creating hero', {
+      error: error && (error.stack || error.message || error),
+    });
     if (error instanceof AppError) {
       return respondError(error);
     }
-    return respondError(new AppError("Failed to create hero", 500));
+    return respondError(new AppError('Failed to create hero', 500));
   }
 }

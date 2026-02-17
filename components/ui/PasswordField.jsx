@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import React, { useState } from 'react';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export default function PasswordField({
-  name = "password",
-  label = "Password",
+  name = 'password',
+  label = 'Password',
   register,
   error,
-  placeholder = "••••••••",
+  placeholder = '••••••••',
   ...props
 }) {
   const [show, setShow] = useState(false);
@@ -22,7 +22,7 @@ export default function PasswordField({
   return (
     <TextField
       label={label}
-      type={show ? "text" : "password"}
+      type={show ? 'text' : 'password'}
       placeholder={placeholder}
       fullWidth
       variant="outlined"

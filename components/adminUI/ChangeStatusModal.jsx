@@ -35,7 +35,7 @@ export default function ChangeStatusModal({
   loading = false,
 }) {
   const currentStatus = user?.status;
-  const selectedStatus = availableStatuses.find(s => s.id === selectedStatusId);
+  const selectedStatus = availableStatuses.find((s) => s.id === selectedStatusId);
   const isStatusChanged = selectedStatusId && selectedStatusId !== currentStatus?.id;
 
   const handleSubmit = (e) => {
@@ -44,19 +44,19 @@ export default function ChangeStatusModal({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
       fullWidth
       PaperProps={{
-        className: "rounded-lg"
+        className: 'rounded-lg',
       }}
     >
       <DialogTitle className="text-xl font-semibold text-zinc-900 border-b">
         Change User Status
       </DialogTitle>
-      
+
       <form onSubmit={handleSubmit}>
         <DialogContent className="mt-4 space-y-4 p-6">
           {user && (
@@ -67,15 +67,17 @@ export default function ChangeStatusModal({
               </div>
               <div className="text-sm">
                 <span className="font-medium text-zinc-700">Current Status:</span>{' '}
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  currentStatus?.key === 'ACTIVE' 
-                    ? 'bg-green-100 text-green-700' 
-                    : currentStatus?.key === 'SUSPEND'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : currentStatus?.key === 'BANNED'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    currentStatus?.key === 'ACTIVE'
+                      ? 'bg-green-100 text-green-700'
+                      : currentStatus?.key === 'SUSPEND'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : currentStatus?.key === 'BANNED'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
                   {currentStatus?.name || 'Unknown'}
                 </span>
               </div>
@@ -89,7 +91,7 @@ export default function ChangeStatusModal({
             onChange={(v) => setSelectedStatusId(v ? Number(v) : null)}
             required
             disabled={loading}
-            options={availableStatuses.map(status => ({
+            options={availableStatuses.map((status) => ({
               id: status.id,
               name: `${status.name} ${status.id === currentStatus?.id ? '(Current)' : ''}`,
               description: status.description,
@@ -105,8 +107,7 @@ export default function ChangeStatusModal({
               </p>
               <p className="text-xs text-blue-700">
                 You are about to change this user&apos;s status from{' '}
-                <strong>{currentStatus?.name}</strong> to{' '}
-                <strong>{selectedStatus?.name}</strong>.
+                <strong>{currentStatus?.name}</strong> to <strong>{selectedStatus?.name}</strong>.
               </p>
               <p className="text-xs text-blue-700 mt-1">
                 This will invalidate all existing user sessions.
@@ -137,12 +138,7 @@ export default function ChangeStatusModal({
         </DialogContent>
 
         <DialogActions className="border-t px-6 py-6">
-          <Button 
-            onClick={onClose} 
-            disabled={loading}
-            variant="outlined"
-            color="inherit"
-          >
+          <Button onClick={onClose} disabled={loading} variant="outlined" color="inherit">
             Cancel
           </Button>
           <Button

@@ -1,9 +1,9 @@
-import { comparePassword, hashPassword } from '../../../lib/hash.js'
+import { comparePassword, hashPassword } from '../../../lib/hash.js';
 
 export async function hashUserPassword(password) {
-	return hashPassword(password)
+  return hashPassword(password);
 }
 
 export async function verifyUserPassword(password, hash) {
-	return comparePassword(password, hash)
+  return comparePassword(password, hash);
 }

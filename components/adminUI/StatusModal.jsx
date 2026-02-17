@@ -34,9 +34,7 @@ export default function StatusModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {isCreate ? 'Create New Status' : 'Edit Status'}
-      </DialogTitle>
+      <DialogTitle>{isCreate ? 'Create New Status' : 'Edit Status'}</DialogTitle>
       <form onSubmit={onSubmit}>
         <DialogContent>
           <div className="space-y-4">
@@ -49,9 +47,9 @@ export default function StatusModal({
               required
               disabled={loading}
               helperText="Unique identifier (uppercase, no spaces)"
-              inputProps={{ 
+              inputProps={{
                 style: { textTransform: 'uppercase' },
-                maxLength: 50 
+                maxLength: 50,
               }}
             />
 
@@ -81,16 +79,12 @@ export default function StatusModal({
           </div>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={onClose} 
-            disabled={loading}
-            color="inherit"
-          >
+          <Button onClick={onClose} disabled={loading} color="inherit">
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
+          <Button
+            type="submit"
+            variant="contained"
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : null}
           >

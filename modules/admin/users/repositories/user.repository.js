@@ -1,4 +1,4 @@
-import { prisma } from '../../../../lib/prisma.js'
+import { prisma } from '../../../../lib/prisma.js';
 
 /**
  * Find all users with cursor-based pagination and search
@@ -9,39 +9,39 @@ import { prisma } from '../../../../lib/prisma.js'
  * @returns {Promise<{users: Array, nextCursor: number|null, hasMore: boolean}>}
  */
 export async function findAllUsers({ perPage = 10, cursor = null, search = '' }) {
-	const where = search
-		? {
-				OR: [
-					{ email: { contains: search, mode: 'insensitive' } },
-					{ name: { contains: search, mode: 'insensitive' } },
-				],
-		  }
-		: {}
+  const where = search
+    ? {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
 
-	const users = await prisma.user.findMany({
-		where,
-		take: perPage + 1, // Fetch one extra to check if there's more
-		...(cursor && { cursor: { id: cursor }, skip: 1 }), // Skip the cursor itself
-		orderBy: { id: 'asc' },
-		include: {
-			status: true,
-			roles: {
-				include: {
-					role: true,
-				},
-			},
-		},
-	})
+  const users = await prisma.user.findMany({
+    where,
+    take: perPage + 1, // Fetch one extra to check if there's more
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }), // Skip the cursor itself
+    orderBy: { id: 'asc' },
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
 
-	const hasMore = users.length > perPage
-	const returnedUsers = hasMore ? users.slice(0, perPage) : users
-	const nextCursor = hasMore ? returnedUsers[returnedUsers.length - 1].id : null
+  const hasMore = users.length > perPage;
+  const returnedUsers = hasMore ? users.slice(0, perPage) : users;
+  const nextCursor = hasMore ? returnedUsers[returnedUsers.length - 1].id : null;
 
-	return {
-		users: returnedUsers,
-		nextCursor,
-		hasMore,
-	}
+  return {
+    users: returnedUsers,
+    nextCursor,
+    hasMore,
+  };
 }
 
 /**
@@ -50,16 +50,16 @@ export async function findAllUsers({ perPage = 10, cursor = null, search = '' })
  * @returns {Promise<number>}
  */
 export async function countUsers(search = '') {
-	const where = search
-		? {
-				OR: [
-					{ email: { contains: search, mode: 'insensitive' } },
-					{ name: { contains: search, mode: 'insensitive' } },
-				],
-		  }
-		: {}
+  const where = search
+    ? {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
 
-	return prisma.user.count({ where })
+  return prisma.user.count({ where });
 }
 
 /**
@@ -68,17 +68,17 @@ export async function countUsers(search = '') {
  * @returns {Promise<User|null>}
  */
 export async function findUserById(id) {
-	return prisma.user.findUnique({
-		where: { id },
-		include: {
-			status: true,
-			roles: {
-				include: {
-					role: true,
-				},
-			},
-		},
-	})
+  return prisma.user.findUnique({
+    where: { id },
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -87,9 +87,9 @@ export async function findUserById(id) {
  * @returns {Promise<User>}
  */
 export async function deleteUserById(id) {
-	return prisma.user.delete({
-		where: { id },
-	})
+  return prisma.user.delete({
+    where: { id },
+  });
 }
 
 /**
@@ -102,17 +102,17 @@ export async function deleteUserById(id) {
  * @returns {Promise<User>}
  */
 export async function createUser(data) {
-	return prisma.user.create({
-		data,
-		include: {
-			status: true,
-			roles: {
-				include: {
-					role: true,
-				},
-			},
-		},
-	})
+  return prisma.user.create({
+    data,
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -122,18 +122,18 @@ export async function createUser(data) {
  * @returns {Promise<User>}
  */
 export async function updateUserById(id, data) {
-	return prisma.user.update({
-		where: { id },
-		data,
-		include: {
-			status: true,
-			roles: {
-				include: {
-					role: true,
-				},
-			},
-		},
-	})
+  return prisma.user.update({
+    where: { id },
+    data,
+    include: {
+      status: true,
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -146,12 +146,12 @@ export async function updateUserById(id, data) {
  * @returns {Promise<UserStatusHistory>}
  */
 export async function createStatusHistory(data) {
-	return prisma.userStatusHistory.create({
-		data,
-		include: {
-			status: true,
-		},
-	})
+  return prisma.userStatusHistory.create({
+    data,
+    include: {
+      status: true,
+    },
+  });
 }
 
 /**
@@ -161,15 +161,15 @@ export async function createStatusHistory(data) {
  * @returns {Promise<{count: number}>}
  */
 export async function closePreviousStatusHistory(userId) {
-	return prisma.userStatusHistory.updateMany({
-		where: {
-			userId,
-			endAt: null,
-		},
-		data: {
-			endAt: new Date(),
-		},
-	})
+  return prisma.userStatusHistory.updateMany({
+    where: {
+      userId,
+      endAt: null,
+    },
+    data: {
+      endAt: new Date(),
+    },
+  });
 }
 
 /**
@@ -178,13 +178,13 @@ export async function closePreviousStatusHistory(userId) {
  * @returns {Promise<Array<UserStatusHistory>>}
  */
 export async function getUserStatusHistory(userId) {
-	return prisma.userStatusHistory.findMany({
-		where: { userId },
-		include: {
-			status: true,
-		},
-		orderBy: {
-			startAt: 'desc',
-		},
-	})
+  return prisma.userStatusHistory.findMany({
+    where: { userId },
+    include: {
+      status: true,
+    },
+    orderBy: {
+      startAt: 'desc',
+    },
+  });
 }

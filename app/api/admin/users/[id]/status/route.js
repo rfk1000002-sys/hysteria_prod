@@ -3,11 +3,11 @@ import { respondSuccess, respondError } from '../../../../../../lib/response.js'
 import { requireAuthWithPermission } from '../../../../../../lib/helper/permission.helper.js';
 import logger from '../../../../../../lib/logger.js';
 
-import { 
-  findUserById, 
+import {
+  findUserById,
   updateUserById,
   closePreviousStatusHistory,
-  createStatusHistory 
+  createStatusHistory,
 } from '../../../../../../modules/admin/users/repositories/user.repository.js';
 
 /**
@@ -24,29 +24,41 @@ export async function PUT(request, { params }) {
     const userId = parseInt(resolvedParams.id, 10);
 
     if (!userId || isNaN(userId)) {
-      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Invalid user ID' })
+      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Invalid user ID' });
     }
 
     const body = await request.json();
     const { statusId, reason } = body;
 
     if (!statusId) {
-      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Status ID is required' })
+      return respondError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'Status ID is required',
+      });
     }
 
     if (!reason || reason.trim() === '') {
-      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'Reason for status change is required' })
+      return respondError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'Reason for status change is required',
+      });
     }
 
     // Check if user exists
     const existingUser = await findUserById(userId);
     if (!existingUser) {
-      return respondError({ status: 404, code: 'USER_NOT_FOUND', message: 'User not found' })
+      return respondError({ status: 404, code: 'USER_NOT_FOUND', message: 'User not found' });
     }
 
     // Check if status is actually changing
     if (existingUser.statusId === statusId) {
-      return respondError({ status: 400, code: 'VALIDATION_ERROR', message: 'User already has this status' })
+      return respondError({
+        status: 400,
+        code: 'VALIDATION_ERROR',
+        message: 'User already has this status',
+      });
     }
 
     // Update user status
@@ -69,8 +81,10 @@ export async function PUT(request, { params }) {
 
     return respondSuccess({ user: updatedUser });
   } catch (error) {
-    logger.error('Error updating user status', { error: error && error.message ? error.message : error })
-    return respondError(error)
+    logger.error('Error updating user status', {
+      error: error && error.message ? error.message : error,
+    });
+    return respondError(error);
   }
 }
 

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { IconSpeaker } from '../../components/ui/icon.jsx';
 
 export default function Hero() {
@@ -18,30 +18,28 @@ export default function Hero() {
 
   const fetchActiveHero = async () => {
     try {
-      const response = await fetch("/api/hero/active");
+      const response = await fetch('/api/hero/active');
       const data = await response.json();
       if (data.success && data.data) {
         setHeroData(data.data);
       }
     } catch (error) {
-      console.error("Error fetching hero:", error);
+      console.error('Error fetching hero:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const defaultHero = {
-    source:
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-      // "image/ilustrasi-menu.png",
-    title: "Media & Kolektif\nSeni-Budaya Alternatif",
-    description:
-      "Ruang ekspresi dan dokumentasi gerakan seni-budaya independen di Semarang",
+    source: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    // "image/ilustrasi-menu.png",
+    title: 'Media & Kolektif\nSeni-Budaya Alternatif',
+    description: 'Ruang ekspresi dan dokumentasi gerakan seni-budaya independen di Semarang',
   };
 
   // Prefer DB-provided hero source; fall back to default only when DB has no source
   const hero = heroData && heroData.source ? heroData : defaultHero;
-  const titleLines = hero.title.split("\n");
+  const titleLines = hero.title.split('\n');
 
   const isVideo = (url) => {
     if (!url) return false;
@@ -106,10 +104,10 @@ export default function Hero() {
   useEffect(() => {
     if (!isYouTube(src) || !iframeRef.current) return;
     try {
-      const cmd = muted ? "mute" : "unMute";
+      const cmd = muted ? 'mute' : 'unMute';
       iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: cmd, args: [] }),
-        "*"
+        JSON.stringify({ event: 'command', func: cmd, args: [] }),
+        '*'
       );
     } catch (e) {
       // ignore
@@ -151,20 +149,20 @@ export default function Hero() {
               onLoad={() => {
                 try {
                   // set initial mute/unmute without reloading
-                  const cmd = muted ? "mute" : "unMute";
+                  const cmd = muted ? 'mute' : 'unMute';
                   iframeRef.current.contentWindow.postMessage(
-                    JSON.stringify({ event: "command", func: cmd, args: [] }),
-                    "*"
+                    JSON.stringify({ event: 'command', func: cmd, args: [] }),
+                    '*'
                   );
                 } catch (e) {}
               }}
               style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                width: "177.78%",
-                height: "100%",
-                transform: "translate(-50%, -50%)",
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '177.78%',
+                height: '100%',
+                transform: 'translate(-50%, -50%)',
                 border: 0,
               }}
             />
@@ -210,7 +208,7 @@ export default function Hero() {
           <div className="w-full max-w-[700px] ml-0 sm:ml-8 md:ml-12 lg:ml-20 px-4 sm:px-0 text-left">
             <h1
               className="text-[28px] sm:text-[40px] md:text-[56px] lg:text-[64px] font-bold text-white leading-[1.05]"
-              style={{ textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}
             >
               {titleLines.map((line, index) => (
                 <span key={index}>

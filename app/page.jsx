@@ -1,9 +1,8 @@
-
-import Hero from "../_sectionComponents/halaman_utama/Hero";
-import SorotanEvent from "../_sectionComponents/halaman_utama/sorotan_event";
-import PlatformKami from "../_sectionComponents/halaman_utama/platform_kami";
-import ArtikelHysteria from "../_sectionComponents/halaman_utama/artikel_hysteria";
-import Colaboration from "../_sectionComponents/halaman_utama/colaboration";
+import Hero from '../_sectionComponents/halaman_utama/Hero';
+import SorotanEvent from '../_sectionComponents/halaman_utama/sorotan_event';
+import PlatformKami from '../_sectionComponents/halaman_utama/platform_kami';
+import ArtikelHysteria from '../_sectionComponents/halaman_utama/artikel_hysteria';
+import Colaboration from '../_sectionComponents/halaman_utama/colaboration';
 
 export default function Home() {
   return (
