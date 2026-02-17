@@ -10,6 +10,8 @@ import StatusManagement from "../users/status_management/page.jsx";
 import HeroManagement from "../section/HeroManagement.jsx";
 import CategoriesPage from "../categories/page.jsx";
 import TeamManagementPage from "../team/page.jsx";
+import ArticlesPage from "../articles/page.jsx";
+import CreateArticlePage from "../articles/create/page.jsx";
 
 export default function AdminShell({ children }) {
   const [open, setOpen] = useState(false);
@@ -45,6 +47,10 @@ export default function AdminShell({ children }) {
         return <CategoriesPage />;
       case "team":
         return <TeamManagementPage />;
+      case "article":
+        return <ArticlesPage onNavigate={handleNavigate} />;
+      case "article.create":
+        return <CreateArticlePage onNavigate={handleNavigate} />;
       case "dashboard":
       default:
         return children;
@@ -55,7 +61,9 @@ export default function AdminShell({ children }) {
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100">
         <div className="lg:flex lg:items-start lg:justify-start">
-          <aside className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}>
+          <aside
+            className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
+          >
             <AdminSidebar
               collapsed={collapsed}
               onClose={() => setOpen(false)}
@@ -71,7 +79,9 @@ export default function AdminShell({ children }) {
               <AdminTopbar onOpenSidebar={() => setOpen(true)} />
             </div>
 
-            <main className="mx-auto w-full max-w-5xl px-6 py-8">{renderContent()}</main>
+            <main className="mx-auto w-full max-w-5xl px-6 py-8">
+              {renderContent()}
+            </main>
           </div>
 
           {open && (
