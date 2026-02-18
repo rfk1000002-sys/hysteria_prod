@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUpload from "./ImageUpload";
+import EventDescriptionEditor from "./EventDescriptionEditor";
 
 export default function EventForm({ initialData = null, isEdit = false, eventId = null }) {
   const router = useRouter();
@@ -224,8 +225,16 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
       {/* DESCRIPTION */}
       <div>
-        <label className="block font-medium mb-1 text-black">Deskripsi</label>
-        <textarea name="description" rows={5} value={form.description} onChange={handleChange} className={inputClass} />
+        <label className="block font-medium mb-1 text-black">
+          Deskripsi Event
+        </label>
+
+        <EventDescriptionEditor
+          value={form.description}
+          onChange={(html) =>
+            setForm((prev) => ({ ...prev, description: html }))
+          }
+        />
       </div>
 
       {/* START & END */}
@@ -243,16 +252,22 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         </div>
       </div>
 
-      {/* LOCATION */}
-      <div>
-        <label className="block font-medium mb-1 text-black">Lokasi</label>
-        <input name="location" value={form.location} onChange={handleChange} className={inputClass} />
-      </div>
-
       {/* REGISTER LINK */}
       <div>
         <label className="block font-medium mb-1 text-black">Link Pendaftaran</label>
         <input type="url" name="registerLink" value={form.registerLink} onChange={handleChange} className={inputClass} />
+      </div>
+
+      {/* LOCATION */}
+      <div>
+        <label className="block font-medium mb-1 text-black">Nama Lokasi (Opsional)</label>
+        <input name="location" value={form.location} onChange={handleChange} className={inputClass} />
+      </div>
+      
+      {/* LOCATION */}
+      <div>
+        <label className="block font-medium mb-1 text-black">Alamat Lokasi</label>
+        <input name="location" value={form.location} onChange={handleChange} className={inputClass} />
       </div>
 
       {/* MAPS */}

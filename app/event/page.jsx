@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getEventStatus } from "../../lib/event-status";
+import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9;
 
 export default function EventsPage() {
   const router = useRouter();
@@ -37,7 +38,9 @@ export default function EventsPage() {
     if (status !== "all") params.set("status", status);
     if (sort !== "latest") params.set("sort", sort);
 
-    router.replace(`/event?${params.toString()}`);
+    const qs = params.toString();
+    router.replace(qs ? `/event?${qs}` : "/event");
+
     setPage(1);
   }, [q, status, sort, router]);
 
@@ -99,37 +102,104 @@ export default function EventsPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold">Daftar Event</h1>
+    <div className="max-w-6xl mx-auto p-6 space-y-4">
+      <h1 className="font-poppins text-[36px] font-bold leading-[100%] text-[var(--Color-3)]">
+        Daftar Event
+      </h1>
+
+      <p className="font-poppins text-[16px] font-normal text-[var(--Color-3)]">
+        Ruang untuk bertemu, bertukar pengetahuan dan membangun jejaring.
+      </p>
 
       {/* FILTER */}
-      <div className="grid md:grid-cols-4 gap-3">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Cari event..."
-          className="px-4 py-2 rounded-lg border"
-        />
+      <div className="flex justify-center mt-8 mb-10">
+        <div className="flex items-center gap-4">
+          
+          {/* SEARCH */}
+          <div className="relative w-[640px]">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search"
+              className="
+                w-full h-[48px]
+                pl-6 pr-14
+                rounded-full
+                border border-[var(--Color-1)]
+                bg-[var(--Color-3)]
+                font-helvetica text-[16px]
+                text-[var(--Color-1)]
+                placeholder:text-[var(--Color-1)]
+                focus:outline-none
+              "
+            />
+            <Search
+              className="absolute right-5 top-1/2 -translate-y-1/2"
+              size={24}
+              strokeWidth={2}
+              color="var(--Color-1)"
+            />
+          </div>
 
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="px-4 py-2 rounded-lg border"
-        >
-          <option value="all">Semua Event</option>
-          <option value="upcoming">Akan Berlangsung</option>
-          <option value="ongoing">Sedang Berlangsung</option>
-          <option value="finished">Telah Berakhir</option>
-        </select>
+          {/* FILTER */}
+          <div className="relative w-[48px] h-[48px]">
+            <Filter
+              className="absolute inset-0 m-auto pointer-events-none"
+              size={18}
+              strokeWidth={2}
+              color="var(--Color-1)"
+            />
 
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="px-4 py-2 rounded-lg border"
-        >
-          <option value="latest">Terbaru</option>
-          <option value="oldest">Terlama</option>
-        </select>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="
+                w-full h-full
+                rounded-full
+                border border-[var(--Color-1)]
+                bg-transparent
+                text-transparent
+                appearance-none
+                cursor-pointer
+                focus:outline-none
+              "
+            >
+              <option value="all">Semua Event</option>
+              <option value="upcoming">Akan Berlangsung</option>
+              <option value="ongoing">Sedang Berlangsung</option>
+              <option value="finished">Telah Berakhir</option>
+            </select>
+          </div>
+
+          {/* SORT */}
+          <div className="relative w-[48px] h-[48px]">
+            <ArrowUpDown
+              className="absolute inset-0 m-auto pointer-events-none"
+              size={18}
+              strokeWidth={2}
+              color="var(--Color-1)"
+            />
+
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="
+                w-full h-full
+                rounded-full
+                border border-[var(--Color-1)]
+                bg-transparent
+                text-transparent
+                appearance-none
+                cursor-pointer
+                focus:outline-none
+              "
+            >
+              <option value="latest">Terbaru</option>
+              <option value="oldest">Terlama</option>
+            </select>
+          </div>
+
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -145,40 +215,65 @@ export default function EventsPage() {
               <Link
                 key={event.id}
                 href={`/event/${event.slug}`}
-                className="group relative rounded-xl overflow-hidden shadow hover:shadow-xl transition"
+                className="group relative w-full max-w-[440px] aspect-[3/4] rounded-xl overflow-hidden"
               >
-                <div className="relative h-[420px]">
-                  <Image
-                    src={event.poster || "/placeholder-event.jpg"}
-                    alt={event.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition"
-                  />
-                </div>
+                <Image
+                  src={event.poster || "/placeholder-event.jpg"}
+                  alt={event.title}
+                  fill
+                  className="object-cover"
+                />
 
                 <div
-                  className="absolute inset-0 p-5 flex flex-col justify-end
-                  bg-gradient-to-t from-black/70 via-black/40 to-transparent
-                  opacity-0 group-hover:opacity-100 transition duration-300"
+                  className="
+                    absolute inset-0 p-5 flex flex-col justify-end
+                    bg-gradient-to-t from-black/80 via-black/40 to-transparent
+                    opacity-0 group-hover:opacity-100
+                    transition-opacity duration-300 ease-out
+                  "
                 >
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="inline-flex gap-2 mb-3">
                     {event.categoryItem?.title && (
-                      <span className="text-xs bg-pink-600 text-white px-3 py-1 rounded-full">
+                      <span
+                        className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          px-3
+                          h-[26px]
+                          rounded-full
+                          text-[12px]
+                          text-[var(--Color-1)]
+                          bg-[var(--Color-3)]
+                        "
+                      >
                         {event.categoryItem.title}
                       </span>
                     )}
                     {event.organizer && (
-                      <span className="text-xs bg-white/90 text-black px-3 py-1 rounded-full">
+                      <span
+                        className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          px-3
+                          h-[26px]
+                          rounded-full
+                          text-[12px]
+                          text-[var(--Color-1)]
+                          bg-[var(--Color-3)]
+                        "
+                      >
                         {event.organizer}
                       </span>
                     )}
                   </div>
 
-                  <h2 className="text-white font-semibold text-lg">
+                  <h2 className="font-poppins text-[20px] font-semibold text-white leading-snug">
                     {event.title}
                   </h2>
 
-                  <p className="text-sm text-gray-200 mt-1">
+                  <p className="mt-1 text-[14px] text-white/90">
                     {new Date(event.startAt).toLocaleDateString("id-ID", {
                       weekday: "long",
                       day: "numeric",
@@ -194,9 +289,18 @@ export default function EventsPage() {
                         e.stopPropagation();
                         window.open(event.registerLink, "_blank");
                       }}
-                      className="mt-4 px-5 py-2.5 rounded-lg
-                                bg-pink-600 text-white text-sm
-                                hover:bg-pink-700 transition"
+                      className="
+                        mt-4
+                        inline-flex items-center justify-center
+                        h-[36px]
+                        rounded-lg
+                        bg-[var(--Color-6)]
+                        text-[var(--Color-3)]
+                        font-poppins text-[14px] font-normal
+                        transition
+                        hover:bg-[#D40568]
+                        active:bg-[#BC045C]
+                      "
                     >
                       Ikuti Sekarang
                     </button>
@@ -209,9 +313,18 @@ export default function EventsPage() {
                         e.stopPropagation();
                         window.open(event.registerLink, "_blank");
                       }}
-                      className="mt-4 px-5 py-2.5 rounded-lg
-                                bg-yellow-500 text-white text-sm
-                                hover:bg-yellow-600 transition"
+                      className="
+                        mt-4
+                        inline-flex items-center justify-center
+                        h-[36px]
+                        rounded-lg
+                        bg-[#FDE6F1]
+                        text-[var(--Color-1)]
+                        font-poppins text-[14px] font-normal
+                        transition
+                        hover:bg-[#FCDAEA]
+                        active:bg-[#F9B2D4]
+                      "
                     >
                       Sedang Berlangsung
                     </button>
@@ -220,8 +333,16 @@ export default function EventsPage() {
                   {event.status === "FINISHED" && (
                     <button
                       disabled
-                      className="mt-4 px-5 py-2.5 rounded-lg
-                                bg-gray-400 text-white text-sm cursor-not-allowed"
+                      className="
+                        mt-4
+                        inline-flex items-center justify-center
+                        h-[36px]
+                        rounded-lg
+                        bg-[#E5E5E5]
+                        text-[#9CA3AF]
+                        font-poppins text-[14px] font-normal
+                        cursor-not-allowed
+                      "
                     >
                       Event Telah Berakhir
                     </button>
@@ -233,36 +354,75 @@ export default function EventsPage() {
 
           {/* PAGINATION */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-10">
-              <button
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-                className="px-4 py-2 rounded border disabled:opacity-40"
-              >
-                Prev
-              </button>
+            <div className="flex items-center justify-center mt-10">
+              <div className="flex items-center justify-center gap-4 w-[220px] h-[50px] bg-[var(--Color-1)] rounded-full">
 
-              {Array.from({ length: totalPages }).map((_, i) => (
+                {/* PREV */}
                 <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-4 py-2 rounded border ${
-                    page === i + 1
-                      ? "bg-pink-600 text-white border-pink-600"
-                      : ""
-                  }`}
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="
+                    w-[25px] h-[25px]
+                    flex items-center justify-center
+                    rounded-full
+                    bg-[var(--Color-3)]
+                    shadow
+                    disabled:opacity-40
+                  "
                 >
-                  {i + 1}
+                  <ChevronLeft size={14} strokeWidth={2} color="var(--Color-1)" />
                 </button>
-              ))}
 
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-                className="px-4 py-2 rounded border disabled:opacity-40"
-              >
-                Next
-              </button>
+                {/* PAGE NUMBER */}
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const isActive = page === i + 1;
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i + 1)}
+                      className={`
+                        w-[30px] h-[28.152px]
+                        flex items-center justify-center
+                        rounded
+                        font-helvetica text-[20px] font-normal
+                        ${
+                          isActive
+                            ? "bg-white/50 text-[var(--Color-5)] shadow"
+                            : "text-[var(--Color-3)]"
+                        }
+                      `}
+                      style={
+                        isActive
+                          ? {
+                              filter:
+                                "drop-shadow(0 0 5.8px rgba(0,0,0,0.25))",
+                            }
+                          : {}
+                      }
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                })}
+
+                {/* NEXT */}
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                  className="
+                    w-[25px] h-[25px]
+                    flex items-center justify-center
+                    rounded-full
+                    bg-[var(--Color-3)]
+                    shadow
+                    disabled:opacity-40
+                  "
+                >
+                  <ChevronRight size={14} strokeWidth={2} color="var(--Color-1)" />
+                </button>
+
+              </div>
             </div>
           )}
         </>

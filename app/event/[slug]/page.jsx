@@ -37,6 +37,13 @@ export default async function EventDetailPage({ params }) {
 
   const status = getEventStatus(event.startAt, event.endAt);
 
+  const startDate = new Date(event.startAt);
+  const endDate = event.endAt ? new Date(event.endAt) : null;
+
+  const sameDay =
+    endDate &&
+    startDate.toDateString() === endDate.toDateString();
+
   return (
     <div className="w-full">
       {/* HERO GRADIENT */}
@@ -147,26 +154,43 @@ export default async function EventDetailPage({ params }) {
 
             <div>
               <h3 className="font-semibold mb-2">Jadwal Pelaksanaan</h3>
-              <p className="text-sm text-gray-600"> Mulai : 
-                {new Date(event.startAt).toLocaleDateString("id-ID", {
+              <p className="text-sm text-gray-600">
+                Tanggal:{" "}
+                {startDate.toLocaleDateString("id-ID", {
                   weekday: "long",
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}
+                {endDate && !sameDay && (
+                  <>
+                    {" – "}
+                    {endDate.toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </>
+                )}
               </p>
-              <p className="text-sm text-gray-600"> Waktu : 
-                {new Date(event.startAt).toLocaleTimeString("id-ID", {
+
+              <p className="text-sm text-gray-600">
+                Waktu:{" "}
+                {startDate.toLocaleTimeString("id-ID", {
                   hour: "2-digit",
                   minute: "2-digit",
-                })}{" "}
-                {" – "}
-                {event.endAt
-                  ? `${new Date(event.endAt).toLocaleTimeString("id-ID", {
+                })}
+                {endDate && (
+                  <>
+                    {" – "}
+                    {endDate.toLocaleTimeString("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })} WIB`
-                  : "Selesai"}
+                    })}{" "}
+                    WIB
+                  </>
+                )}
               </p>
             </div>
 
@@ -190,38 +214,49 @@ export default async function EventDetailPage({ params }) {
                   />
                 </div>
               )}
+              
+              {/* BUTTONS */}
+              <div>
+                <h3 className="font-semibold mb-2">Arsip Kegiatan</h3>
+                <div className="relative z-10 flex flex-col sm:flex-row gap-4 mt-10">
+                  <a
+                    href={event.driveLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-3
+                              rounded-md bg-pink-600 text-white hover:bg-pink-700 transition"
+                  >
+                    Dokumentasi
+                  </a>
+
+                  <a
+                    href={event.youtubeLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-3
+                              rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                  >
+                    Youtube
+                  </a>
+                </div>
+              </div>
+              
             </div>
           </aside>
 
           {/* DESKRIPSI */}
           <div className="md:col-span-2">
             <h2 className="text-xl font-semibold mb-4">Deskripsi</h2>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-              {event.description}
-            </p>
 
-            {/* BUTTONS */}
-            <div className="relative z-10 flex flex-col sm:flex-row gap-4 mt-10">
-              <a
-                href={event.driveLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-6 py-3
-                          rounded-md bg-pink-600 text-white hover:bg-pink-700 transition"
-              >
-                Dokumentasi
-              </a>
-
-              <a
-                href={event.youtubeLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-6 py-3
-                          rounded-md bg-red-600 text-white hover:bg-red-700 transition"
-              >
-                Youtube
-              </a>
-            </div>
+            <div
+              className="
+                prose prose-p:leading-relaxed
+                prose-img:rounded-xl prose-img:mx-auto
+                prose-a:text-pink-600 hover:prose-a:underline
+                max-w-none text-gray-800
+              "
+              dangerouslySetInnerHTML={{ __html: event.description }}
+            />
           </div>
         </section>
 
