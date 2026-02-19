@@ -26,7 +26,7 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
        {key: "laki-masak", label: "Laki Masak", view: "platform.laki-masak", icon: IconSocial, enabled: true},
        {key: "thumbnail", label: "Thumbnail", view: "platform.thumbnail", icon: IconSocial, enabled: false},
     ]},
-    { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: false },
+    { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: true },
     { key: "post", label: "Post", view: "post", icon: IconPost, enabled: false },
     { key: "settings", label: "Settings", view: "settings", icon: IconSettings, enabled: true,
       children: [{ key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true }],
