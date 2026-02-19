@@ -65,19 +65,19 @@ export default function ProfileCard({ name, role, imageUrl, email, instagram }) 
   const imgSrc = imageUrl || "/image/team-placeholder.webp";
 
   return (
-    <div className="flex flex-col items-start bg-white rounded-[10px] shadow-[0px_0px_20px_-3px_rgba(0,0,0,0.25)] overflow-hidden w-full max-w-[375px] h-full min-h-[500px] hover:shadow-xl transition-shadow duration-300">
-      <div className="w-full aspect-[375/375] relative bg-gray-200 overflow-hidden">
+    <div className="flex flex-col items-start bg-white rounded-[10px] shadow-[0px_0px_20px_-3px_rgba(0,0,0,0.25)] overflow-hidden w-full max-w-[320px] h-full min-h-[500px] hover:shadow-xl transition-shadow duration-300">
+      <div className="w-full aspect-[321/321] relative bg-gray-200 overflow-hidden">
         <Image
           src={imgSrc}
           alt={name}
-          width={375}
-          height={375}
+          width={320}
+          height={320}
           className="w-full h-full object-cover"
         />
       </div>
-      <div className="p-8 flex flex-col gap-1 w-full flex-1">
-        <h3 className="font-bold text-[28px] md:text-[32px] leading-[1.5] text-black font-poppins">{name}</h3>
-        <p className="font-normal text-[18px] md:text-[20px] leading-[1.5] text-[#e83c91] font-poppins mb-6">{role}</p>
+      <div className="p-6 flex flex-col gap-1 w-full flex-1">
+        <h3 className="font-bold text-[22px] md:text-[24px] leading-[1.5] text-black font-poppins">{name}</h3>
+        <p className="font-normal text-[16px] md:text-[18px] leading-[1.5] text-[#e83c91] font-poppins mb-6">{role}</p>
         <SocialIcons
           email={email}
           instagram={instagram}

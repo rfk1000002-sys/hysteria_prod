@@ -57,7 +57,7 @@ export default function ProfileSlider({ profiles, title, slug }) {
           {profiles.map((profile, index) => (
             <div
               key={index}
-              className="flex-none w-[320px] md:w-[375px] snap-center">
+              className="flex-none w-[300px] md:w-[320px] snap-center">
               <ProfileCard {...profile} />
             </div>
           ))}
