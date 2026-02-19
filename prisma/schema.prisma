@@ -156,6 +156,19 @@ model HeroSection {
   updatedAt   DateTime @updatedAt
 }
 
+model PageHero {
+  id       Int     @id @default(autoincrement())
+  pageSlug String  @unique @db.VarChar(100)
+  imageUrl String? @db.VarChar(500)
+  title    String? @db.VarChar(500)
+  subtitle String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageSlug])
+}
+
 // ====================================
 // NAVIGASI & KATEGORI
 // ====================================

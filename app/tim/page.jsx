@@ -15,17 +15,34 @@ const poppins = Poppins({
 export default function TimPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hero, setHero] = useState({
+    imageUrl: "/image/tim-hero.png",
+    title: "Tim Hysteria",
+    subtitle: "Hysteria , Colaboratorium and Creative Impact Hub",
+  });
 
   useEffect(() => {
     let isMounted = true;
     const fetchTeam = async () => {
       try {
-        const res = await fetch("/api/team", { method: "GET" });
-        const json = await res.json().catch(() => null);
+        const [teamRes, heroRes] = await Promise.all([fetch("/api/team", { method: "GET" }), fetch("/api/page-hero/tim", { method: "GET" })]);
+        const json = await teamRes.json().catch(() => null);
+        const heroJson = await heroRes.json().catch(() => null);
+
         if (!isMounted) return;
+
         if (json?.success) {
           const list = Array.isArray(json.data?.categories) ? json.data.categories : [];
           setCategories(list);
+        }
+
+        if (heroJson?.success && heroJson?.data) {
+          const pageHero = heroJson.data;
+          setHero((prev) => ({
+            imageUrl: pageHero.imageUrl ?? null,
+            title: pageHero.title || prev.title,
+            subtitle: pageHero.subtitle || prev.subtitle,
+          }));
         }
       } catch (error) {
         console.error("Error fetching team data:", error);
@@ -49,7 +66,11 @@ export default function TimPage() {
 
   return (
     <main className={`${poppins.variable} font-sans bg-white min-h-screen pb-32`}>
-      <TimHero />
+      <TimHero
+        imageUrl={hero.imageUrl}
+        title={hero.title}
+        subtitle={hero.subtitle}
+      />
 
       {/* Section 1: Pengelola Hysteria (Grid) */}
       <section className="py-20 relative px-4 md:px-0">
