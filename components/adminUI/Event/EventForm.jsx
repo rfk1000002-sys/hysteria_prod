@@ -261,7 +261,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       {/* LOCATION */}
       <div>
         <label className="block font-medium mb-1 text-black">Nama Lokasi (Opsional)</label>
-        <input name="location" value={form.location} onChange={handleChange} className={inputClass} />
+        <input name="location" value={form.locationname} onChange={handleChange} className={inputClass} />
       </div>
       
       {/* LOCATION */}

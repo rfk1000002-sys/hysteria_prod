@@ -10,7 +10,7 @@ import Image from "@tiptap/extension-image";
 import ListItem from "@tiptap/extension-list-item";
 
 import ImageUpload from "./ImageUpload";
-
+ 
 import {
   Bold,
   Italic,
