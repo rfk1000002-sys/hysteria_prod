@@ -34,14 +34,10 @@ export async function findPublishedBySlug(slug) {
     },
     include: {
       categories: {
-        include: {
-          category: true,
-        },
+        include: { category: true },
       },
       tags: {
-        include: {
-          tag: true,
-        },
+        include: { tag: true },
       },
     },
   });
