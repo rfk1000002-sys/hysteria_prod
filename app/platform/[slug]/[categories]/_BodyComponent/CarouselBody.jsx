@@ -1,0 +1,159 @@
+"use client";
+
+import { useRef } from "react";
+import Image from "next/image";
+import Link from "next/link";
+
+/**
+ * CarouselBody — layout "carousel"
+ *
+ * Renders each sub-category as its own section with:
+ *  - Section title + "Lihat Semua" link
+ *  - Horizontally scrollable card row
+ *  - Dot pagination indicator
+ *
+ * Props:
+ *   subCategories : Array<{ title, slug?, linkUrl?, items: Array<{ src, alt, title, subtitle }> }>
+ */
+export default function CarouselBody({ subCategories = [] }) {
+  if (!subCategories.length) {
+    return (
+      <div className="py-20 text-center text-zinc-400">
+        <p>Belum ada sub-kategori tersedia.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full pb-16">
+      {subCategories.map((sub, idx) => (
+        <SubCategoryRow key={sub.slug || idx} {...sub} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------- internal: one horizontal row per sub-category ---------- */
+
+function SubCategoryRow({ title, linkUrl, items = [] }) {
+  const scrollRef = useRef(null);
+
+  const scroll = (dir) => {
+    if (!scrollRef.current) return;
+    const amount = 340;
+    scrollRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+  };
+
+  if (!items.length) return null;
+
+  return (
+    <section className="w-full max-w-[1920px] mx-auto mt-12 px-4 md:px-24">
+      {/* Header: title + lihat semua */}
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="font-poppins font-bold text-[20px] md:text-[24px] text-black">
+          {title}
+        </h3>
+
+        {linkUrl && (
+          <Link
+            href={linkUrl}
+            className="text-sm font-medium text-zinc-500 hover:text-pink-600 transition-colors"
+          >
+            Lihat Semua
+          </Link>
+        )}
+      </div>
+
+      {/* Scrollable cards */}
+      <div className="relative">
+        {/* Left arrow (desktop) */}
+        <button
+          onClick={() => scroll("left")}
+          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition"
+          aria-label="Scroll left"
+        >
+          <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {items.map((item, i) => (
+            <div key={i} className="flex-none w-[220px] md:w-[260px] snap-start">
+              <CarouselCard item={item} />
+            </div>
+          ))}
+        </div>
+
+        {/* Right arrow (desktop) */}
+        <button
+          onClick={() => scroll("right")}
+          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition"
+          aria-label="Scroll right"
+        >
+          <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Dot indicators */}
+      <DotIndicator count={items.length} />
+    </section>
+  );
+}
+
+/* ---------- Carousel Card (Tailwind-based, no styled-jsx) ---------- */
+
+function CarouselCard({ item }) {
+  const src = item.src || "/image/DummyPoster.webp";
+  const isLocal = typeof src === "string" && src.startsWith("/");
+
+  return (
+    <div className="group relative w-full aspect-[2/3] overflow-hidden rounded-lg bg-zinc-200 cursor-pointer">
+      <Image
+        src={src}
+        alt={item.alt || item.title || "Image"}
+        fill
+        unoptimized={!isLocal}
+        sizes="(max-width:640px) 50vw, 260px"
+        className="object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+
+      {/* Gradient overlay + text */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3">
+        {item.title && (
+          <h3 className="text-white text-sm md:text-base font-semibold leading-tight drop-shadow-md">
+            {item.title}
+          </h3>
+        )}
+        {item.subtitle && (
+          <p className="text-white/80 text-xs md:text-sm mt-1 drop-shadow-md">
+            {item.subtitle}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Dot pagination indicator ---------- */
+
+function DotIndicator({ count }) {
+  if (count <= 1) return null;
+
+  return (
+    <div className="flex justify-center gap-2 mt-4">
+      {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
+        <span
+          key={i}
+          className="w-2 h-2 rounded-full bg-zinc-300"
+        />
+      ))}
+    </div>
+  );
+}
