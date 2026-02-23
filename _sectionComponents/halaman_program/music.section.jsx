@@ -1,9 +1,9 @@
-// _components/ForumSection.jsx
+// _components/MusicSection.jsx
 "use client";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "next/link"; 
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -11,71 +11,56 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// ... (DATA_POSTINGAN TETAP SAMA, TIDAK PERLU DIUBAH) ...
-const DATA_POSTINGAN = [
-  {
-    id: 1,
-    title: "DI KOREA MUNG PINDAH TURU TOK!",
-    subTitle: "Buah Tangan dari Korsel",
-    eventNumber: "Buah Tangan #47",
-    date: "Sabtu, 8 Maret 2026",
-    time: "19:00 WIB s.d. Selesai",
-    location: "Jl. Stonen No.29 Gajahmungkur",
-    status: "Akan Berlangsung",
-    collab: ["Adin", "Puma", "Yus", "Kolektif Hysteria"],
-    image: "https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&w=600&q=80",
+// DATA MUSIK (Disesuaikan dengan struktur Forum)
+const MUSIC_ITEMS = [
+  { 
+    id: 1, 
+    title: "SGRT",
+    subTitle: "Album Rilisan Terbaru",
+    genre: "Indie Pop",
+    date: "Rilis: 2024",
+    status: "New Release",
+    image: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=600&q=80" 
   },
-  {
-    id: 2,
-    title: "MEMBACA ARSIP KOTA LAMA",
-    subTitle: "Diskusi Sejarah",
-    eventNumber: "Temu Jejaring #12",
-    date: "Minggu, 9 Maret 2026",
-    time: "15:00 WIB s.d. Selesai",
-    location: "Gedung Oudetrap, Kota Lama",
-    status: "Akan Berlangsung",
-    collab: ["Arsip Kota", "Sejarawan Muda"],
-    image: "https://images.unsplash.com/photo-1524230572899-a752b3835840?auto=format&fit=crop&w=600&q=80",
+  { 
+    id: 2, 
+    title: "Kotak Listrik",
+    subTitle: "Eksperimental Elektronik",
+    genre: "Synthwave",
+    date: "Rilis: 2023",
+    status: "Featured",
+    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80" 
   },
-  {
-    id: 3,
-    title: "MEDITASI DI TENGAH KEBISINGAN",
-    subTitle: "Urban Healing",
-    eventNumber: "Meditasi #05",
-    date: "Senin, 10 Maret 2026",
-    time: "08:00 WIB s.d. Selesai",
-    location: "Taman Indonesia Kaya",
-    status: "Selesai",
-    collab: ["Guru Yoga", "Komunitas Peace"],
-    image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=600&q=80",
+  { 
+    id: 3, 
+    title: "Di(e)gital",
+    subTitle: "Suara Masa Depan",
+    genre: "Cyberpunk",
+    date: "Rilis: 2025",
+    status: "Coming Soon",
+    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80" 
   },
-  {
-    id: 4,
-    title: "SIMPOSIUM SENI & TEKNOLOGI",
-    subTitle: "Masa Depan AI",
-    eventNumber: "Simposium #08",
-    date: "Selasa, 11 Maret 2026",
-    time: "10:00 WIB s.d. Selesai",
-    location: "Galeri Semarang",
-    status: "Akan Berlangsung",
-    collab: ["AI Labs", "Seniman Digital"],
-    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=600&q=80",
+  { 
+    id: 4, 
+    title: "Bunyi Halaman Belakang",
+    subTitle: "Sesi Akustik Santai",
+    genre: "Folk / Acoustic",
+    date: "Live Session",
+    status: "Popular",
+    image: "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?auto=format&fit=crop&w=600&q=80" 
   },
-  {
-    id: 5,
-    title: "JALAN JALAN SORE",
-    subTitle: "Lawatan Santai",
-    eventNumber: "Lawatan #20",
-    date: "Rabu, 12 Maret 2026",
-    time: "16:00 WIB s.d. Selesai",
-    location: "Simpang Lima",
-    status: "Akan Berlangsung",
-    collab: ["Komunitas Jalan", "Pejalan Kaki"],
-    image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=600&q=80",
+  { 
+    id: 5, 
+    title: "Folk Me Up",
+    subTitle: "Kompilasi Musik Rakyat",
+    genre: "Traditional Folk",
+    date: "Rilis: 2022",
+    status: "Classic",
+    image: "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=600&q=80" 
   },
 ];
 
-export default function ForumSection() {
+export default function MusicSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   
   // State untuk Dragging
@@ -84,11 +69,11 @@ export default function ForumSection() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // --- Logic Mouse Drag ---
+  // --- Logic Mouse Drag (Sama Persis dengan ForumSection) ---
   const handleMouseDown = (e) => {
     setIsDown(true);
     if(scrollRef.current) {
-        scrollRef.current.style.scrollBehavior = 'auto'; // Instant scroll saat drag
+        scrollRef.current.style.scrollBehavior = 'auto'; 
         setStartX(e.pageX - scrollRef.current.offsetLeft);
         setScrollLeft(scrollRef.current.scrollLeft);
     }
@@ -118,7 +103,6 @@ export default function ForumSection() {
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.children.length > 0) {
       const scrollPos = scrollRef.current.scrollLeft;
-      // Ambil lebar item pertama (karena ada spacer, pastikan ambil item card)
       const firstCard = scrollRef.current.children[0];
       const itemWidth = firstCard ? firstCard.clientWidth : 300; 
       const totalItemWidth = itemWidth + 24; 
@@ -148,11 +132,12 @@ export default function ForumSection() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h2 className={`${poppins.className} text-[28px] md:text-[32px] font-bold text-black mb-4 md:mb-0`}>
-          Forum
+          Musik
         </h2>
         
+        {/* LINK HEADER KE HALAMAN MUSIK (Ganti Link Sesuai Routing) */}
         <Link 
-            href="/program/forum" 
+            href="/program/music" 
             className="text-black font-semibold underline underline-offset-4 hover:text-[#D63384] transition"
         >
             Lihat Semua
@@ -167,65 +152,70 @@ export default function ForumSection() {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         onScroll={handleScroll}
-        // PERBAIKAN 1: Matikan snap saat isDown true
         className={`flex gap-6 overflow-x-auto pb-12 pt-4 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0 overscroll-x-none touch-pan-y
           ${isDown ? 'cursor-grabbing' : 'cursor-grab snap-x snap-mandatory'} 
         `}
         style={{ 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none',
-            // scrollBehavior diatur via inline style di event handler, jadi aman
             overscrollBehaviorX: 'none'
         }} 
       >
-        {DATA_POSTINGAN.map((post) => (
+        {MUSIC_ITEMS.map((item) => (
           <div 
-            key={post.id} 
+            key={item.id} 
+            // UKURAN DAN ASPEK RASIO SAMA DENGAN FORUM (4:5)
             className="flex-shrink-0 group relative w-[300px] sm:w-[340px] aspect-[4/5] snap-start rounded-xl overflow-hidden shadow-lg transition-all duration-300 select-none hover:shadow-2xl bg-gray-100"
           >
             {/* Background Image Layer */}
             <Image
-                src={post.image}
-                alt={post.title}
+                src={item.image}
+                alt={item.title}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none" // Tambah pointer-events-none
+                className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
                 sizes="(max-width: 768px) 300px, 340px"
             />
 
             {/* Default Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none" />
 
-            {/* Default Content */}
+            {/* Default Content (Tampil saat tidak di-hover) */}
             <div className="absolute inset-0 p-6 flex flex-col justify-end text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-4 pointer-events-none">
                <h3 className="text-2xl font-black leading-tight uppercase mb-2 drop-shadow-lg line-clamp-2">
-                   {post.title}
+                   {item.title}
                </h3>
                <div className="flex items-center gap-2 opacity-90 text-xs">
-                   <span>📍 {post.location}</span>
+                   <span>🎵 {item.genre}</span>
                </div>
             </div>
             
-            {/* Hover Overlay */}
+            {/* Hover Overlay (Tampil saat di-hover) */}
             <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end items-start text-left">
                     <div className="mb-3">
+                       {/* Badge Status */}
                        <span className="bg-white text-[#D63384] text-xs font-bold px-3 py-1 rounded-full shadow-sm inline-block">
-                          {post.status}
+                          {item.status}
                        </span>
                     </div>
                     <h3 className="text-white font-bold text-xl leading-tight mb-1 drop-shadow-md">
-                        {post.title}
+                        {item.title}
                     </h3>
                     <p className="text-white font-bold text-sm mb-1 drop-shadow-md">
-                        -{post.subTitle}-
+                        -{item.subTitle}-
                     </p>
                     <p className="text-gray-200 text-xs font-medium mb-4">
-                        {post.date}
+                        {item.date}
                     </p>
-                    <button className="bg-[#D63384] hover:bg-[#b02a6b] text-white text-sm font-semibold py-2.5 px-6 rounded-lg w-fit transition-colors shadow-lg">
+                    
+                    {/* LINK TOMBOL KE DETAIL MUSIK */}
+                    <Link 
+                        href={`/program/music/${item.id}`} // Contoh routing ke detail
+                        className="bg-[#D63384] hover:bg-[#b02a6b] text-white text-sm font-semibold py-2.5 px-6 rounded-lg w-fit transition-colors shadow-lg inline-block"
+                    >
                         Ikuti Sekarang
-                    </button>
+                    </Link>
                 </div>
             </div>
           </div>
@@ -236,13 +226,11 @@ export default function ForumSection() {
       </div>
 
       {/* Pagination Dots */}
-      {/* PERBAIKAN 2: Tambahkan 'h-6' (atau ukuran fix lainnya) di sini */}
       <div className="flex justify-center items-center gap-4 mt-8 h-6">
-        {DATA_POSTINGAN.map((_, index) => (
+        {MUSIC_ITEMS.map((_, index) => (
           <button
             key={index}
             onClick={() => scrollToSlide(index)}
-            // Tambahkan shrink-0 agar dot tidak gepeng
             className={`rounded-full transition-all duration-300 flex-shrink-0
               ${activeIndex === index 
                 ? "w-4 h-4 bg-[#D63384] opacity-100" 

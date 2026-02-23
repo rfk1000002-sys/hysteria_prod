@@ -1,7 +1,8 @@
-// _components/FilmSection.jsx
+// _components/ResidencySection.jsx
 "use client";
 
 import Image from "next/image";
+import Link from "next/link"; // Tambahkan import Link
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -9,25 +10,25 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// Data Dummy Pemutaran Film
-const FILM_ITEMS = [
+// Data dengan URL gambar Unsplash
+const RESIDENCY_ITEMS = [
   {
     id: 1,
-    title: "Sinema Kolektif",
-    // Gambar: Suasana bioskop gelap
-    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop",
-    link: "#",
+    title: "Flash Residency",
+    // Gambar studio seni
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1000&auto=format&fit=crop",
+    link: "/program/flash-residency", // Ubah ke slug flash-residency
   },
   {
     id: 2,
-    title: "Layar Tancap Kota",
-    // Gambar: Outdoor cinema malam hari
-    image: "https://images.unsplash.com/photo-1517604931442-7105376f2611?q=80&w=1000&auto=format&fit=crop",
-    link: "#",
+    title: "Kandang Tandang",
+    // Gambar workshop kolaboratif
+    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1000&auto=format&fit=crop",
+    link: "/program/kandang-tandang", // Ubah ke slug kandang-tandang
   },
 ];
 
-export default function FilmSection() {
+export default function ResidencySection() {
   return (
     // PENYESUAIAN CONTAINER:
     // 1. px-6 md:px-10 lg:px-20 (Agar sejajar lurus)
@@ -39,31 +40,34 @@ export default function FilmSection() {
       <h2
         className={`${poppins.className} text-[28px] md:text-[32px] font-bold text-black mb-8`}
       >
-        Pemutaran Film
+        Residensi dan Workshop
       </h2>
 
       {/* GRID LAYOUT (2 Kolom) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {FILM_ITEMS.map((item) => (
-          <div
+        {RESIDENCY_ITEMS.map((item) => (
+          // Mengubah div pembungkus menjadi Link agar bisa diklik dan berpindah halaman
+          <Link
+            href={item.link}
             key={item.id}
-            // Radius diperhalus jadi rounded-[24px] agar konsisten
-            className="group relative w-full h-[300px] md:h-[380px] rounded-[24px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
+            // Tambahkan "block" agar Link berperilaku sama persis seperti div
+            className="block group relative w-full h-[300px] md:h-[380px] rounded-[24px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
           >
             {/* 1. BACKGROUND IMAGE */}
-            <div className="absolute inset-0 bg-gray-800">
+            <div className="absolute inset-0 bg-gray-200">
                <Image 
                  src={item.image} 
                  alt={item.title} 
                  fill 
-                 className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100" 
+                 className="object-cover group-hover:scale-105 transition-transform duration-700" 
                  sizes="(max-width: 768px) 100vw, 50vw"
                />
-               {/* Overlay Gelap Tipis */}
-               <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
+               {/* Overlay tipis agar tulisan di bawah pop-up jika gambar terlalu terang */}
+               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
             </div>
 
             {/* 2. FOOTER BAR (Judul & Panah) */}
+            {/* Background solid tetap dipertahankan sesuai desain asli, tapi dipercantik */}
             <div className="absolute bottom-0 left-0 right-0 bg-[#3E3245] p-6 md:p-8 flex items-center justify-between transition-colors duration-300 group-hover:bg-[#5a4863]">
               
               {/* Judul */}
@@ -89,7 +93,7 @@ export default function FilmSection() {
               </div>
 
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>
