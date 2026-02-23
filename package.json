@@ -19,8 +19,8 @@
     "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.0.0",
     "@mui/material": "^7.3.7",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
     "bcrypt": "^6.0.0",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.3",
@@ -46,7 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
     "prettier": "^3.8.1",
-    "prisma": "^7.2.0",
+    "prisma": "^7.4.0",
     "tailwindcss": "^4"
   }
 }
