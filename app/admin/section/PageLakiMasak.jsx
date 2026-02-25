@@ -1,24 +1,34 @@
+/**
+ * PageLakiMasak.jsx
+ *
+ * Halaman admin untuk mengelola konten platform Hysteria Laki Masak.
+ * Struktur identik dengan PageArtlab — dua tab (Page Utama + Bagian Hero).
+ * Perbedaan: PLATFORM_SLUG, COVER_ITEMS, dan HERO_ITEMS disesuaikan untuk Laki Masak.
+ */
 "use client";
 
 import React, { useState, useEffect } from "react";
 import FormMain from "./_component/form.main.jsx";
 import FormHero from "./_component/form.hero.jsx";
 
+/** Slug identifier platform di DB dan URL API. */
 const PLATFORM_SLUG = "laki-masak";
 
+/** Slot cover image Laki Masak. `apiKey` harus cocok dengan kolom `key` di tabel PlatformImage. */
 const COVER_ITEMS = [
-  { id: 1, apiKey: "cover-1", label: "Cover Meramu*" },
   { id: 2, apiKey: "cover-2", label: "Cover Homecooked*" },
   { id: 3, apiKey: "cover-3", label: "Cover Komik Ramuan*" },
   { id: 4, apiKey: "cover-4", label: "Pre-Order*" },
 ];
 
+/** Slot hero image per sub-halaman Laki Masak. title/subtitle adalah nilai default sebelum API dimuat. */
 const HERO_ITEMS = [
   { id: 1, apiKey: "hero-meramu",       label: "Hero Page Meramu",       title: "", subtitle: "", files: [] },
   { id: 2, apiKey: "hero-homecooked",   label: "Hero Page Homecooked",   title: "", subtitle: "", files: [] },
   { id: 3, apiKey: "hero-komik-ramuan", label: "Hero Page Komik Ramuan", title: "", subtitle: "", files: [] },
 ];
 
+/** Nilai awal form sebelum data API dimuat. */
 const INITIAL_MAIN_FORM = {
   headline: "",
   subHeadline: "",
@@ -28,16 +38,18 @@ const INITIAL_MAIN_FORM = {
 };
 
 export default function PageLakiMasak() {
-  const [active, setActive] = useState("main");
+  const [active, setActive] = useState("main");  // tab aktif: "main" | "hero"
   const [loading, setLoading] = useState(true);
 
+  // Form teks + file gambar utama
   const [mainForm, setMainForm] = useState(INITIAL_MAIN_FORM);
-  const [mainFiles, setMainFiles] = useState([]);
+  const [mainFiles, setMainFiles] = useState([]);  // File[] untuk mainImageUrl baru
   const [mainItems, setMainItems] = useState(COVER_ITEMS.map((item) => ({ ...item, files: [] })));
   const [heroItems, setHeroItems] = useState(HERO_ITEMS);
 
   const [heroSaving, setHeroSaving] = useState(false);
   const [mainSaving, setMainSaving] = useState(false);
+  // true jika user menghapus mainImageUrl — akan kirim null ke API saat save
   const [mainPendingClear, setMainPendingClear] = useState(false);
 
   useEffect(() => {
@@ -72,6 +84,10 @@ export default function PageLakiMasak() {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Dipanggil oleh ListCover saat user memilih/menghapus file cover.
+   * clearImage=true → tandai pendingClear agar saat save dikirim imageUrl: null.
+   */
   const handleMainFilesChange = (id, files, clearImage = false) => {
     setMainItems((prev) => prev.map((item) =>
       item.id === id
@@ -80,6 +96,7 @@ export default function PageLakiMasak() {
     ));
   };
 
+  /** Dipanggil oleh ListHero saat user memilih/menghapus file hero. */
   const handleHeroFilesChange = (id, files, clearImage = false) => {
     setHeroItems((prev) => prev.map((item) =>
       item.id === id
@@ -88,10 +105,12 @@ export default function PageLakiMasak() {
     ));
   };
 
+  /** Update field teks (title/subtitle) sebuah item hero. */
   const handleHeroItemChange = (id, changes) => {
     setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   };
 
+  /** User menghapus gambar utama — tandai pending clear. */
   const handleClearMainImage = () => {
     setMainForm((prev) => ({ ...prev, mainImageUrl: null }));
     setMainPendingClear(true);

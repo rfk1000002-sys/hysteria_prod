@@ -1,8 +1,20 @@
+/**
+ * _list.hero.jsx
+ *
+ * Komponen accordion untuk menampilkan dan mengelola daftar slot hero image.
+ * Berbeda dari _list.cover: setiap item hero juga memiliki field teks (title, subtitle).
+ *
+ * Props:
+ *  items         – array of { id, label, title, subtitle, files, imageUrl? }
+ *  onFilesChange – (id, newFiles, clearImage?) => void
+ *  onItemChange  – (id, { title?, subtitle? }) => void  — dipanggil saat teks berubah
+ */
 "use client";
 
 import React, { useState } from "react";
 import UploadBox from "../../../../components/adminUI/UploadBox.jsx";
 
+/** Icon panah yang berotasi 180° saat accordion terbuka. */
 function ChevronIcon({ open }) {
   return (
     <svg
@@ -26,8 +38,10 @@ function ChevronIcon({ open }) {
  *  onItemChange  – (id, changes) => void
  */
 export default function ListHero({ items = [], onFilesChange, onItemChange = () => {} }) {
+  // Hanya satu item yang bisa terbuka sekaligus; null = semua tertutup
   const [openId, setOpenId] = useState(null);
 
+  // Toggle: buka item yang ditutup, tutup item yang sudah terbuka
   const toggle = (id) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
@@ -92,8 +106,8 @@ export default function ListHero({ items = [], onFilesChange, onItemChange = () 
                         Array.isArray(newFiles) ? newFiles : Array.from(newFiles || [])
                       )
                     }
-                    existingUrl={item.imageUrl || null}
-                    onClearExisting={() => onFilesChange(item.id, [], true)}
+                    existingUrl={item.imageUrl || null}  // tampilkan gambar tersimpan jika ada
+                    onClearExisting={() => onFilesChange(item.id, [], true)}  // true = tandai pendingClear di parent
                     accept="image/*"
                     maxSizeMB={5}
                   />

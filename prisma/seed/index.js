@@ -12,6 +12,8 @@ const seeds = [
   // require("./008-seed-basic-permissions.js"),
   require('./009-nav-category.js'),
   // require("./010-team.js"),
+  // require("./011-platform-permissions.js"),
+  // require("./012-seed-platforms.js"),
 ];
 
 async function main() {

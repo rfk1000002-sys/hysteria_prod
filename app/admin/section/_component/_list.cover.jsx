@@ -1,8 +1,21 @@
+/**
+ * _list.cover.jsx
+ *
+ * Komponen accordion untuk menampilkan dan mengelola daftar slot cover image.
+ * Setiap item dapat di-expand untuk menampilkan UploadBox.
+ *
+ * Props:
+ *  items         – array of { id, label, files, imageUrl? }
+ *                  imageUrl diisi dari data API (gambar yang sudah tersimpan)
+ *  onFilesChange – (id, newFiles, clearImage?) => void
+ *                  clearImage=true dikirim saat user menekan tombol hapus gambar
+ */
 "use client";
 
 import React, { useState } from "react";
 import UploadBox from "../../../../components/adminUI/UploadBox.jsx";
 
+/** Ikon chevron yang berputar 180° saat accordion terbuka. */
 function ChevronIcon({ open }) {
   return (
     <svg
@@ -25,8 +38,10 @@ function ChevronIcon({ open }) {
  *  onFilesChange – (id, newFiles) => void
  */
 export default function ListCover({ items = [], onFilesChange }) {
+  // Hanya satu item yang bisa terbuka sekaligus; null = semua tertutup
   const [openId, setOpenId] = useState(null);
 
+  // Toggle: buka item yang ditutup, tutup item yang sudah terbuka
   const toggle = (id) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
@@ -61,8 +76,8 @@ export default function ListCover({ items = [], onFilesChange }) {
                 <UploadBox
                   files={Array.isArray(item.files) ? item.files : []}
                   setFiles={(newFiles) => onFilesChange(item.id, Array.isArray(newFiles) ? newFiles : Array.from(newFiles || []))}
-                  existingUrl={item.imageUrl || null}
-                  onClearExisting={() => onFilesChange(item.id, [], true)}
+                  existingUrl={item.imageUrl || null}  // tampilkan gambar tersimpan jika ada
+                  onClearExisting={() => onFilesChange(item.id, [], true)}  // true = tandai pendingClear di parent
                   accept="image/*"
                   maxSizeMB={5}
                 />

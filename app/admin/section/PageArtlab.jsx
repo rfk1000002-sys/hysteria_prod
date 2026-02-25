@@ -1,11 +1,28 @@
+/**
+ * PageArtlab.jsx
+ *
+ * Halaman admin untuk mengelola konten platform Hysteria Artlab.
+ * Terdiri dari dua tab:
+ *  - "Page Utama" : form teks + gambar utama + daftar slot cover image
+ *  - "Bagian Hero" : daftar slot hero image per sub-halaman
+ *
+ * Semua state dikelola di komponen ini (fully controlled);
+ * FormMain dan FormHero hanya menerima props tanpa state internal.
+ */
 "use client";
 
 import React, { useState, useEffect } from "react";
 import FormMain from "./_component/form.main.jsx";
 import FormHero from "./_component/form.hero.jsx";
 
+/** Slug yang dipakai sebagai identifier platform di DB dan di URL API. */
 const PLATFORM_SLUG = "artlab";
 
+/**
+ * Daftar slot cover image platform Artlab.
+ * `apiKey` harus cocok dengan kolom `key` di tabel PlatformImage di DB.
+ * Urutan array menentukan urutan tampil di UI.
+ */
 const COVER_ITEMS = [
   { id: 1, apiKey: "cover-1", label: "Cover Merchandise*" },
   { id: 2, apiKey: "cover-2", label: "Cover Podcast Artlab*" },
@@ -14,8 +31,13 @@ const COVER_ITEMS = [
   { id: 5, apiKey: "cover-5", label: "Cover Untuk Perhatian*" },
 ];
 
+/**
+ * Daftar slot hero image per sub-halaman Artlab.
+ * `title` dan `subtitle` adalah nilai awal sebelum data dari API dimuat.
+ * `files` selalu dimulai sebagai array kosong; diisi saat user memilih file baru.
+ */
 const HERO_ITEMS = [
-  { id: 1, apiKey: "hero-podcast-artlab",    label: "Hero Page Podcast Artlab",       title: "", subtitle: "", files: [] },
+  { id: 1, apiKey: "hero-podcast-artlab",     label: "Hero Page Podcast Artlab",       title: "", subtitle: "", files: [] },
   { id: 2, apiKey: "hero-stonen-radio",       label: "Hero Page Stonen 29 Radio Show", title: "", subtitle: "", files: [] },
   { id: 3, apiKey: "hero-anitalk",            label: "Hero Page Anitalk",              title: "", subtitle: "", files: [] },
   { id: 4, apiKey: "hero-artist-radar",       label: "Hero Page Artist Radar",         title: "", subtitle: "", files: [] },
@@ -24,6 +46,7 @@ const HERO_ITEMS = [
   { id: 7, apiKey: "hero-untuk-perhatian",    label: "Hero Page Untuk Perhatian",      title: "", subtitle: "", files: [] },
 ];
 
+/** Nilai awal form teks platform sebelum data dari API dimuat. */
 const INITIAL_MAIN_FORM = {
   headline: "",
   subHeadline: "",
@@ -33,16 +56,20 @@ const INITIAL_MAIN_FORM = {
 };
 
 export default function PageArtlab() {
-  const [active, setActive] = useState("main");
-  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState("main");  // tab aktif: "main" | "hero"
+  const [loading, setLoading] = useState(true);   // true selama data awal belum dimuat
 
+  // Form teks platform (headline, social links, dll) + file gambar utama
   const [mainForm, setMainForm] = useState(INITIAL_MAIN_FORM);
-  const [mainFiles, setMainFiles] = useState([]);
+  const [mainFiles, setMainFiles] = useState([]);                    // File[] untuk mainImageUrl baru
+  // Setiap item cover memiliki { ...COVER_ITEMS[n], files: [], imageUrl: null, pendingClear: false }
   const [mainItems, setMainItems] = useState(COVER_ITEMS.map((item) => ({ ...item, files: [] })));
+  // Setiap item hero memiliki { ...HERO_ITEMS[n], files: [], title, subtitle, imageUrl }
   const [heroItems, setHeroItems] = useState(HERO_ITEMS);
 
   const [heroSaving, setHeroSaving] = useState(false);
   const [mainSaving, setMainSaving] = useState(false);
+  // true jika user menekan "Hapus" pada mainImageUrl — akan kirim null ke API saat save
   const [mainPendingClear, setMainPendingClear] = useState(false);
 
   // Load existing platform data on mount
@@ -62,12 +89,14 @@ export default function PageArtlab() {
           mainImageUrl:   p.mainImageUrl   || null,
         });
 
+        // Sinkronkan slot cover: ambil imageUrl dari API, pertahankan label dari konstanta lokal
         const covers = (p.images || []).filter((img) => img.type === "cover");
         setMainItems(COVER_ITEMS.map((item) => {
           const found = covers.find((c) => c.key === item.apiKey);
           return { ...item, files: [], imageUrl: found?.imageUrl || null };
         }));
 
+        // Sinkronkan slot hero: ambil title, subtitle, imageUrl dari API
         const heroes = (p.images || []).filter((img) => img.type === "hero");
         setHeroItems(HERO_ITEMS.map((item) => {
           const found = heroes.find((h) => h.key === item.apiKey);
@@ -78,6 +107,12 @@ export default function PageArtlab() {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Dipanggil oleh ListCover saat user memilih file baru atau menghapus gambar.
+   * @param {number}  id         - id item cover
+   * @param {File[]}  files      - file baru yang dipilih (kosong jika dihapus)
+   * @param {boolean} clearImage - true jika user menekan tombol hapus gambar yang sudah ada
+   */
   const handleMainFilesChange = (id, files, clearImage = false) => {
     setMainItems((prev) => prev.map((item) =>
       item.id === id
@@ -86,6 +121,10 @@ export default function PageArtlab() {
     ));
   };
 
+  /**
+   * Dipanggil oleh ListHero saat user memilih file baru atau menghapus gambar hero.
+   * Sama seperti handleMainFilesChange tapi untuk slot hero.
+   */
   const handleHeroFilesChange = (id, files, clearImage = false) => {
     setHeroItems((prev) => prev.map((item) =>
       item.id === id
@@ -94,10 +133,12 @@ export default function PageArtlab() {
     ));
   };
 
+  /** Dipanggil saat user mengubah title/subtitle sebuah item hero di form. */
   const handleHeroItemChange = (id, changes) => {
     setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   };
 
+  /** User menekan tombol hapus gambar utama — tandai pending clear, UI akan bersih. */
   const handleClearMainImage = () => {
     setMainForm((prev) => ({ ...prev, mainImageUrl: null }));
     setMainPendingClear(true);

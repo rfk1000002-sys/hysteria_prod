@@ -1,5 +1,16 @@
+/**
+ * platform.repository.js
+ *
+ * Layer paling bawah dari modul platform.
+ * Berisi semua operasi database (raw SQL via Prisma.$queryRaw) untuk tabel "Platform".
+ * Tidak ada business logic di sini — hanya query dan return data mentah.
+ */
 import { prisma } from "../../../../lib/prisma.js";
 
+/**
+ * Mengambil satu baris Platform berdasarkan slug.
+ * Mengembalikan null jika tidak ditemukan.
+ */
 export async function findPlatformBySlug(slug) {
   const rows = await prisma.$queryRaw`
     SELECT id, slug, name, headline, "subHeadline",
@@ -12,10 +23,16 @@ export async function findPlatformBySlug(slug) {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
+/**
+ * Mengambil satu Platform beserta semua PlatformImage-nya (eager-load).
+ * Gambar diurutkan berdasarkan kolom `order` ASC, lalu id ASC sebagai tiebreaker.
+ * Mengembalikan null jika platform tidak ditemukan.
+ */
 export async function findPlatformBySlugWithImages(slug) {
   const platform = await findPlatformBySlug(slug);
   if (!platform) return null;
 
+  // Ambil semua slot gambar yang terhubung ke platform ini
   const images = await prisma.$queryRaw`
     SELECT id, "platformId", key, type, label, title, subtitle,
            "imageUrl", "order", "createdAt", "updatedAt"
@@ -27,6 +44,10 @@ export async function findPlatformBySlugWithImages(slug) {
   return { ...platform, images: Array.isArray(images) ? images : [] };
 }
 
+/**
+ * Mengambil semua platform.
+ * @param {boolean} onlyActive - Jika true (default), hanya mengembalikan platform yang aktif.
+ */
 export async function listAllPlatforms(onlyActive = true) {
   if (onlyActive) {
     return prisma.$queryRaw`
@@ -38,6 +59,7 @@ export async function listAllPlatforms(onlyActive = true) {
       ORDER BY id ASC
     `;
   }
+  // Tanpa filter isActive — digunakan jika perlu menampilkan semua platform termasuk yang nonaktif
   return prisma.$queryRaw`
     SELECT id, slug, name, headline, "subHeadline",
            instagram, youtube, "youtubeProfile", "mainImageUrl", "isActive",
@@ -47,12 +69,24 @@ export async function listAllPlatforms(onlyActive = true) {
   `;
 }
 
+/**
+ * Update (partial) data Platform berdasarkan slug.
+ * Hanya field yang dikirim yang akan diperbarui — field yang tidak ada di `data` dibiarkan.
+ *
+ * Pola yang digunakan:
+ * - COALESCE(nilai_baru, nilai_lama)  → jika nilai_baru = null, kolom tidak berubah.
+ * - CASE WHEN hasMainImageUrl THEN nilai ELSE nilai_lama END
+ *   → memungkinkan pengiriman null secara eksplisit untuk menghapus gambar.
+ *   → jika key `mainImageUrl` tidak ada di objek `data` sama sekali, kolom tidak disentuh.
+ */
 export async function upsertPlatformBySlug(slug, data) {
   const headline = data?.headline ?? null;
   const subHeadline = data?.subHeadline ?? null;
   const instagram = data?.instagram ?? null;
   const youtube = data?.youtube ?? null;
   const youtubeProfile = data?.youtubeProfile ?? null;
+
+  // hasOwnProperty dipakai bukan hanya falsy check, supaya null yang dikirim eksplisit tetap diproses
   const hasMainImageUrl = Object.prototype.hasOwnProperty.call(data || {}, "mainImageUrl");
   const mainImageUrl = data?.mainImageUrl ?? null;
 

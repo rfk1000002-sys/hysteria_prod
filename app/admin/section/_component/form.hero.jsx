@@ -1,3 +1,16 @@
+/**
+ * form.hero.jsx
+ *
+ * Wrapper form untuk tab "Bagian Hero".
+ * Komponen ini fully controlled — semua state (items) dikelola oleh parent Page.
+ *
+ * Props:
+ *  items         – array hero items dengan title, subtitle, files, imageUrl
+ *  onFilesChange – (id, newFiles, clearImage?) => void
+ *  onItemChange  – (id, changes) => void  — untuk update title/subtitle
+ *  onSubmit      – (items) => void  — dipanggil dengan items terkini saat tombol Simpan diklik
+ *  submitting    – boolean  — true selama proses save berlangsung
+ */
 "use client";
 import React from "react";
 import ListHero from "./_list.hero.jsx";

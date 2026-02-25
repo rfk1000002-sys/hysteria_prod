@@ -28,9 +28,11 @@ export default function FormMain({
   onSubmit = () => {},
   submitting = false,
 }) {
+  // Controlled input: update satu field di `form` tanpa menimpa field lain
   const handleChange = (e) =>
     onFormChange((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
+  // Cegah default submit HTML agar tidak reload halaman, lalu delegasikan ke parent
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit();

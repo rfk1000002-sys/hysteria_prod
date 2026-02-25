@@ -1,24 +1,34 @@
+/**
+ * PageDitampart.jsx
+ *
+ * Halaman admin untuk mengelola konten platform Hysteria Ditampart.
+ * Struktur identik dengan PageArtlab — dua tab (Page Utama + Bagian Hero).
+ * Perbedaan: PLATFORM_SLUG, COVER_ITEMS, dan HERO_ITEMS disesuaikan untuk Ditampart.
+ */
 "use client";
 
 import React, { useState, useEffect } from "react";
 import FormMain from "./_component/form.main.jsx";
 import FormHero from "./_component/form.hero.jsx";
 
+/** Slug identifier platform di DB dan URL API. */
 const PLATFORM_SLUG = "ditampart";
 
+/** Slot cover image Ditampart. `apiKey` harus cocok dengan kolom `key` di tabel PlatformImage. */
 const COVER_ITEMS = [
-  { id: 1, apiKey: "cover-1", label: "Cover 3D*" },
   { id: 2, apiKey: "cover-2", label: "Cover Foto Kegiatan*" },
   { id: 3, apiKey: "cover-3", label: "Cover Mockup dan Poster*" },
   { id: 4, apiKey: "cover-4", label: "Cover Short Film Dokumenter*" },
   { id: 5, apiKey: "cover-5", label: "Cover Event Ditampart*" },
 ];
 
+/** Slot hero image per sub-halaman Ditampart. title/subtitle adalah nilai default sebelum API dimuat. */
 const HERO_ITEMS = [
-  { id: 1, apiKey: "hero-mockup-poster",    label: "Hero Page Mock Up dan Poster", title: "", subtitle: "", files: [] },
+  { id: 1, apiKey: "hero-mockup-ditampart",  label: "Hero Page Mock Up dan Poster", title: "", subtitle: "", files: [] },
   { id: 2, apiKey: "hero-event-ditampart",   label: "Hero Page Event Ditampart",    title: "", subtitle: "", files: [] },
 ];
 
+/** Nilai awal form sebelum data API dimuat. */
 const INITIAL_MAIN_FORM = {
   headline: "",
   subHeadline: "",
@@ -28,16 +38,18 @@ const INITIAL_MAIN_FORM = {
 };
 
 export default function PageDitampart() {
-  const [active, setActive] = useState("main");
+  const [active, setActive] = useState("main");  // tab aktif: "main" | "hero"
   const [loading, setLoading] = useState(true);
 
+  // Form teks + file gambar utama
   const [mainForm, setMainForm] = useState(INITIAL_MAIN_FORM);
-  const [mainFiles, setMainFiles] = useState([]);
+  const [mainFiles, setMainFiles] = useState([]);  // File[] untuk mainImageUrl baru
   const [mainItems, setMainItems] = useState(COVER_ITEMS.map((item) => ({ ...item, files: [] })));
   const [heroItems, setHeroItems] = useState(HERO_ITEMS);
 
   const [heroSaving, setHeroSaving] = useState(false);
   const [mainSaving, setMainSaving] = useState(false);
+  // true jika user menghapus mainImageUrl — akan kirim null ke API saat save
   const [mainPendingClear, setMainPendingClear] = useState(false);
 
   useEffect(() => {
@@ -72,6 +84,10 @@ export default function PageDitampart() {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Dipanggil oleh ListCover saat user memilih/menghapus file cover.
+   * clearImage=true → tandai pendingClear agar saat save dikirim imageUrl: null ke API.
+   */
   const handleMainFilesChange = (id, files, clearImage = false) => {
     setMainItems((prev) => prev.map((item) =>
       item.id === id
@@ -80,6 +96,7 @@ export default function PageDitampart() {
     ));
   };
 
+  /** Dipanggil oleh ListHero saat user memilih/menghapus file hero. */
   const handleHeroFilesChange = (id, files, clearImage = false) => {
     setHeroItems((prev) => prev.map((item) =>
       item.id === id
@@ -88,90 +105,30 @@ export default function PageDitampart() {
     ));
   };
 
+  /** Update field teks (title/subtitle) sebuah item hero. */
   const handleHeroItemChange = (id, changes) => {
     setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   };
 
+  /** User menghapus gambar utama — tandai pending clear. */
   const handleClearMainImage = () => {
     setMainForm((prev) => ({ ...prev, mainImageUrl: null }));
     setMainPendingClear(true);
   };
 
-  async function handleSaveMain() {
-    setMainSaving(true);
-    try {
-      let res;
-      if (mainFiles.length > 0) {
-        const fd = new FormData();
-        fd.append("headline",       mainForm.headline       || "");
-        fd.append("subHeadline",    mainForm.subHeadline    || "");
-        fd.append("instagram",      mainForm.instagram      || "");
-        fd.append("youtube",        mainForm.youtube        || "");
-        fd.append("youtubeProfile", mainForm.youtubeProfile || "");
-        fd.append("mainImageUrl",   mainFiles[0]);
-        res = await fetch(`/api/admin/platform/${PLATFORM_SLUG}`, { method: "PATCH", body: fd });
-      } else {
-        const body = {
-          headline:       mainForm.headline       || "",
-          subHeadline:    mainForm.subHeadline    || "",
-          instagram:      mainForm.instagram      || "",
-          youtube:        mainForm.youtube        || "",
-          youtubeProfile: mainForm.youtubeProfile || "",
-        };
-        if (mainPendingClear) body.mainImageUrl = null;
-        res = await fetch(`/api/admin/platform/${PLATFORM_SLUG}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      }
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload.error?.message || "Gagal menyimpan platform");
-      }
-
-      for (const item of mainItems) {
-        if (item.files?.length > 0) {
-          const coverFd = new FormData();
-          coverFd.append("imageUrl", item.files[0]);
-          const cRes = await fetch(`/api/admin/platform/${PLATFORM_SLUG}/images/${item.apiKey}`, {
-            method: "PATCH",
-            body: coverFd,
-          });
-          if (!cRes.ok) {
-            const payload = await cRes.json().catch(() => ({}));
-            throw new Error(payload.error?.message || `Gagal menyimpan cover: ${item.label}`);
-          }
-        } else if (item.pendingClear) {
-          const cRes = await fetch(`/api/admin/platform/${PLATFORM_SLUG}/images/${item.apiKey}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageUrl: null }),
-          });
-          if (!cRes.ok) {
-            const payload = await cRes.json().catch(() => ({}));
-            throw new Error(payload.error?.message || `Gagal menghapus gambar cover: ${item.label}`);
-          }
-        }
-      }
-
-      setMainFiles([]);
-      setMainPendingClear(false);
-      setMainItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false })));
-      alert("Data halaman utama berhasil disimpan");
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Terjadi kesalahan saat menyimpan");
-    } finally {
-      setMainSaving(false);
-    }
-  }
-
+  /**
+   * Menyimpan seluruh tab "Bagian Hero".
+   * Untuk tiap item:
+   *  - Ada file baru → multipart PATCH (title + subtitle + imageUrl file)
+   *  - Hanya teks atau pendingClear → JSON PATCH
+   *  - Tidak berubah sama sekali → di-skip (tidak kirim request)
+   */
   async function handleSaveHero(items) {
     setHeroSaving(true);
     try {
       for (const item of items) {
         if (item.files?.length > 0) {
+          // Upload gambar baru sekaligus update title/subtitle
           const heroFd = new FormData();
           heroFd.append("title",    item.title    || "");
           heroFd.append("subtitle", item.subtitle || "");
