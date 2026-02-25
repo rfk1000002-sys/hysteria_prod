@@ -1,8 +1,17 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import PosterCard from "./cards/PosterCard";
+import VideoCard from "./cards/VideoCard";
+import ArtistCard from "./cards/ArtistCard";
+
+/**
+ * cardType per subCategory:
+ *   'poster'  → PosterCard  (vertikal 2:3, overlay info hover)
+ *   'video'   → VideoCard   (landscape 16:9, play button, timestamp)
+ *   'artist'  → ArtistCard  (vertikal 3:4, branded Artist Radar)
+ */
 
 /**
  * CarouselBody — layout "carousel"
@@ -35,7 +44,7 @@ export default function CarouselBody({ subCategories = [] }) {
 
 /* ---------- internal: one horizontal row per sub-category ---------- */
 
-function SubCategoryRow({ title, linkUrl, items = [] }) {
+function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster" }) {
   const scrollRef = useRef(null);
 
   const scroll = (dir) => {
@@ -45,6 +54,12 @@ function SubCategoryRow({ title, linkUrl, items = [] }) {
   };
 
   if (!items.length) return null;
+
+  // Batasi jumlah item yang dirender
+  const displayedItems = items.slice(0, 7);
+
+  // Lebar card bervariasi per tipe
+  const cardWidth = cardType === "video" ? "w-[280px] md:w-[320px]" : "w-[180px] md:w-[220px]";
 
   return (
     <section className="w-full max-w-[1920px] mx-auto mt-12 px-4 md:px-24">
@@ -69,7 +84,7 @@ function SubCategoryRow({ title, linkUrl, items = [] }) {
         {/* Left arrow (desktop) */}
         <button
           onClick={() => scroll("left")}
-          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition"
+          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
           aria-label="Scroll left"
         >
           <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -80,11 +95,16 @@ function SubCategoryRow({ title, linkUrl, items = [] }) {
         <div
           ref={scrollRef}
           className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scroll-smooth"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-x",
+          }}
         >
-          {items.map((item, i) => (
-            <div key={i} className="flex-none w-[220px] md:w-[260px] snap-start">
-              <CarouselCard item={item} />
+          {displayedItems.map((item, i) => (
+            <div key={i} className={`flex-none ${cardWidth} snap-start`}>
+              <CardSwitch cardType={cardType} item={item} />
             </div>
           ))}
         </div>
@@ -92,7 +112,7 @@ function SubCategoryRow({ title, linkUrl, items = [] }) {
         {/* Right arrow (desktop) */}
         <button
           onClick={() => scroll("right")}
-          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition"
+          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
           aria-label="Scroll right"
         >
           <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -102,42 +122,49 @@ function SubCategoryRow({ title, linkUrl, items = [] }) {
       </div>
 
       {/* Dot indicators */}
-      <DotIndicator count={items.length} />
+      <DotIndicator count={displayedItems.length} />
     </section>
   );
 }
 
-/* ---------- Carousel Card (Tailwind-based, no styled-jsx) ---------- */
+/* ---------- Card switcher ---------- */
 
-function CarouselCard({ item }) {
-  const src = item.src || "/image/DummyPoster.webp";
-  const isLocal = typeof src === "string" && src.startsWith("/");
-
-  return (
-    <div className="group relative w-full aspect-[2/3] overflow-hidden rounded-lg bg-zinc-200 cursor-pointer">
-      <Image
-        src={src}
-        alt={item.alt || item.title || "Image"}
-        fill
-        unoptimized={!isLocal}
-        sizes="(max-width:640px) 50vw, 260px"
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
+function CardSwitch({ cardType, item }) {
+  if (cardType === "video") {
+    return (
+      <VideoCard
+        src={item.src}
+        alt={item.alt}
+        title={item.title}
+        timestamp={item.timestamp || item.subtitle}
+        badge={item.badge}
       />
+    );
+  }
 
-      {/* Gradient overlay + text */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3">
-        {item.title && (
-          <h3 className="text-white text-sm md:text-base font-semibold leading-tight drop-shadow-md">
-            {item.title}
-          </h3>
-        )}
-        {item.subtitle && (
-          <p className="text-white/80 text-xs md:text-sm mt-1 drop-shadow-md">
-            {item.subtitle}
-          </p>
-        )}
-      </div>
-    </div>
+  if (cardType === "artist") {
+    return (
+      <ArtistCard
+        src={item.src}
+        alt={item.alt}
+        name={item.name || item.title}
+        role={item.role}
+        episode={item.episode}
+        subtitle={item.subtitle}
+      />
+    );
+  }
+
+  // default: poster
+  return (
+    <PosterCard
+      src={item.src}
+      alt={item.alt}
+      title={item.title}
+      subtitle={item.subtitle}
+      badge={item.badge}
+      meta={item.meta}
+    />
   );
 }
 
@@ -151,7 +178,7 @@ function DotIndicator({ count }) {
       {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
         <span
           key={i}
-          className="w-2 h-2 rounded-full bg-zinc-300"
+          className="w-2 h-2 rounded-full bg-pink-300"
         />
       ))}
     </div>

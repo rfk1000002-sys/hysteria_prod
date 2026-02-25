@@ -21,7 +21,7 @@ export default function TimHero({ imageUrl, title, description }) {
       </div>
 
       {/* Left-aligned title/description like screenshot */}
-      <div className="absolute z-10 left-6 md:left-24 top-4/9 w-full md:w-1/2 px-4 md:px-0 text-left gap-3">
+      <div className="absolute z-10 left-6 md:left-24 top-5/9 w-full md:w-1/2 px-4 md:px-0 text-left gap-3">
         <h1 className="font-bold text-[32px] md:text-[40px] lg:text-[56px] leading-[1.1] font-poppins mb-4">{resolvedTitle}</h1>
         <p className="font-normal text-[14px] md:text-[18px] lg:text-[20px] leading-[1.6] font-poppins max-w-[680px]">{resolvedDescription}</p>
       </div>

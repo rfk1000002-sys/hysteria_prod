@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
+import PosterCard from "./cards/PosterCard";
 
 /**
  * GridBody — layout "grid"
@@ -123,7 +123,15 @@ export default function GridBody({ items = [], filters = [] }) {
       {paginatedItems.length > 0 ? (
         <div className="grid grid-cols-3 md:grid-cols-5 gap-5">
           {paginatedItems.map((item, i) => (
-            <GridCard key={i} item={item} />
+            <PosterCard
+              key={i}
+              src={item.src}
+              alt={item.alt}
+              title={item.title}
+              subtitle={item.subtitle}
+              badge={item.badge}
+              meta={item.meta}
+            />
           ))}
         </div>
       ) : (
@@ -172,41 +180,6 @@ export default function GridBody({ items = [], filters = [] }) {
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ---------- Grid Card (Tailwind-based, no styled-jsx) ---------- */
-
-function GridCard({ item }) {
-  const src = item.src || "/image/DummyPoster.webp";
-  const isLocal = typeof src === "string" && src.startsWith("/");
-
-  return (
-    <div className="group relative w-full aspect-[2/3] overflow-hidden rounded-lg bg-zinc-200 cursor-pointer">
-      {/* Image fills the card */}
-      <Image
-        src={src}
-        alt={item.alt || item.title || "Image"}
-        fill
-        unoptimized={!isLocal}
-        sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
-      />
-
-      {/* Gradient overlay + text — always visible */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-3">
-        {item.title && (
-          <h3 className="text-white text-sm md:text-base font-semibold leading-tight drop-shadow-md">
-            {item.title}
-          </h3>
-        )}
-        {item.subtitle && (
-          <p className="text-white/80 text-xs md:text-sm mt-1 drop-shadow-md">
-            {item.subtitle}
-          </p>
-        )}
-      </div>
     </div>
   );
 }

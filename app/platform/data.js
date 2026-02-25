@@ -43,31 +43,34 @@ export const PLATFORM_DATA = {
           {
             title: 'Stonen 29 Radio Show',
             slug: 'stonen-29-radio-show',
+            cardType: 'poster',
             linkUrl: '#',
             items: [
-              { src: '/image/DummyPoster.webp', alt: 'Episode 1', title: 'DI KITA MUNG PINDAH TURU TORI', subtitle: 'Stonen 29 Radio Show' },
-              { src: '/image/DummyPoster.webp', alt: 'Episode 2', title: 'DI KITA MUNG PINDAH TURU TORI', subtitle: 'Stonen 29 Radio Show' },
-              { src: '/image/DummyPoster.webp', alt: 'Episode 3', title: 'DI KITA MUNG PINDAH TURU TORI', subtitle: 'Stonen 29 Radio Show' },
+              { src: '/image/DummyPoster.webp', alt: 'Episode 1', title: 'Di Korea Mung Pindah Turu Tok! ~Buah Tangan dari Korsel~', badge: 'Akan Berlangsung', meta: 'Sabtu, 8 Maret 2026'},
+              { src: '/image/DummyPoster.webp', alt: 'Episode 2', title: 'Di Korea Mung Pindah Turu Tok! ~Buah Tangan dari Korsel~', badge: 'Akan Berlangsung', meta: 'Sabtu, 15 Maret 2026'},
+              { src: '/image/DummyPoster.webp', alt: 'Episode 3', title: 'Di Korea Mung Pindah Turu Tok! ~Buah Tangan dari Korsel~', badge: 'Telah Berakhir', meta: 'Sabtu, 22 Maret 2026'},
             ]
           },
           {
             title: 'Anitalk',
             slug: 'anitalk',
+            cardType: 'video',
             linkUrl: '#',
             items: [
-              { src: '/image/DummyPoster.webp', alt: 'Anitalk 1', title: 'Anitalk Episode 1', subtitle: '22.00' },
-              { src: '/image/DummyPoster.webp', alt: 'Anitalk 2', title: 'Anitalk Episode 2', subtitle: '22.00' },
-              { src: '/image/DummyPoster.webp', alt: 'Anitalk 3', title: 'Anitalk Episode 3', subtitle: '22.00' },
+              { src: '/image/video.webp', alt: 'Anitalk 1', title: 'Anitalk Episode 1', timestamp: '22.00' },
+              { src: '/image/video.webp', alt: 'Anitalk 2', title: 'Anitalk Episode 2', timestamp: '22.00' },
+              { src: '/image/video.webp', alt: 'Anitalk 3', title: 'Anitalk Episode 3', timestamp: '22.00' },
             ]
           },
           {
             title: 'Artist Radar',
             slug: 'artist-radar',
+            cardType: 'artist',
             linkUrl: '#',
             items: [
-              { src: '/image/DummyPoster.webp', alt: 'Artist 1', title: 'Artist Radar 1', subtitle: 'Spotlight' },
-              { src: '/image/DummyPoster.webp', alt: 'Artist 2', title: 'Artist Radar 2', subtitle: 'Spotlight' },
-              { src: '/image/DummyPoster.webp', alt: 'Artist 3', title: 'Artist Radar 3', subtitle: 'Spotlight' },
+              { src: '/image/artist.webp', alt: 'Artist 1', name: 'Nama Artist 1', role: 'Vocalist & Lyricist', episode: 'Edisi 1' },
+              { src: '/image/artist.webp', alt: 'Artist 2', name: 'Nama Artist 2', role: 'Producer & Beatmaker', episode: 'Edisi 2' },
+              { src: '/image/artist.webp', alt: 'Artist 3', name: 'Nama Artist 3', role: 'Visual Artist', episode: 'Edisi 3' },
             ]
           }
         ]
@@ -81,14 +84,14 @@ export const PLATFORM_DATA = {
         layout: 'grid',
         filters: ['Having Fun Artlab', 'Peltoe'],
         items: [
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Having Fun Artlab' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Having Fun Artlab' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Peltoe' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Peltoe' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Having Fun Artlab' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Having Fun Artlab' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Peltoe' },
-          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', subtitle: 'Workshop', tag: 'Peltoe' },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Having Fun Artlab', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Having Fun Artlab', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Peltoe', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Peltoe', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Having Fun Artlab', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Having Fun Artlab', badge: null, meta: null },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Peltoe', badge: 'Akan Berlangsung', meta: 'Sabtu, 29 Maret 2026' },
+          { src: '/image/DummyPoster.webp', title: 'AI SUNRISE WALK MERAPI', tag: 'Peltoe', badge: 'Telah Berakhir', meta: 'Sabtu, 22 Maret 2026' },
         ]
       },
       {

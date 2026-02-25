@@ -17,7 +17,7 @@ import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { Help } from "@mui/icons-material";
 
-export default function HeroManagement() {
+export default function PageHome() {
   const { apiCall, csrfToken } = useAuth();
   const [heroes, setHeroes] = useState([]);
   const [loading, setLoading] = useState(true);

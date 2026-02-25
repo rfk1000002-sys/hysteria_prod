@@ -16,8 +16,13 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       ],
     },
     { key: "category", label: "Category", view: "category", icon: IconCategorySmall, enabled: true },
+
     { key: "section", label: "Section",view: "section",icon: IconSection,enabled: true,children: [
-        { key: "hero", label: "Hero - Home Page", view: "section.hero", icon: IconHero, enabled: true },
+        { key: "home", label: "Page Home", view: "section.home", icon: IconHero, enabled: true },
+        { key: "program", label: "Page Program", view: "section.program", icon: IconHero, enabled: true },
+        { key: "artlab", label: "Page Artlab", view: "section.artlab", icon: IconHero, enabled: true },
+        { key: "ditampart", label: "Page Ditampart", view: "section.ditampart", icon: IconHero, enabled: true },
+        { key: "laki-masak", label: "Page Laki Masak", view: "section.laki-masak", icon: IconHero, enabled: true },
       ],
     },
     { key: "platform", label: "Platform", view: "platform", icon: IconPlatform, enabled: true, children: [
