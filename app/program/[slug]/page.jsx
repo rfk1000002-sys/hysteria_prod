@@ -55,29 +55,27 @@ const PROGRAM_DATA = {
   },
   'pemutaran-film': {
     title: 'Pemutaran Film',
-    desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.', // (Silakan ubah deskripsi ini jika perlu)
+    desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.',
     categories: [
         'Semua', 
         'Screening AM', 
         'Lawatan Bandeng Keling'
     ] 
   },
-
-  // --- NEW: RESIDENSI & WORKSHOP (TANPA KATEGORI) ---
   'flash-residency': {
     title: 'Flash Residency',
     desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.',
-    categories: [] // Dikosongkan agar sidebar tidak muncul
+    categories: [] 
   },
   'kandang-tandang': {
     title: 'Kandang Tandang',
     desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.',
-    categories: [] // Dikosongkan agar sidebar tidak muncul
+    categories: [] 
   },
   'safari-memori': {
     title: 'safari-memori',
-    desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.', // Ubah deskripsi jika perlu
-    categories: [] // Dikosongkan agar sidebar tidak muncul
+    desc: 'Perayaan seni, budaya, dan kehidupan kampung melalui kerja kolektif warga dan seniman.',
+    categories: [] 
   }
 };
 
@@ -91,18 +89,22 @@ const generateDummyData = (slug) => {
     .map(c => typeof c === 'object' ? c.name : c)
     .filter(c => c !== 'Semua');
   
-  // Deteksi apakah program ini punya kategori atau tidak
   const hasCategories = categories.length > 0;
+  
+  // Data simulasi status dan tanggal untuk variasi hover
+  const statusOptions = ['Akan Berlangsung', 'Telah Berakhir'];
+  const dateOptions = ['Sabtu, 8 Maret 2026', 'Selasa, 15 Juli 2025'];
 
   return Array.from({ length: 150 }).map((_, index) => {
-    // Jika tidak ada kategori, isi saja dengan string kosong/umum
     const category = hasCategories ? categories[index % categories.length] : 'Umum'; 
     return {
       id: index,
-      title: `Program ${slug.toUpperCase()} ${hasCategories ? `- ${category} ` : ''}#${index + 1}: Di Korea Mung Pindah Turu Tok!`,
+      title: `Di Korea Mung Pindah Turu Tok! -Buah Tangan dari Korsel-`, // Judul disesuaikan dgn desain
       year: 2023 + (index % 3),
       category: category,
       isChoice: index % 3 === 0, 
+      status: statusOptions[index % 2], // Ganti-ganti status
+      date: dateOptions[index % 2],     // Ganti-ganti tanggal
     };
   });
 };
@@ -117,35 +119,26 @@ export default function ProgramDetailPage({ params }) {
   
   // State Paginasi
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Cek apakah punya sidebar (jika array categories tidak kosong)
   const hasSidebar = data?.categories && data.categories.length > 0;
-  
-  // Jika tidak pakai sidebar (layout penuh), buat 18 per halaman (grid 6x3 rapi)
   const itemsPerPage = hasSidebar ? 15 : 18; 
 
   const allItems = useMemo(() => generateDummyData(slug), [slug]);
 
-  // 1. Filter Data
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
-      // Jika tidak ada sidebar, abaikan filter kategori
       const matchCategory = !hasSidebar || activeCategory === 'Semua' || item.category === activeCategory;
       const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCategory && matchSearch;
     });
   }, [allItems, activeCategory, searchQuery, hasSidebar]);
 
-  // 2. Hitung Total Halaman
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-  // 3. Potong Data (Slice)
   const currentDisplayItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredItems, currentPage, itemsPerPage]);
 
-  // 4. LOGIKA PAGINASI GESER (SLIDING WINDOW)
   const getVisiblePageNumbers = () => {
     const maxVisibleButtons = 5; 
 
@@ -181,19 +174,17 @@ export default function ProgramDetailPage({ params }) {
       setCurrentPage(1);
   }
 
-  // JIKA SLUG TIDAK ADA DI PROGRAM_DATA, MAKA MUNCUL 404
   if (!data) return notFound();
 
   return (
     <main className={`min-h-screen bg-white ${poppins.className}`}>
-
       {/* HERO SECTION */}
       <section className="relative w-full h-[700px]">
         <div className="absolute inset-0">
           <Image src="/image/bg_program.jpeg" alt="Background Program" fill priority className="object-cover" quality={100} />
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
-        <div className="relative z-10 w-full px-10 lg:px-20 h-full flex flex-col justify-center text-white">
+        <div className="relative z-10 w-full px-10 lg:px-20 h-full flex flex-col justify-end pb-24 text-white">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 drop-shadow-md tracking-tight uppercase">{data.title}</h1>
           <p className="text-lg md:text-xl max-w-2xl font-medium opacity-95 leading-relaxed drop-shadow-sm">{data.desc}</p>
         </div>
@@ -225,10 +216,9 @@ export default function ProgramDetailPage({ params }) {
 
       {/* MAIN CONTENT */}
       <div className="w-full px-10 lg:px-20 pb-20">
-         
          <div className="flex flex-row gap-8 items-start justify-center lg:justify-start">
             
-            {/* === SIDEBAR (Hanya tampil jika ada kategori) === */}
+            {/* === SIDEBAR === */}
             {hasSidebar && (
                 <aside className="w-[240px] flex-shrink-0 hidden md:block">
                    <div className="flex flex-col border border-[#D63384] rounded-xl overflow-hidden shadow-sm">
@@ -263,29 +253,58 @@ export default function ProgramDetailPage({ params }) {
                         <button onClick={() => {setSearchQuery(''); setActiveCategory('Semua'); setCurrentPage(1);}} className="mt-2 text-[#D63384] underline text-sm">Reset Pencarian</button>
                     </div>
                 ) : (
-                    <div className={`flex flex-wrap gap-4 ${hasSidebar ? 'justify-between' : 'justify-center xl:justify-start gap-x-[1.2rem]'}`}>
+                    <div className={`grid gap-6 justify-items-center sm:justify-items-start ${
+                        hasSidebar 
+                            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' 
+                            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                    }`}>
                         {currentDisplayItems.map((item) => (
-                            <div key={item.id} className="group relative rounded-[10px] overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300"
-                                style={{ width: '210px', height: '290px', background: 'linear-gradient(180deg, #F2C94C 0%, #F2994A 100%)', flexShrink: 0 }}>
-                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-0"></div>
-                                <div className="relative z-10 p-4 h-full flex flex-col justify-between text-white">
+                            <div key={item.id} className="group relative rounded-[10px] overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 w-full"
+                                style={{ maxWidth: '210px', height: '290px', background: 'linear-gradient(180deg, #F2C94C 0%, #F2994A 100%)' }}>
+                                
+                                {/* TAMPILAN DEFAULT (Sebelum Hover) */}
+                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-0 transition-opacity duration-300 group-hover:opacity-0"></div>
+                                <div className="relative z-10 p-4 h-full flex flex-col justify-between text-white transition-opacity duration-300 group-hover:opacity-0">
                                     <div className="self-start">
                                         {item.isChoice && (
                                             <span className="text-[9px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm border border-white/10">Pilihan</span>
                                         )}
                                     </div>
                                     <div>
-                                        <span className="text-[10px] font-bold block mb-1 opacity-90">{item.year}</span>
-                                        <h3 className="font-bold text-sm leading-tight line-clamp-3 group-hover:underline underline-offset-2 uppercase">{item.title}</h3>
-                                        <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button className="bg-[#D63384] text-white text-[10px] py-1 px-3 rounded-full font-bold">Ikuti Sekarang</button>
-                                        </div>
+                                        <h3 className="font-bold text-sm leading-tight line-clamp-3">{item.title}</h3>
                                     </div>
                                 </div>
+
+                                {/* TAMPILAN OVERLAY (Ketika Di-Hover) */}
+                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex flex-col justify-end p-4">
+                                    {/* Pembungkus konten dengan efek slide-up ringan */}
+                                    <div className="flex flex-col transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+                                        
+                                        {/* Badge Status (Akan Berlangsung / Telah Berakhir) */}
+                                        <span className="bg-white text-[#D63384] text-[10px] font-bold px-3 py-1 rounded-full w-max mb-2 shadow-sm">
+                                            {item.status}
+                                        </span>
+
+                                        {/* Judul Lengkap */}
+                                        <h3 className="font-bold text-sm leading-snug text-white mb-1">
+                                            {item.title}
+                                        </h3>
+
+                                        {/* Tanggal */}
+                                        <span className="text-[10px] font-medium text-gray-200 block mb-3">
+                                            {item.date}
+                                        </span>
+
+                                        {/* Tombol "Ikuti Sekarang" (Hanya jika status Akan Berlangsung) */}
+                                        {item.status === 'Akan Berlangsung' && (
+                                            <button className="bg-[#D63384] hover:bg-[#b52a6f] text-white text-[11px] py-2 px-4 rounded-md font-semibold w-max transition-colors shadow-md cursor-pointer">
+                                                Ikuti Sekarang
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
                             </div>
-                        ))}
-                        {[...Array(6)].map((_, i) => (
-                            <div key={`dummy-${i}`} style={{ width: '210px', height: 0, padding: 0, margin: 0 }} />
                         ))}
                     </div>
                 )}
