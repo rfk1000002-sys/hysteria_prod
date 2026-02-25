@@ -27,7 +27,7 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
        {key: "thumbnail", label: "Thumbnail", view: "platform.thumbnail", icon: IconSocial, enabled: false},
     ]},
     { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: true },
-    { key: "post", label: "Post", view: "post", icon: IconPost, enabled: false },
+    { key: "article", label: "Artikel", view: "article", icon: IconPost, enabled: true },
     { key: "settings", label: "Settings", view: "settings", icon: IconSettings, enabled: true,
       children: [{ key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true }],
     },
