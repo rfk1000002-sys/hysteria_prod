@@ -48,14 +48,14 @@ export default function AdminShell({ children }) {
         return <StatusManagement />;
       case "users.permission":
         return <Permission />;
-      case "section":
-      case "section.home":
+      case "page":
+      case "page.home":
         return <PageHome />;
-      case "section.artlab":
+      case "page.artlab":
         return <PageArtlab />;
-      case "section.ditampart":
+      case "page.ditampart":
         return <PageDitampart />;
-      case "section.laki-masak":
+      case "page.laki-masak":
         return <PageLakiMasak />;
       case "category":
         return <CategoriesPage />;
