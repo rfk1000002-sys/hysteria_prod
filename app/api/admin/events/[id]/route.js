@@ -18,6 +18,13 @@ export async function GET(req, { params }) {
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
+      include: {
+        categories: {
+          include: {
+            categoryItem: true,
+          },
+        },
+      },
     });
 
     if (!event) {
@@ -57,10 +64,8 @@ export async function PUT(req, { params }) {
       title: body.title,
       description: body.description,
       organizer: body.organizer,
-      categoryItemId: body.categoryItemId
-        ? Number(body.categoryItemId)
-        : undefined,
       location: body.location,
+      address: body.address ?? null, 
       registerLink: body.registerLink,
       mapsEmbedSrc: body.mapsEmbedSrc,
       poster: body.poster || null,
@@ -70,26 +75,33 @@ export async function PUT(req, { params }) {
         typeof body.isPublished === "boolean"
           ? body.isPublished
           : undefined,
+      tags: Array.isArray(body.tags) ? body.tags : [],
     };
 
-    // START & END (SENSITIF JAM)
-    if (body.startDate && body.startTime) {
-      data.startAt = new Date(`${body.startDate}T${body.startTime}`);
-    } else if (body.startAt) {
-      data.startAt = new Date(body.startAt);
-    }
-
-    if (body.endDate && body.endTime) {
-      data.endAt = new Date(`${body.endDate}T${body.endTime}`);
-    } else if (body.endAt) {
-      data.endAt = new Date(body.endAt);
-    }
+    if (body.startAt) data.startAt = new Date(body.startAt);
+    if (body.endAt) data.endAt = new Date(body.endAt);
 
     const event = await prisma.event.update({
       where: { id: eventId },
       data,
     });
-    
+
+    /* ================= UPDATE KATEGORI ================= */
+    if (Array.isArray(body.categoryItemIds)) {
+      await prisma.eventCategory.deleteMany({
+        where: { eventId },
+      });
+
+      await prisma.eventCategory.createMany({
+        data: body.categoryItemIds.map((id, idx) => ({
+          eventId,
+          categoryItemId: Number(id),
+          isPrimary: idx === 0,
+          order: idx,
+        })),
+      });
+    }
+
     return NextResponse.json(event);
   } catch (error) {
     console.error("UPDATE EVENT ERROR:", error);

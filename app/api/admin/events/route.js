@@ -10,69 +10,105 @@ export async function POST(req) {
       title,
       description,
       organizer,
-      categoryItemId,
+      categoryItemIds = [],
       startAt,
       endAt,
       location,
+      address,
       registerLink,
       mapsEmbedSrc,
       poster,
       driveLink,
       youtubeLink,
+      tags = [],
       isPublished,
     } = body;
 
-    // VALIDASI WAJIB
-    if (!title || !categoryItemId || !startAt || !location || !poster) {
+    /* ================= VALIDASI ================= */
+    const errors = {};
+
+    if (!title) errors.title = "Judul event wajib diisi";
+
+    if (
+      !Array.isArray(categoryItemIds) ||
+      categoryItemIds.length === 0
+    ) {
+      errors.categoryItemIds = "Minimal pilih 1 kategori";
+    }
+
+    if (!startAt) errors.startAt = "Tanggal mulai wajib diisi";
+
+    if (!location) errors.location = "Lokasi wajib diisi";
+
+    if (!poster) errors.poster = "Poster wajib diupload";
+
+    // kalau ada error → return detail
+    if (Object.keys(errors).length > 0) {
       return NextResponse.json(
-        { message: "Field wajib belum lengkap" }, 
+        {
+          message: "Validasi gagal",
+          errors,
+        },
         { status: 400 }
       );
     }
 
-    // CEK KATEGORI
-    const category = await prisma.categoryItem.findUnique({
-      where: { id: Number(categoryItemId) },
+    /* ================= CEK KATEGORI ================= */
+    const categoriesExist = await prisma.categoryItem.findMany({
+      where: {
+        id: { in: categoryItemIds.map(Number) },
+      },
+      select: { id: true },
     });
 
-    if (!category) {
+    if (categoriesExist.length !== categoryItemIds.length) {
       return NextResponse.json(
-        { message: "Kategori tidak valid" },
+        { message: "Salah satu kategori tidak valid" },
         { status: 400 }
       );
     }
 
-    // SLUG
+    /* ================= SLUG ================= */
     const baseSlug = slugify(title, { lower: true, strict: true });
-    const slugCount = await prisma.event.count(
-      { where: { slug: { startsWith: baseSlug } },
+    const slugCount = await prisma.event.count({
+      where: { slug: { startsWith: baseSlug } },
     });
 
-    const slug = slugCount > 0 ? `${baseSlug}-${slugCount + 1}` : baseSlug;
+    const slug =
+      slugCount > 0 ? `${baseSlug}-${slugCount + 1}` : baseSlug;
 
+    /* ================= CREATE EVENT ================= */
     const event = await prisma.event.create({
       data: {
         title,
         slug,
         description,
         organizer,
-        categoryItemId: Number(categoryItemId),
         startAt: new Date(startAt),
-        endAt: endAt ? new Date(endAt) : null, 
+        endAt: endAt ? new Date(endAt) : null,
         location,
+        address,
         registerLink,
         mapsEmbedSrc,
         poster,
         driveLink,
         youtubeLink,
         isPublished: Boolean(isPublished),
+        tags: Array.isArray(tags) ? tags : [],
+
+        categories: {
+          create: categoryItemIds.map((id, idx) => ({
+            categoryItemId: Number(id), 
+            isPrimary: idx === 0,
+            order: idx,
+          })),
+        },
       },
     });
 
     return NextResponse.json(event, { status: 201 });
   } catch (err) {
     console.error("POST /api/admin/events ERROR:", err);
-
     return NextResponse.json(
       { message: "Gagal membuat event" },
       { status: 500 }
@@ -80,26 +116,25 @@ export async function POST(req) {
   }
 }
 
+/* ================= GET ================= */
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
       include: {
-        categoryItem: {
-          select: {
-            title: true,
+        categories: {
+          include: {
+            categoryItem: {
+              select: { title: true },
+            },
           },
         },
       },
     });
 
-    // WALAU KOSONG → TETAP BALIK []
     return NextResponse.json(events, { status: 200 });
   } catch (err) {
     console.error("GET /api/admin/events ERROR:", err);
-
     return NextResponse.json(
       { message: "Gagal mengambil data event" },
       { status: 500 }

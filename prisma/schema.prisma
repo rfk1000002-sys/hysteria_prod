@@ -218,7 +218,8 @@ model CategoryItem {
 
   isActive Boolean @default(true)
 
-  events Event[]
+  // RELASI MANY TO MANY
+  events EventCategory[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -275,15 +276,16 @@ model TeamMember {
 
 model Event {
   id            Int       @id @default(autoincrement())
+
+  // BASIC INFO
   title         String    @db.VarChar(255)
   slug          String    @unique @db.VarChar(255)
   description   String?   @db.Text
   organizer     String?   @db.VarChar(255)
   poster        String?   @db.VarChar(500)
 
-  // RELASI KE CATEGORYITEM
-  categoryItemId Int
-  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id])
+  // RELASI (MANY TO MANY)
+  categories    EventCategory[]
 
   // WAKTU
   startAt       DateTime
@@ -291,12 +293,16 @@ model Event {
 
   // LOKASI
   location      String?   @db.VarChar(255)
+  address       String? @db.Text
   mapsEmbedSrc  String?   @db.Text
 
   // LINK
   registerLink  String?   @db.VarChar(500)
-  driveLink       String?   @db.VarChar(500)
-  youtubeLink     String?   @db.VarChar(500)
+  driveLink     String?   @db.VarChar(500)
+  youtubeLink   String?   @db.VarChar(500)
+
+  // TAGS
+  tags          String[]  @db.VarChar(50)
 
   // PUBLISH
   isPublished   Boolean   @default(false)
@@ -304,7 +310,24 @@ model Event {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@index([categoryItemId])
   @@index([startAt])
+  @@index([endAt])
   @@index([isPublished])
+}
+
+model EventCategory {
+  eventId        Int
+  categoryItemId Int
+
+  // RELASI
+  event          Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+
+  // OPTIONAL META (future-proof)
+  isPrimary      Boolean      @default(false)
+  order          Int          @default(0)
+
+  @@id([eventId, categoryItemId])
+  @@index([eventId])
+  @@index([categoryItemId])
 }
