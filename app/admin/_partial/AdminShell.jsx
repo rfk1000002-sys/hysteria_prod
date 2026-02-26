@@ -11,6 +11,7 @@ import HeroManagement from "../section/HeroManagement.jsx";
 import CategoriesPage from "../categories/page.jsx";
 import TeamManagementPage from "../team/page.jsx";
 import EventPage from "../events/page.jsx";
+import TentangSettingsPage from "../tentang/page.jsx";
 import { usePathname } from "next/navigation";
 
 export default function AdminShell({ children }) {
@@ -50,9 +51,11 @@ export default function AdminShell({ children }) {
         return <CategoriesPage />;
       case "team":
         return <TeamManagementPage />;
-      case 'event':
+      case "tentang":
+        return <TentangSettingsPage />;
+      case "event":
         return <EventPage />;
-      case 'dashboard':
+      case "dashboard":
       default:
         return children;
     }
@@ -78,9 +81,7 @@ export default function AdminShell({ children }) {
               <AdminTopbar onOpenSidebar={() => setOpen(true)} />
             </div>
 
-            <main className="mx-auto w-full max-w-5xl px-6 py-8">
-            {isDashboard ? renderContent() : children}
-          </main>
+            <main className="mx-auto w-full max-w-5xl px-6 py-8">{isDashboard ? renderContent() : children}</main>
           </div>
 
           {open && (
