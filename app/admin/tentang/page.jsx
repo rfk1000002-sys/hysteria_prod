@@ -31,6 +31,8 @@ export default function TentangSettingsPage() {
             "& .MuiTabs-scrollButtons": { display: "flex !important" },
             "& .MuiTabs-scrollButtons svg": { color: "rgba(0,0,0,0.6)" },
             "& .MuiTab-root": { textTransform: "none" },
+            "& .MuiTab-root.Mui-selected": { color: "#db2777" },
+            "& .MuiTabs-indicator": { backgroundColor: "#db2777" },
           }}>
           <Tab
             label="Page Hero"
