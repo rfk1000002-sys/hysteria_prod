@@ -268,7 +268,7 @@ export default function SejarahTab() {
                   value={form.title}
                   onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                   className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
-                  placeholder="Title"
+                  placeholder="Tahun Sejarah / Judul"
                 />
                 <input
                   type="file"
@@ -319,13 +319,13 @@ export default function SejarahTab() {
                     value={editForm.title}
                     onChange={(event) => setEditForm((prev) => ({ ...prev, title: event.target.value }))}
                     className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
-                    placeholder="Title"
+                    placeholder="Tahun Sejarah / Judul"
                   />
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(event) => setEditForm((prev) => ({ ...prev, imageFile: event.target.files?.[0] || null, clearImage: false }))}
-                    className="text-sm"
+                    className="block w-full text-sm text-zinc-600 file:mr-3 file:rounded file:border-0 file:bg-pink-50 file:px-3 file:py-2 file:text-pink-700 hover:file:bg-pink-100"
                   />
                 </div>
                 <div>
@@ -350,7 +350,8 @@ export default function SejarahTab() {
                   <button
                     type="button"
                     onClick={() => setEditForm((prev) => ({ ...prev, imageUrl: "", imageFile: null, clearImage: true }))}
-                    className="px-2 py-1 text-xs rounded border border-zinc-300 hover:bg-zinc-50">
+                    className="px-2 py-1 text-xs rounded border bg-red-50 text-red-700 border-red-300 hover:bg-red-100">
+
                     Hapus Gambar
                   </button>
                   <button
@@ -367,7 +368,7 @@ export default function SejarahTab() {
                         type="button"
                         onClick={handleUpdate}
                         disabled={saving || !editForm.title.trim()}
-                        className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-60">
+                        className="px-3 py-1.5 rounded-md bg-pink-600 text-white text-sm hover:bg-pink-700 disabled:opacity-60">
                         Simpan Perubahan
                       </button>
                     </PermissionGate>
