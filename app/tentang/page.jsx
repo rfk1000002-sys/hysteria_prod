@@ -12,6 +12,7 @@ const poppins = Poppins({
 });
 
 export default function TentangPage() {
+  const defaultDescription = "Sebagai laboratorium bersama dan diharapkan memberikan dampak perubahan dengan penekanan kreativitas, Hysteria memimpikan terwujudnya ekosisem seni dan kreatifitas yang sehat, menyejahterakan, dan berkelanjutan. Dibentuk sejak 11 September 2004 Hysteria selain produksi artistik juga memfasilitasi pertemuan lintas disipliner dalam skala lokal hingga global untuk mencari trobosan-trobosan dalam persoalan kreatifitas, seni, komunitas, anak muda, dan isu kota.";
   const [loading, setLoading] = useState(true);
   const [heroData, setHeroData] = useState({
     title: "Tentang Hysteria",
@@ -19,6 +20,7 @@ export default function TentangPage() {
     imageUrl: "/image/tim-hero.png",
   });
   const [visiContent, setVisiContent] = useState("Terwujudnya ekosistem seni dan kreativitas yang sehat, menyejahterakan, dan berkelanjutan");
+  const [descriptionContent, setDescriptionContent] = useState(defaultDescription);
   const [misiText, setMisiText] = useState("");
   const [sejarahItems, setSejarahItems] = useState([]);
   const [visualItems, setVisualItems] = useState([]);
@@ -44,6 +46,7 @@ export default function TentangPage() {
 
         if (visiMisiJson?.success && visiMisiJson?.data) {
           const aboutData = visiMisiJson.data;
+          setDescriptionContent(aboutData.description || defaultDescription);
           setVisiContent(aboutData.visi || "");
           // const normalizedMisi = typeof aboutData.misi === "string" ? aboutData.misi : Array.isArray(aboutData.misi) ? aboutData.misi.join("\n") : "";
           setMisiText(aboutData.misi || "");
@@ -97,7 +100,7 @@ export default function TentangPage() {
       <div className="relative w-full">
         <section className="py-20 text-center px-4 md:px-0 relative z-10 pt-[100px]">
           <div className="max-w-[1520px] mx-auto">
-            <p className="text-[20px] leading-[1.5] text-black font-poppins">Sebagai laboratorium bersama dan diharapkan memberikan dampak perubahan dengan penekanan kreativitas, Hysteria memimpikan terwujudnya ekosisem seni dan kreatifitas yang sehat, menyejahterakan, dan berkelanjutan. Dibentuk sejak 11 September 2004 Hysteria selain produksi artistik juga memfasilitasi pertemuan lintas disipliner dalam skala lokal hingga global untuk mencari trobosan-trobosan dalam persoalan kreatifitas, seni, komunitas, anak muda, dan isu kota.</p>
+            <p className="text-[20px] leading-[1.5] text-black font-poppins whitespace-pre-line">{descriptionContent}</p>
           </div>
         </section>
       </div>

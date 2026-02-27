@@ -193,7 +193,7 @@ export default function PanduanVisualTab() {
   };
 
   return (
-    <PermissionGate requiredPermissions={["team.read"]}>
+    <PermissionGate requiredPermissions={["tentang.read"]}>
       <div className="space-y-4">
         <Card
           title="Panduan Visual"
@@ -219,7 +219,7 @@ export default function PanduanVisualTab() {
               </div>
               <div className="flex justify-end">
                 <PermissionGate
-                  requiredPermissions={["team.create"]}
+                  requiredPermissions={["tentang.create"]}
                   disableOnDenied>
                   <button
                     type="button"
@@ -260,7 +260,7 @@ export default function PanduanVisualTab() {
                   </button>
                   <div className="ml-auto">
                     <PermissionGate
-                      requiredPermissions={["team.update"]}
+                      requiredPermissions={["tentang.update"]}
                       disableOnDenied>
                       <button
                         type="button"

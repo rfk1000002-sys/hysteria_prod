@@ -8,7 +8,7 @@ const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 
 export async function GET(request, { params }) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.read", "team.read"]);
+    await requireAuthWithPermission(request, ["tentang.read"]);
     const { id } = await params;
     const entityId = Number(id);
     if (!Number.isFinite(entityId) || entityId <= 0) return respondError(new AppError("Invalid sejarah id", 400));
@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.update"]);
+    await requireAuthWithPermission(request, ["tentang.update"]);
     const { id } = await params;
     const entityId = Number(id);
     if (!Number.isFinite(entityId) || entityId <= 0) return respondError(new AppError("Invalid sejarah id", 400));
@@ -74,7 +74,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.delete"]);
+    await requireAuthWithPermission(request, ["tentang.delete"]);
     const { id } = await params;
     const entityId = Number(id);
     if (!Number.isFinite(entityId) || entityId <= 0) return respondError(new AppError("Invalid sejarah id", 400));

@@ -5,7 +5,7 @@ import { getPanduanVisualItems, createPanduanVisual } from "../../../../../modul
 
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.read", "team.read"]);
+    await requireAuthWithPermission(request, ["tentang.read"]);
     const { searchParams } = new URL(request.url);
     const isActive = searchParams.get("isActive");
     const data = await getPanduanVisualItems({
@@ -21,7 +21,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.create"]);
+    await requireAuthWithPermission(request, ["tentang.create"]);
     const body = await request.json();
     const data = await createPanduanVisual(body || {});
     return respondSuccess(data, 201);

@@ -109,7 +109,7 @@ export default function HeroSettingsTab() {
   };
 
   return (
-    <PermissionGate requiredPermissions={["page-hero.read"]}>
+    <PermissionGate requiredPermissions={["tentang.read"]}>
       <div className="space-y-4">
         <Card
           title="Hero Page Tentang"
@@ -203,7 +203,7 @@ export default function HeroSettingsTab() {
 
               <div className="flex justify-end">
                 <PermissionGate
-                  requiredPermissions={["page-hero.update"]}
+                  requiredPermissions={["tentang.update"]}
                   disableOnDenied>
                   <button
                     type="submit"

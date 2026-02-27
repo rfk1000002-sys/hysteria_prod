@@ -11,10 +11,12 @@ export async function upsertTentangVisiMisiBySlug(pageSlug, data) {
     where: { pageSlug },
     create: {
       pageSlug,
+      description: data.description,
       visi: data.visi,
       misi: data.misi,
     },
     update: {
+      ...(data.description !== undefined && { description: data.description }),
       ...(data.visi !== undefined && { visi: data.visi }),
       ...(data.misi !== undefined && { misi: data.misi }),
     },

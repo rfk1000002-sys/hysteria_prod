@@ -10,6 +10,7 @@ export default function VisiMisiTab() {
   const { apiCall } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [description, setDescription] = useState("");
   const [visi, setVisi] = useState("");
   const [misi, setMisi] = useState("");
   const [toast, setToast] = useState({ visible: false, message: "", type: "error" });
@@ -22,6 +23,7 @@ export default function VisiMisiTab() {
       if (!json?.success) throw new Error(json?.error?.message || "Gagal memuat visi misi");
 
       const data = json.data || {};
+      setDescription(data.description || "");
       setVisi(data.visi || "");
       setMisi(data.misi || "");
     } catch (error) {
@@ -41,6 +43,7 @@ export default function VisiMisiTab() {
       const res = await apiCall("/api/admin/tentang/visi-misi", {
         method: "PUT",
         body: JSON.stringify({
+          description,
           visi,
           misi,
         }),
@@ -49,6 +52,7 @@ export default function VisiMisiTab() {
       if (!json?.success) throw new Error(json?.error?.message || "Gagal menyimpan visi misi");
 
       setToast({ visible: true, message: "Visi & misi berhasil disimpan", type: "success" });
+      setDescription(description);
       setVisi(visi);
       setMisi(misi);
     } catch (error) {
@@ -59,7 +63,7 @@ export default function VisiMisiTab() {
   };
 
   return (
-    <PermissionGate requiredPermissions={["team.read"]}>
+    <PermissionGate requiredPermissions={["tentang.read"]}>
       <div className="space-y-4">
         <Card
           title="Visi & Misi"
@@ -68,6 +72,16 @@ export default function VisiMisiTab() {
             <div className="text-sm text-zinc-500">Memuat data visi & misi...</div>
           ) : (
             <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Deskripsi</label>
+                <textarea
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm min-h-28 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  placeholder="Masukkan deskripsi intro tentang halaman tentang..."
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">Visi</label>
                 <textarea
@@ -91,7 +105,7 @@ export default function VisiMisiTab() {
 
               <div className="flex justify-end">
                 <PermissionGate
-                  requiredPermissions={["team.update"]}
+                  requiredPermissions={["tentang.update"]}
                   disableOnDenied>
                   <button
                     type="button"
