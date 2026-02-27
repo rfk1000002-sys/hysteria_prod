@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "TentangVisiMisi" ALTER COLUMN "description" DROP DEFAULT;
+ALTER TABLE "TentangVisiMisi" ADD COLUMN "description" TEXT NOT NULL;
