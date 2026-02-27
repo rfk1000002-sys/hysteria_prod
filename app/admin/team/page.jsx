@@ -29,18 +29,37 @@ export default function TeamPage() {
             "& .MuiTabs-scrollButtons": { display: "flex !important" },
             "& .MuiTabs-scrollButtons svg": { color: "rgba(0,0,0,0.6)" },
             "& .MuiTab-root": { textTransform: "none" },
-          }}
-        >
-          <Tab label="Hero Page Team" id="tab-team-hero" aria-controls="tabpanel-team-hero" sx={{ minWidth: "auto" }} />
-          <Tab label="Team Management" id="tab-team-management" aria-controls="tabpanel-team-management" sx={{ minWidth: "auto" }} />
+            "& .MuiTab-root.Mui-selected": { color: "#db2777" },
+            "& .MuiTabs-indicator": { backgroundColor: "#db2777" },
+          }}>
+          <Tab
+            label="Hero Page Team"
+            id="tab-team-hero"
+            aria-controls="tabpanel-team-hero"
+            sx={{ minWidth: "auto" }}
+          />
+          <Tab
+            label="Team Management"
+            id="tab-team-management"
+            aria-controls="tabpanel-team-management"
+            sx={{ minWidth: "auto" }}
+          />
         </Tabs>
       </Box>
 
-      <div role="tabpanel" hidden={activeTab !== 0} id="tabpanel-team-hero" aria-labelledby="tab-team-hero">
+      <div
+        role="tabpanel"
+        hidden={activeTab !== 0}
+        id="tabpanel-team-hero"
+        aria-labelledby="tab-team-hero">
         {activeTab === 0 && <HeroSettingsTab />}
       </div>
 
-      <div role="tabpanel" hidden={activeTab !== 1} id="tabpanel-team-management" aria-labelledby="tab-team-management">
+      <div
+        role="tabpanel"
+        hidden={activeTab !== 1}
+        id="tabpanel-team-management"
+        aria-labelledby="tab-team-management">
         {activeTab === 1 && <TeamManagementTab />}
       </div>
     </div>

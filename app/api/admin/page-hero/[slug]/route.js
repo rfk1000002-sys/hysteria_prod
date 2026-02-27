@@ -6,6 +6,16 @@ import { getPageHeroBySlug, upsertPageHeroBySlug, upsertPageHeroWithFile } from 
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 
+const resolveReadPermissionsBySlug = (slug) => {
+  if (slug === "tentang") return ["tentang.read"];
+  return ["team-about-hero.read", "team.read"];
+};
+
+const resolveUpdatePermissionsBySlug = (slug) => {
+  if (slug === "tentang") return ["tentang.update"];
+  return ["team-about-hero.update", "team.update"];
+};
+
 const normalizeClearImagePayload = (payload = {}) => {
   const shouldClearImage = payload?.clearImage === true || payload?.clearImage === "true";
   if (!shouldClearImage) return payload;
@@ -20,7 +30,7 @@ export async function GET(request, { params }) {
     const { slug } = await params;
 
     logger.info("[PageHero][Admin][GET] Start", { slug });
-    await requireAuthWithPermission(request, ["team-about-hero.read", "team.read"]);
+    await requireAuthWithPermission(request, resolveReadPermissionsBySlug(slug));
 
     const hero = await getPageHeroBySlug(slug);
 
@@ -41,7 +51,7 @@ export async function PUT(request, { params }) {
     const { slug } = await params;
     logger.info("[PageHero][Admin][PUT] Start", { slug });
 
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.update"]);
+    await requireAuthWithPermission(request, resolveUpdatePermissionsBySlug(slug));
 
     const contentType = request.headers.get("content-type") || "";
     logger.info("[PageHero][Admin][PUT] Content-Type", { slug, contentType });

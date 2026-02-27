@@ -5,7 +5,7 @@ import { reorderSejarahItems } from "../../../../../../modules/admin/tentang/ind
 
 export async function POST(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.update"]);
+    await requireAuthWithPermission(request, ["tentang.update"]);
     const body = await request.json();
     const items = Array.isArray(body?.items) ? body.items : [];
     const result = await reorderSejarahItems(items);

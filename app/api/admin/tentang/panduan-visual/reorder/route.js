@@ -5,7 +5,7 @@ import { reorderPanduanVisualItems } from "../../../../../../modules/admin/tenta
 
 export async function POST(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.update"]);
+    await requireAuthWithPermission(request, ["tentang.update"]);
     const body = await request.json();
     const items = Array.isArray(body?.items) ? body.items : [];
     const result = await reorderPanduanVisualItems(items);

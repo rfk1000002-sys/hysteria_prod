@@ -218,8 +218,8 @@ model CategoryItem {
 
   isActive Boolean @default(true)
 
-  // RELASI MANY TO MANY
-  events          EventCategory[]
+  events Event[]
+  platformCategories PlatformCategory[]
   eventOrganizers EventOrganizer[]
 
   createdAt DateTime @default(now())
@@ -296,9 +296,35 @@ model Platform {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  images PlatformImage[]
+  images     PlatformImage[]
+  categories PlatformCategory[]
 
   @@index([slug])
+}
+
+model PlatformCategory {
+  id         Int      @id @default(autoincrement())
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  platformId Int
+
+  // Sumber title, slug, url diambil dari CategoryItem (nav tree)
+  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+  categoryItemId Int
+
+  // Metadata visual khusus halaman platform
+  layout      String  @default("grid") @db.VarChar(50) // 'grid' | 'carousel'
+  description String? @db.Text
+  filters     Json?   @db.JsonB // string[] untuk filter grid
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platformId, categoryItemId])
+  @@index([platformId])
+  @@index([categoryItemId])
+  @@index([order])
 }
 
 model PlatformImage {
@@ -326,8 +352,9 @@ model TentangVisiMisi {
   id       Int    @id @default(autoincrement())
   pageSlug String @unique @default("tentang") @db.VarChar(100)
 
-  visi String @db.Text
-  misi String @db.Text
+  description String @db.Text
+  visi  String @db.Text
+  misi  String @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
