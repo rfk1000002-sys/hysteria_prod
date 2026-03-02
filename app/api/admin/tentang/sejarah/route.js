@@ -8,7 +8,7 @@ const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
 
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.read", "team.read"]);
+    await requireAuthWithPermission(request, ["tentang.read"]);
     const { searchParams } = new URL(request.url);
     const isActive = searchParams.get("isActive");
     const data = await getSejarahItems({
@@ -24,7 +24,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.create"]);
+    await requireAuthWithPermission(request, ["tentang.create"]);
 
     const contentType = request.headers.get("content-type") || "";
     let body = {};

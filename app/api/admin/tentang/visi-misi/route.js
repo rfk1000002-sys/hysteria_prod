@@ -5,7 +5,7 @@ import { getTentangVisiMisi, upsertTentangVisiMisi } from "../../../../../module
 
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.read", "team.read"]);
+    await requireAuthWithPermission(request, ["tentang.read"]);
     const data = await getTentangVisiMisi();
     return respondSuccess(data, 200);
   } catch (error) {
@@ -17,7 +17,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    await requireAuthWithPermission(request, ["team-about-hero.update", "team.update"]);
+    await requireAuthWithPermission(request, ["tentang.update"]);
     const body = await request.json();
     const data = await upsertTentangVisiMisi(body || {});
     return respondSuccess(data, 200);
