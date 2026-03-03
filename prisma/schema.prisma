@@ -212,14 +212,14 @@ model ContactSection {
   // WhatsApp
   whatsappNumber   String   @db.VarChar(50)
   
-  // Telepon
-  phoneNumber      String?  @db.VarChar(50)
+  // TikTok
+  tiktokUrl        String?  @db.VarChar(500)
   
   // Social Media Links
   instagramUrl     String?  @db.VarChar(500)
   twitterUrl       String?  @db.VarChar(500)
   facebookUrl      String?  @db.VarChar(500)
-  linkedinUrl      String?  @db.VarChar(500)
+  email            String?  @db.VarChar(255)
   youtubeUrl       String?  @db.VarChar(500)
   
   isActive         Boolean  @default(false)

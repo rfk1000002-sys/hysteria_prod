@@ -19,11 +19,11 @@ export default function ContactManagement() {
     locationAddress: '',
     operationalHours: '',
     whatsappNumber: '',
-    phoneNumber: '',
+    tiktokUrl: '',
     instagramUrl: '',
     twitterUrl: '',
     facebookUrl: '',
-    linkedinUrl: '',
+    email: '',
     youtubeUrl: '',
     isActive: false,
   });
@@ -52,11 +52,11 @@ export default function ContactManagement() {
             locationAddress: contactData.locationAddress || '',
             operationalHours: contactData.operationalHours || '',
             whatsappNumber: contactData.whatsappNumber || '',
-            phoneNumber: contactData.phoneNumber || '',
+            tiktokUrl: contactData.tiktokUrl || '',
             instagramUrl: contactData.instagramUrl || '',
             twitterUrl: contactData.twitterUrl || '',
             facebookUrl: contactData.facebookUrl || '',
-            linkedinUrl: contactData.linkedinUrl || '',
+            email: contactData.email || '',
             youtubeUrl: contactData.youtubeUrl || '',
             isActive: contactData.isActive,
           });
@@ -111,11 +111,11 @@ export default function ContactManagement() {
             locationAddress: returned.locationAddress || '',
             operationalHours: returned.operationalHours || '',
             whatsappNumber: returned.whatsappNumber || '',
-            phoneNumber: returned.phoneNumber || '',
+            tiktokUrl: returned.tiktokUrl || '',
             instagramUrl: returned.instagramUrl || '',
             twitterUrl: returned.twitterUrl || '',
             facebookUrl: returned.facebookUrl || '',
-            linkedinUrl: returned.linkedinUrl || '',
+            email: returned.email || '',
             youtubeUrl: returned.youtubeUrl || '',
             isActive: returned.isActive,
           });
@@ -177,6 +177,17 @@ export default function ContactManagement() {
     );
   }
 
+  const formatDateTime = (value) => {
+    if (!value) return '-';
+    return new Date(value).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const fields = [
     {
       name: 'mapsEmbedUrl',
@@ -212,10 +223,10 @@ export default function ContactManagement() {
       placeholder: '+62812345678',
     },
     {
-      name: 'phoneNumber',
-      label: 'Nomor Telepon (Card Media Sosial)',
+      name: 'tiktokUrl',
+      label: 'TikTok URL (Optional)',
       type: 'text',
-      placeholder: '(024) 8316860',
+      placeholder: 'https://tiktok.com/@hysteria',
     },
     {
       name: 'instagramUrl',
@@ -236,10 +247,10 @@ export default function ContactManagement() {
       placeholder: 'https://facebook.com/hysteria',
     },
     {
-      name: 'linkedinUrl',
-      label: 'LinkedIn URL (Optional)',
+      name: 'email',
+      label: 'Email (Optional)',
       type: 'text',
-      placeholder: 'https://linkedin.com/company/hysteria',
+      placeholder: 'hysteriakita59@gmail.com',
     },
     {
       name: 'youtubeUrl',
@@ -272,6 +283,27 @@ export default function ContactManagement() {
       <Card>
         {contact ? (
           <div className="space-y-6 p-6">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900">Ringkasan Contact Aktif</p>
+                  <p className="text-xs text-zinc-600 mt-1">
+                    Data ini ditampilkan di halaman kontak publik.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-3 py-1 text-xs rounded font-medium ${contact.isActive ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-600'}`}
+                  >
+                    {contact.isActive ? 'Aktif' : 'Tidak Aktif'}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-zinc-500">
+                Terakhir diperbarui: {formatDateTime(contact.updatedAt)}
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-sm font-semibold text-zinc-700 mb-2">Lokasi</h3>
@@ -290,25 +322,26 @@ export default function ContactManagement() {
             </div>
 
             <div className="border-t pt-6">
-              <h3 className="text-sm font-semibold text-zinc-700 mb-3">Kontak</h3>
+              <h3 className="text-sm font-semibold text-zinc-700 mb-3">Kontak Utama</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <span className="text-xs text-zinc-500">WhatsApp (Tombol Diskusi):</span>
                   <p className="text-sm text-zinc-900">{contact.whatsappNumber}</p>
                 </div>
+                
                 <div>
-                  <span className="text-xs text-zinc-500">Telepon (Card Media Sosial):</span>
-                  <p className="text-sm text-zinc-900">{contact.phoneNumber || '-'}</p>
+                  <span className="text-xs text-zinc-500">Email:</span>
+                  <p className="text-sm text-zinc-900">{contact.email || '-'}</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t pt-6">
-              <h3 className="text-sm font-semibold text-zinc-700 mb-3">Media Sosial</h3>
+              <h3 className="text-sm font-semibold text-zinc-700 mb-3">Media Sosial & Channel</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {contact.instagramUrl && (
-                  <div>
-                    <span className="text-xs text-zinc-500">Instagram:</span>
+                <div>
+                  <span className="text-xs text-zinc-500">Instagram:</span>
+                  {contact.instagramUrl ? (
                     <a
                       href={contact.instagramUrl}
                       target="_blank"
@@ -317,11 +350,13 @@ export default function ContactManagement() {
                     >
                       {contact.instagramUrl}
                     </a>
-                  </div>
-                )}
-                {contact.facebookUrl && (
-                  <div>
-                    <span className="text-xs text-zinc-500">Facebook:</span>
+                  ) : (
+                    <p className="text-sm text-zinc-500">Belum diisi</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500">Facebook:</span>
+                  {contact.facebookUrl ? (
                     <a
                       href={contact.facebookUrl}
                       target="_blank"
@@ -330,11 +365,13 @@ export default function ContactManagement() {
                     >
                       {contact.facebookUrl}
                     </a>
-                  </div>
-                )}
-                {contact.twitterUrl && (
-                  <div>
-                    <span className="text-xs text-zinc-500">Twitter:</span>
+                  ) : (
+                    <p className="text-sm text-zinc-500">Belum diisi</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500">Twitter/X:</span>
+                  {contact.twitterUrl ? (
                     <a
                       href={contact.twitterUrl}
                       target="_blank"
@@ -343,11 +380,28 @@ export default function ContactManagement() {
                     >
                       {contact.twitterUrl}
                     </a>
-                  </div>
-                )}
-                {contact.youtubeUrl && (
-                  <div>
-                    <span className="text-xs text-zinc-500">YouTube:</span>
+                  ) : (
+                    <p className="text-sm text-zinc-500">Belum diisi</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500">TikTok:</span>
+                  {contact.tiktokUrl ? (
+                    <a
+                      href={contact.tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block truncate"
+                    >
+                      {contact.tiktokUrl}
+                    </a>
+                  ) : (
+                    <p className="text-sm text-zinc-500">Belum diisi</p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500">YouTube:</span>
+                  {contact.youtubeUrl ? (
                     <a
                       href={contact.youtubeUrl}
                       target="_blank"
@@ -356,21 +410,10 @@ export default function ContactManagement() {
                     >
                       {contact.youtubeUrl}
                     </a>
-                  </div>
-                )}
-                {contact.linkedinUrl && (
-                  <div>
-                    <span className="text-xs text-zinc-500">LinkedIn:</span>
-                    <a
-                      href={contact.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:underline block truncate"
-                    >
-                      {contact.linkedinUrl}
-                    </a>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-zinc-500">Belum diisi</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -385,14 +428,6 @@ export default function ContactManagement() {
                   title="Google Maps"
                 />
               </div>
-            </div>
-
-            <div className="border-t pt-6">
-              <span
-                className={`px-3 py-1 text-sm rounded ${contact.isActive ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-600'}`}
-              >
-                {contact.isActive ? '✓ Active' : 'Inactive'}
-              </span>
             </div>
           </div>
         ) : (
@@ -412,6 +447,7 @@ export default function ContactManagement() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         mode="edit"
+        size="lg"
         title={contact ? 'Edit Contact Information' : 'Buat Contact Information'}
         fields={fields}
         initialData={formData}
@@ -419,7 +455,7 @@ export default function ContactManagement() {
       />
 
       <Toast
-        show={toast.visible}
+        visible={toast.visible}
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ ...toast, visible: false })}

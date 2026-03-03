@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -15,6 +16,33 @@ import {
 
 export default function Footer() {
   const pathname = usePathname() || '';
+  const [contactData, setContactData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchContact() {
+      try {
+        const res = await fetch('/api/contact');
+        const json = await res.json().catch(() => null);
+
+        if (isMounted && json?.success && json?.data?.contact) {
+          setContactData(json.data.contact);
+        }
+      } catch {
+        if (isMounted) setContactData(null);
+      }
+    }
+
+    if (!pathname.startsWith('/admin')) {
+      fetchContact();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
+
   if (pathname.startsWith('/admin')) return null;
 
   const year = new Date().getFullYear();
@@ -46,18 +74,46 @@ export default function Footer() {
             <div className="mt-2 text-sm font-bold text-white">Ikuti kami</div>
 
             <div className="flex items-center gap-3 text-white">
-              <Link href="#" className="hover:opacity-90" aria-label="Instagram">
+              <a
+                href={contactData?.instagramUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`hover:opacity-90 ${!contactData?.instagramUrl ? 'opacity-40 pointer-events-none' : ''}`}
+                aria-label="Instagram"
+                aria-disabled={!contactData?.instagramUrl}
+              >
                 <IconInstagram className="w-5 h-5 text-white" size={20} />
-              </Link>
-              <Link href="#" className="hover:opacity-90" aria-label="Facebook">
+              </a>
+              <a
+                href={contactData?.facebookUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`hover:opacity-90 ${!contactData?.facebookUrl ? 'opacity-40 pointer-events-none' : ''}`}
+                aria-label="Facebook"
+                aria-disabled={!contactData?.facebookUrl}
+              >
                 <IconFacebook className="w-5 h-5 text-white" size={20} />
-              </Link>
-              <Link href="#" className="hover:opacity-90" aria-label="YouTube">
+              </a>
+              <a
+                href={contactData?.youtubeUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`hover:opacity-90 ${!contactData?.youtubeUrl ? 'opacity-40 pointer-events-none' : ''}`}
+                aria-label="YouTube"
+                aria-disabled={!contactData?.youtubeUrl}
+              >
                 <IconYoutube className="w-5 h-5 text-white" size={20} />
-              </Link>
-              <Link href="#" className="hover:opacity-90" aria-label="X">
+              </a>
+              <a
+                href={contactData?.twitterUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`hover:opacity-90 ${!contactData?.twitterUrl ? 'opacity-40 pointer-events-none' : ''}`}
+                aria-label="X"
+                aria-disabled={!contactData?.twitterUrl}
+              >
                 <IconX className="w-5 h-5 text-white" size={20} />
-              </Link>
+              </a>
             </div>
           </div>
 

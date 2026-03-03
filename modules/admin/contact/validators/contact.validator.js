@@ -28,7 +28,7 @@ export const contactSchema = z.object({
     .or(z.literal('')),
   twitterUrl: z.string().url({ message: 'URL Twitter tidak valid' }).optional().or(z.literal('')),
   facebookUrl: z.string().url({ message: 'URL Facebook tidak valid' }).optional().or(z.literal('')),
-  linkedinUrl: z.string().url({ message: 'URL LinkedIn tidak valid' }).optional().or(z.literal('')),
+  email: z.string().email({ message: 'Format email tidak valid' }).optional().or(z.literal('')),
   youtubeUrl: z.string().url({ message: 'URL YouTube tidak valid' }).optional().or(z.literal('')),
 
   isActive: z.boolean().optional().default(false),

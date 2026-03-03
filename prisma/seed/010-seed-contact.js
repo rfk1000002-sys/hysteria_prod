@@ -33,7 +33,7 @@ async function seedContact() {
         twitterUrl: 'https://twitter.com/grobakhysteria',
         facebookUrl: 'https://facebook.com/kolektifhysteria',
         youtubeUrl: 'https://youtube.com/@kolektifhysteria',
-        linkedinUrl: '',
+        email: 'hysteriakita59@gmail.com',
         isActive: true,
       },
     });

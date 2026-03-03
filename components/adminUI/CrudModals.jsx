@@ -214,9 +214,16 @@ export default function CrudModals({
           Are you sure you want to delete this item? This action cannot be undone.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {fields.map((fld) => (
-            <div key={fld.name}>
+            <div
+              key={fld.name}
+              className={
+                fld.type === 'textarea' || fld.type === 'file' || fld.type === 'checkbox'
+                  ? 'md:col-span-2'
+                  : ''
+              }
+            >
               <label className="block text-sm font-semibold text-zinc-900 mb-1">
                 {fld.label || fld.name}
                 {fld.required ? <span className="text-red-600">*</span> : null}

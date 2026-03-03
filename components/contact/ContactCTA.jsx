@@ -15,7 +15,7 @@ export default function ContactCTA({ contactData }) {
         <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <a
             href="/kolaborasi"
-            className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#E93C8E] shadow hover:shadow-2xl hover:scale-105 hover:bg-gray-50 transition-all duration-200"
+            className="w-full sm:w-auto rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#E93C8E] shadow hover:shadow-2xl hover:scale-105 hover:bg-gray-50 transition-all duration-200"
           >
             Ajukan Kolaborasi
           </a>
@@ -23,7 +23,7 @@ export default function ContactCTA({ contactData }) {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#E93C8E] shadow hover:shadow-2xl hover:scale-105 hover:bg-gray-50 transition-all duration-200"
+            className="w-full sm:w-auto rounded-md bg-white px-6 py-3 text-sm font-semibold text-[#E93C8E] shadow hover:shadow-2xl hover:scale-105 hover:bg-gray-50 transition-all duration-200"
           >
             Mulai Diskusi
           </a>

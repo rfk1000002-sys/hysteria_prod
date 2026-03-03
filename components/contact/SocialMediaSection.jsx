@@ -1,20 +1,12 @@
-import { Instagram, Facebook, Youtube, Mail, Phone, X, Linkedin } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Mail, X, Music2 } from 'lucide-react';
 
 export default function SocialMediaSection({ contactData }) {
   const instagram = contactData?.instagramUrl || 'https://instagram.com/grobakhysteria';
   const facebook = contactData?.facebookUrl || 'https://facebook.com/kolektifhysteria';
   const twitter = contactData?.twitterUrl || 'https://twitter.com/grobakhysteria';
   const youtube = contactData?.youtubeUrl || 'https://youtube.com/@kolektifhysteria';
-  const linkedin = contactData?.linkedinUrl;
-  const phoneNumber = contactData?.phoneNumber || '(024) 8316860';
-
-  // Format phone number untuk href tel: - hapus karakter non-digit, lalu tambahkan +62 jika belum ada
-  const cleanPhoneNumber = phoneNumber.replace(/[^0-9]/g, '');
-  const phoneNumberLink = cleanPhoneNumber.startsWith('62')
-    ? `+${cleanPhoneNumber}`
-    : cleanPhoneNumber.startsWith('0')
-      ? `+62${cleanPhoneNumber.substring(1)}`
-      : `+${cleanPhoneNumber}`;
+  const tiktok = contactData?.tiktokUrl;
+  const email = contactData?.email || 'hysteriakita59@gmail.com';
 
   return (
     <section className="mt-20 text-center">
@@ -96,27 +88,9 @@ export default function SocialMediaSection({ contactData }) {
           </a>
         )}
 
-        {/* LinkedIn (optional) */}
-        {linkedin && (
-          <a
-            href={linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-4 rounded-lg bg-white px-6 py-5 text-left shadow-xl hover:shadow-2xl transition-shadow duration-200 cursor-pointer"
-          >
-            <div className="grid h-12 w-12 place-items-center rounded-md bg-white">
-              <Linkedin className="h-8 w-8 text-[#2F2237]" />
-            </div>
-            <div>
-              <div className="text-sm font-extrabold text-[#2F2237]">LinkedIn</div>
-              <div className="mt-1 text-xs text-zinc-600">Kolektif Hysteria</div>
-            </div>
-          </a>
-        )}
-
         {/* Gmail */}
         <a
-          href="mailto:hysteriakita59@gmail.com"
+          href={`mailto:${email}`}
           className="flex items-center gap-4 rounded-lg bg-white px-6 py-5 text-left shadow-xl hover:shadow-2xl transition-shadow duration-200 cursor-pointer"
         >
           <div className="grid h-12 w-12 place-items-center rounded-md bg-white">
@@ -124,23 +98,27 @@ export default function SocialMediaSection({ contactData }) {
           </div>
           <div>
             <div className="text-sm font-extrabold text-[#2F2237]">Gmail</div>
-            <div className="mt-1 text-xs text-zinc-600">hysteriakita59@gmail.com</div>
+            <div className="mt-1 text-xs text-zinc-600">{email}</div>
           </div>
         </a>
 
-        {/* Telepon */}
-        <a
-          href={`tel:${phoneNumberLink}`}
-          className="flex items-center gap-4 rounded-lg bg-white px-6 py-5 text-left shadow-xl hover:shadow-2xl transition-shadow duration-200 cursor-pointer"
-        >
-          <div className="grid h-12 w-12 place-items-center rounded-md bg-white">
-            <Phone className="h-8 w-8 text-[#2F2237]" />
-          </div>
-          <div>
-            <div className="text-sm font-extrabold text-[#2F2237]">Telepon</div>
-            <div className="mt-1 text-xs text-zinc-600">{phoneNumber}</div>
-          </div>
-        </a>
+        {/* TikTok (optional) */}
+        {tiktok && (
+          <a
+            href={tiktok}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 rounded-lg bg-white px-6 py-5 text-left shadow-xl hover:shadow-2xl transition-shadow duration-200 cursor-pointer"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-md bg-white">
+              <Music2 className="h-8 w-8 text-[#2F2237]" />
+            </div>
+            <div>
+              <div className="text-sm font-extrabold text-[#2F2237]">TikTok</div>
+              <div className="mt-1 text-xs text-zinc-600">Kolektif Hysteria</div>
+            </div>
+          </a>
+        )}
       </div>
     </section>
   );

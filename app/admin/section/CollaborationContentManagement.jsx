@@ -220,6 +220,25 @@ export default function CollaborationContentManagement() {
     }
   };
 
+  const formatDateTime = (value) => {
+    if (!value) return '-';
+    return new Date(value).toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const activeCount = contents.filter((item) => item.isActive).length;
+  const latestUpdatedAt =
+    contents.length > 0
+      ? contents
+          .map((item) => new Date(item.updatedAt).getTime())
+          .sort((a, b) => b - a)[0]
+      : null;
+
   return (
     <Card className="w-full">
       <div className="mb-6 flex items-center justify-between">
@@ -247,6 +266,25 @@ export default function CollaborationContentManagement() {
 
       {!loading && (
         <div className="space-y-4">
+          {contents.length > 0 && (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-xs font-medium text-zinc-500">Total Konten</p>
+                <p className="mt-1 text-2xl font-bold text-zinc-900">{contents.length}</p>
+              </div>
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <p className="text-xs font-medium text-green-700">Konten Aktif</p>
+                <p className="mt-1 text-2xl font-bold text-green-800">{activeCount}</p>
+              </div>
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p className="text-xs font-medium text-blue-700">Terakhir Diperbarui</p>
+                <p className="mt-1 text-sm font-semibold text-blue-900">
+                  {latestUpdatedAt ? formatDateTime(latestUpdatedAt) : '-'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {contents.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
               <p className="text-gray-500">
@@ -261,9 +299,9 @@ export default function CollaborationContentManagement() {
                   content.isActive ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'
                 }`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <h3 className="text-lg font-semibold text-gray-900">{content.heroTitle}</h3>
                       {content.isActive && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
@@ -271,52 +309,99 @@ export default function CollaborationContentManagement() {
                           Aktif
                         </span>
                       )}
+                      {!content.isActive && (
+                        <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
+                          Draft
+                        </span>
+                      )}
                     </div>
+
                     <p className="mt-2 text-sm text-gray-600 line-clamp-2">
                       {content.heroDescription}
                     </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <div className="rounded-md border border-zinc-200 bg-white p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                          Hero
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-700 line-clamp-2">
+                          {content.heroTitle || '-'}
+                        </p>
+                      </div>
+                      <div className="rounded-md border border-zinc-200 bg-white p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                          CTA Google Form
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-700 truncate">
+                          {content.googleFormUrl || '-'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-purple-100 px-3 py-1 font-medium text-purple-700">
+                        Why: {Array.isArray(content.whyBenefits) ? content.whyBenefits.length : 0}{' '}
+                        item
+                      </span>
+                      <span className="rounded-full bg-amber-100 px-3 py-1 font-medium text-amber-700">
+                        Skema: {Array.isArray(content.schemes) ? content.schemes.length : 0} item
+                      </span>
+                      <span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700">
+                        Alur: {Array.isArray(content.flowSteps) ? content.flowSteps.length : 0} step
+                      </span>
+                    </div>
+
                     <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500">
                       <div>
-                        <span className="font-medium">Google Form:</span> {content.googleFormUrl}
+                        <span className="font-medium">ID:</span> {content.id}
                       </div>
                       <div>
-                        <span className="font-medium">Updated:</span>{' '}
-                        {new Date(content.updatedAt).toLocaleDateString('id-ID')}
+                        <span className="font-medium">Dibuat:</span> {formatDateTime(content.createdAt)}
+                      </div>
+                      <div>
+                        <span className="font-medium">Diupdate:</span>{' '}
+                        {formatDateTime(content.updatedAt)}
                       </div>
                     </div>
                   </div>
-                  <div className="ml-4 flex gap-2">
+
+                  <div className="flex flex-wrap gap-2 lg:ml-4 lg:flex-col lg:min-w-35">
                     <button
                       onClick={() => handleView(content)}
-                      className="rounded-md bg-gray-100 p-2 text-gray-600 hover:bg-gray-200"
+                      className="inline-flex items-center justify-center gap-1 rounded-md bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200"
                       title="Lihat Detail"
                     >
                       <VisibilityIcon style={{ fontSize: 18 }} />
+                      Lihat
                     </button>
                     <button
                       onClick={() => handleEdit(content)}
-                      className="rounded-md bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"
+                      className="inline-flex items-center justify-center gap-1 rounded-md bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100"
                       title="Edit"
                     >
                       <EditIcon style={{ fontSize: 18 }} />
+                      Edit
                     </button>
                     <button
                       onClick={() => handleToggleActive(content)}
-                      className={`rounded-md p-2 ${
+                      className={`inline-flex items-center justify-center gap-1 rounded-md px-3 py-2 text-xs font-medium ${
                         content.isActive
-                          ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
-                          : 'bg-green-50 text-green-600 hover:bg-green-100'
+                          ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
                       }`}
                       title={content.isActive ? 'Nonaktifkan' : 'Aktifkan'}
                     >
                       <CheckCircleIcon style={{ fontSize: 18 }} />
+                      {content.isActive ? 'Nonaktifkan' : 'Aktifkan'}
                     </button>
                     <button
                       onClick={() => handleDelete(content.id)}
-                      className="rounded-md bg-red-50 p-2 text-red-600 hover:bg-red-100"
+                      className="inline-flex items-center justify-center gap-1 rounded-md bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
                       title="Hapus"
                     >
                       <DeleteIcon style={{ fontSize: 18 }} />
+                      Hapus
                     </button>
                   </div>
                 </div>
