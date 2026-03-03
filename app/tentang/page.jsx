@@ -107,7 +107,9 @@ export default function TentangPage() {
 
       <div className="max-w-[1400px] mx-auto px-6 space-y-16 md:space-y-24">
         {/* Visi Section */}
-        <section className="relative px-2">
+        <section
+          id="visi-misi"
+          className="relative px-2">
           <div className="rounded-[10px] shadow-[0px_0px_10px_0px_rgba(0,0,0,0.15)] md:shadow-[0px_0px_15px_0px_rgba(0,0,0,0.25)] p-8 md:p-10 flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-12">
             <div className="w-full md:w-1/4">
               <h2 className="font-bold text-[24px] sm:text-[32px] md:text-[40px] xl:text-[52px] leading-tight text-black font-poppins text-center md:text-left">Visi:</h2>
@@ -131,13 +133,17 @@ export default function TentangPage() {
         </section>
 
         {/* Sejarah Hysteria Section */}
-        <section className="pt-8 md:pt-12 px-2 md:px-0">
+        <section
+          id="sejarah"
+          className="pt-8 md:pt-12 px-2 md:px-0">
           <h2 className="text-center font-bold text-[24px] sm:text-[32px] md:text-[40px] xl:text-[52px] mb-8 md:mb-16 text-black font-poppins uppercase tracking-wider">Sejarah Hysteria</h2>
           <SejarahHysteria items={sejarahItems} />
         </section>
 
         {/* Panduan Visual Hysteria Section */}
-        <section className="pt-8 md:pt-12 px-2 md:px-0">
+        <section
+          id="panduan-visual"
+          className="pt-8 md:pt-12 px-2 md:px-0">
           <h2 className="text-center font-bold text-[24px] sm:text-[32px] md:text-[40px] xl:text-[52px] mb-8 md:mb-16 text-black font-poppins uppercase tracking-wider">Panduan Visual Hysteria</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-[35px] max-w-[1550px] mx-auto">
             {resolvedVisualItems.map((item, index) => (
