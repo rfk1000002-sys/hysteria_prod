@@ -89,7 +89,7 @@ export default function LoginPage() {
 	return (
 		<div>
 			{/* Main container: centers the login card vertically & horizontally */}
-			<div className="flex min-h-screen items-center justify-center bg-zinc-50 py-15">
+			<div className="flex min-h-screen items-center justify-center bg-zinc-50 py-12">
 				<div className="w-full max-w-5xl mx-auto">
 					{/* Background wrapper: card will sit inside this so it overlaps the bg */}
 					<div 
@@ -103,9 +103,9 @@ export default function LoginPage() {
 								<div className="w-full h-full ">
 
 									{/* bg glassy */}
-									<div className="w-full h-full bg-white/60 backdrop-blur-xl rounded-l-2xl p-6 sm:py-30 px-18 sm:max-w-md border border-transparent">
+									{/* <div className="w-full h-full bg-white/60 backdrop-blur-xl rounded-l-2xl p-6 sm:py-30 px-18 sm:max-w-md border border-transparent"> */}
 									{/* bg white */}
-									{/* <div className="w-full h-full bg-white rounded-l-2xl p-6 sm:py-30 px-18 sm:max-w-md border border-gray-200"> */}
+									<div className="w-full h-full bg-white rounded-l-2xl p-6 sm:py-30 px-18 sm:max-w-md border border-gray-200">
 
 										{/* todo: tambah logo */}
 										<div className="items-center justify-center mb-6 flex">
@@ -113,8 +113,8 @@ export default function LoginPage() {
 												<Image
 												src="/svg/Logo-hysteria.svg"
 												alt="Hysteria"
-												width={63}
-												height={12}
+												width={90}
+												height={15}
 												className="filter brightness-0"
 												priority
 												/>

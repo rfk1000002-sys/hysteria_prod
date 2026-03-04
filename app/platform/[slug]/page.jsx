@@ -1,74 +1,20 @@
 import React from 'react'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import HeadSection from '../../../_sectionComponents/halaman_platform/head.section'
 import ListCategorySection from '../../../_sectionComponents/halaman_platform/list_category.section'
 import MediaSection from '../../../_sectionComponents/halaman_platform/media.section'
+import { listPlatforms } from '../../../modules/admin/platform/services/platform.service'
 
-const MAINTENNACE=false
-
-const PLATFORM_DATA = {
-  'artlab': {
-    head: {
-      title: 'Laboratorium seni, eksperimentasi, dan kolaborasi',
-      description: 'Artlab Hysteria adalah ruang kolaborasi seni-budaya tempat ide diuji, diproduksi, dan dipertemukan dengan publik. Kami membuka laboratorium terbuka bagi eksperimen lintas disiplin, kerja kolektif, dan pengembangan program yang relevan dengan konteks sosial hari ini.',
-      instagramUrl: '#',
-      youtubeUrl: '#',
-      images: [
-        { src: '/image/Artlab.jpg', alt: 'ArtLab' }
-      ]
-    },
-    categories: [
-      { title: 'Merchandise', href: '/platform/artlab/merchandise', image: '/image/list-item.jpg' },
-      { title: 'Podcast ArtLab', href: '/platform/artlab/podcast-artlab', image: '/image/list-item.jpg' },
-      { title: 'Workshop ArtLab', href: '/platform/artlab/workshop-artlab', image: '/image/list-item.jpg' },
-      { title: 'Screening Film', href: '/platform/artlab/screening-film', image: '/image/list-item.jpg' },
-      { title: 'Untuk Perhatian', href: '/platform/artlab/screening-film', image: '/image/list-item.jpg' }
-    ],
-    mediaURL: 'https://www.youtube.com/embed/M7lc1UVf-VE'
-  },
-  'ditampart': {
-    head: {
-      title: 'Laboratorium Para Seniman Semarang Eksis',
-      description: 'Kolektif Hysteria merupakan ruang produksi artistik sekaligus fasilitator untuk pertemuan lintas disipliner dalam skala lokal hingga global untuk mencari trobosan-trobosan dalam persoalan kreatifitas, seni, komunitas, anak muda, dan isu kota.',
-      // instagramUrl: '#',
-      // youtubeUrl: '#',
-      images: [
-        { src: '/image/ditampart1.png', alt: 'Ditam Part' },
-        { src: '/image/ditampart2.png', alt: 'Ditam Part' },
-      ],
-      multyImages: true
-    },
-    categories: [
-    { title: '3D', image: '/image/list-item.jpg', href: '/platform/ditampart/3d' },
-		{ title: 'Foto Kegiatan', image: '/image/list-item.jpg', href: '/platform/ditampart/foto-kegiatan' },
-		{ title: 'Kebutuhan Ditampart', image: '/image/list-item.jpg', href: '/platform/ditampart/kebutuhan-ditampart' },
-		{ title: 'Mock Up and Poster', image: '/image/list-item.jpg', href: '/platform/ditampart/mock-up-and-poster' },
-		{ title: 'Short Documentary', image: '/image/list-item.jpg', href: '/platform/ditampart/short-documentary' }
-    ],
-    mediaURL: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-  },
-  'laki-masak': {
-    head: {
-      title: 'Panggung Ekspresi Menghadirkan Sejuta Rasa dan Cerita',
-      description: 'Laki Masak adalah ruang masak yang nggak cuma soal resep, tapi juga soal cerita, obrolan, dan sikap. Di dapur, laki-laki hadir bukan buat pamer jago, tapi buat berbagi—tentang rasa, proses, ingatan, dan keseharian yang sering luput dibicarakan.',
-      instagramUrl: '#',
-      youtubeUrl: '#',
-      images: [ 
-        { src: '/image/Artlab.jpg', alt: 'Laki Masak' } 
-      ]
-    },
-    categories: [
-        { title: 'Meramu', image: '/image/list-item.jpg', href: '/platform/laki-masak/meramu' },
-        { title: 'Homecooked', image: '/image/list-item.jpg', href: '/platform/laki-masak/homecooked' },
-        { title: 'Komik Ramuan', image: '/image/list-item.jpg', href: '/platform/laki-masak/komik-ramuan' },
-        { title: 'Pre-Order', image: '/image/list-item.jpg', href: '/platform/laki-masak/pre-order' },
-    ],
-    mediaURL: 'https://www.youtube.com/embed/e-ORhEE9VVg'
-  }
-}
+const MAINTENNACE = false
 
 export async function generateStaticParams() {
-  return Object.keys(PLATFORM_DATA).map(slug => ({ slug }))
+  try {
+    const platforms = await listPlatforms()
+    return (platforms || []).map((p) => ({ slug: p.slug }))
+  } catch {
+    return []
+  }
 }
 
 export default async function Page({ params }) {
@@ -76,9 +22,23 @@ export default async function Page({ params }) {
 
   if (!slug) return notFound()
 
-  const data = PLATFORM_DATA[slug]
+  // Build absolute URL required by fetch() in Server Components
+  const headersList = await headers()
+  const host = headersList.get('host') || 'localhost:3000'
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  const baseUrl = `${protocol}://${host}`
 
-  // If we don't have a configured page, render a generic view instead of 404
+  let data = null
+  try {
+    const res = await fetch(`${baseUrl}/api/platforms/${slug}`, { cache: 'no-store' })
+    if (res.ok) {
+      const json = await res.json()
+      data = json?.data ?? null
+    }
+  } catch {
+    // silently fall back to maintenance view
+  }
+
   if (!data || MAINTENNACE) {
     return (
       <main className="bg-white py-20 px-4">
@@ -92,11 +52,30 @@ export default async function Page({ params }) {
     )
   }
 
+  // Pass DB field names directly — components use exact same names as DB columns
+  const {
+    headline,      // Platform.headline
+    subHeadline,   // Platform.subHeadline
+    instagram,     // Platform.instagram
+    youtube,       // Platform.youtube
+    youtubeProfile,// Platform.youtubeProfile
+    images,        // PlatformImage[] type=main → [{ src, alt }]
+    multyImages,   // derived: images.length > 1
+    categories,    // PlatformCategory[] → [{ title, slug, url, imageUrl, ... }]
+  } = data
+
   return (
     <main className="bg-white min-h-screen">
-      <HeadSection {...data.head} />
-      <MediaSection mediaURL={data.mediaURL} />
-      <ListCategorySection items={data.categories} />
+      <HeadSection
+        headline={headline}
+        subHeadline={subHeadline}
+        instagram={instagram}
+        youtube={youtube}
+        images={images}
+        multyImages={multyImages}
+      />
+      <MediaSection youtubeProfile={youtubeProfile} />
+      <ListCategorySection categories={categories} />
     </main>
   )
 }

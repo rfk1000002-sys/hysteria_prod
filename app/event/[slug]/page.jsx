@@ -1,0 +1,549 @@
+import { prisma } from "../../../lib/prisma";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { getEventStatus, EVENT_STATUS_LABEL } from "../../../lib/event-status";
+import ShareButtons from "../../../components/adminUI/Event/ShareButtons";
+import { ArrowLeft } from "lucide-react";
+
+export const revalidate = 60;
+
+export default async function EventDetailPage({ params }) {
+  const { slug } = await params;
+
+  const event = await prisma.event.findFirst({
+    where: {
+      slug,
+      isPublished: true,
+    },
+    include: {
+      eventCategories: {
+        include: {
+          categoryItem: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      },
+      organizers: {
+        include: {
+          categoryItem: {
+            select: {
+              title: true,
+            },
+          },
+        },
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
+    },
+  });
+
+  const otherEvents = await prisma.event.findMany({
+    where: {
+      isPublished: true,
+      slug: { not: slug },
+    },
+    include: {
+      eventCategories: {
+        include: {
+          categoryItem: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      startAt: "asc",
+    },
+    take: 5,
+  });
+  
+  if (!event) return notFound();
+
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
+
+  const status = getEventStatus(event.startAt, event.endAt);
+
+  const startDate = new Date(event.startAt);
+  const endDate = event.endAt ? new Date(event.endAt) : null;
+
+  const sameMonth =
+    endDate &&
+    startDate.getMonth() === endDate.getMonth() &&
+    startDate.getFullYear() === endDate.getFullYear();
+
+  const sameYear =
+    endDate &&
+    startDate.getFullYear() === endDate.getFullYear();
+
+  const formattedDate = endDate
+    ? sameMonth
+      ? `${startDate.getDate()} – ${endDate.getDate()} ${startDate.toLocaleDateString(
+          "id-ID",
+          { month: "long", year: "numeric" }
+        )}`
+      : sameYear
+      ? `${startDate.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+        })} – ${endDate.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`
+      : `${startDate.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })} – ${endDate.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`
+    : startDate.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+  const formattedTime = event.isFlexibleTime
+    ? "Menyesuaikan"
+    : `${startDate.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}${
+        endDate
+          ? ` – ${endDate.toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} WIB`
+          : ""
+      }`;
+
+  return (
+    <div className="w-full">
+      {/* HERO GRADIENT */}
+      <section className="relative w-full h-[360px] bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-500">
+        {/* BACK BUTTON */}
+        <Link
+          href="/event"
+          className="absolute top-6 left-6 z-10
+                    inline-flex items-center justify-center
+                    w-10 h-10 rounded-full
+                    text-white transition
+                    hover:bg-white/10 mt-16"
+          aria-label="Kembali"
+        >
+          <ArrowLeft className="w-7 h-7 stroke-[3]" />
+        </Link>
+      </section>
+
+      {/* CONTENT */}
+      <div className="max-w-7xl mx-auto px-6 -mt-32 space-y-16">
+
+        {/* HEADER (POSTER + INFO) */}
+        <section className="grid md:grid-cols-3 gap-10 items-start">
+          {/* POSTER */}
+          <div className="md:col-span-1">
+            <div className="relative w-full h-[420px] rounded-2xl overflow-hidden shadow-2xl bg-black">
+              <Image
+                src={event.poster || "/placeholder-event.jpg"}
+                alt={event.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 420px"
+                className="object-cover"
+              />
+            </div>
+          </div>
+
+          {/* INFO */}
+          <div className="md:col-span-2 space-y-4 pt-10 mt-28">
+            <div className="flex flex-wrap gap-2">
+              {event.eventCategories.map((cat) => (
+                <span
+                  key={cat.categoryItem.id}
+                  className={`
+                    inline-block px-4 py-1 rounded-full text-sm
+                    ${cat.isPrimary
+                      ? "bg-pink-600 text-white"
+                      : "bg-pink-100 text-pink-700"}
+                  `}
+                >
+                  {cat.categoryItem.title}
+                </span>
+              ))}
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-bold leading-tight">
+              {event.title}
+            </h1>
+
+            <p className="text-sm text-gray-600">
+              Diselenggarakan oleh:
+              <span className="ml-2 inline-flex flex-wrap gap-2">
+                {event.organizers?.map((org) => (
+                  <span
+                    key={org.categoryItemId ?? org.id}
+                    className="inline-block px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs"
+                  >
+                    {org.categoryItem.title}
+                  </span>
+                ))}
+              </span>
+            </p>
+
+            <p className="text-sm">
+              Status Event:{" "}
+              <span className="inline-block px-3 py-1 rounded-full bg-pink-600 text-white text-xs">
+                {EVENT_STATUS_LABEL[status]}
+              </span>
+            </p>
+          </div>
+        </section>
+
+        {/* DETAIL */}
+        <section className="grid md:grid-cols-3 gap-10">
+          {/* SIDEBAR */}
+          <aside className="space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3">Ikuti Keseruan Kami</h3>
+
+              {/* BUTTON DAFTAR EVENT */}
+              {status === "UPCOMING" && event.registerLink && (
+                <form action={event.registerLink} target="_blank">
+                  <button
+                    type="submit"
+                    className="w-full px-6 py-3 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition"
+                  >
+                    Daftar Sekarang
+                  </button>
+                </form>
+              )}
+
+              {status === "ONGOING" && event.registerLink && (
+                <button
+                  className="w-full px-6 py-3 rounded-lg bg-yellow-500 text-white cursor-not-allowed"
+                >
+                  Sedang Berlangsung
+                </button>
+              )}
+
+              {status === "FINISHED" && (
+                <button
+                  disabled
+                  className="w-full px-6 py-3 rounded-lg bg-gray-400 text-white cursor-not-allowed"
+                >
+                  Event Telah Selesai
+                </button>
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Jadwal Pelaksanaan</h3>
+              <div className="text-sm text-gray-600 space-y-2">
+                {/* TANGGAL */}
+                <div className="grid grid-cols-[max-content_10px_1fr] gap-x-2">
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <div className="grid grid-cols-[140px_10px_1fr]">
+                      <span className="font-medium">Tanggal Acara</span>
+                      <span>:</span>
+                      <span>{formattedDate}</span>
+                    </div>
+
+                    <div className="grid grid-cols-[140px_10px_1fr]">
+                      <span className="font-medium">Waktu Acara</span>
+                      <span>:</span>
+                      <span className={event.isFlexibleTime ? "font-medium" : ""}>
+                        {formattedTime}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-2">Lokasi</h3>
+              <p className="text-sm text-gray-600 mb-1">
+                {event.location}
+              </p>
+              <p className="text-sm text-gray-600 mb-3">
+                {event.address}
+              </p>
+
+              {event.mapsEmbedSrc && (
+                <div className="w-full h-[280px] rounded-xl overflow-hidden border">
+                  <iframe
+                    src={event.mapsEmbedSrc}
+                    className="w-full h-full"
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              )}
+              
+              {/* BUTTONS */}
+              <div>
+                {(event.driveLink ||
+                  event.youtubeLink ||
+                  event.instagramLink ||
+                  event.drivebukuLink) && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Arsip Kegiatan</h3>
+
+                    <div className="flex flex-wrap gap-4 mt-4">
+                      {event.driveLink && (
+                        <a
+                          href={event.driveLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 rounded-md bg-pink-600 text-white hover:bg-pink-700 transition"
+                        >
+                          Dokumentasi
+                        </a>
+                      )}
+
+                      {event.youtubeLink && (
+                        <a
+                          href={event.youtubeLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                        >
+                          YouTube
+                        </a>
+                      )}
+
+                      {event.instagramLink && (
+                        <a
+                          href={event.instagramLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 rounded-md bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 text-white hover:opacity-90 transition"
+                        >
+                          Instagram
+                        </a>
+                      )}
+
+                      {event.drivebukuLink && (
+                        <a
+                          href={event.drivebukuLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                        >
+                          Buku Kegiatan
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+
+          {/* DESKRIPSI */}
+          <div className="md:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">Deskripsi</h2>
+
+            <div
+              className="
+                prose prose-p:leading-relaxed
+                prose-img:rounded-xl prose-img:mx-auto
+                prose-a:text-pink-600 hover:prose-a:underline
+                max-w-none text-gray-800
+              "
+              dangerouslySetInnerHTML={{ __html: event.description }}
+            />
+
+            <div className="mt-16">
+              <h2 className="text-xl font-semibold mb-4">Tags</h2>
+              {event.tags && event.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {event.tags.map((et) => (
+                    <span
+                      key={et.tag.id}
+                      className="px-3 py-1 rounded-full text-xs
+                                bg-gray-100 text-gray-700
+                                hover:bg-pink-100 hover:text-pink-700 transition"
+                    >
+                      #{et.tag.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Tidak ada tag</p>
+              )}
+            </div>
+            
+            <div className="mt-16">
+              <ShareButtons
+                url={shareUrl}
+                title={event.title}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* EVENT LAINNYA */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Event Lainnya</h2>
+            <Link href="/event" className="text-pink-600 hover:underline">
+              Lihat semua
+            </Link>
+          </div>
+
+          <div className="flex gap-6 overflow-x-auto pb-4">
+            {otherEvents.map((event) => {
+              const eventStatus = getEventStatus(event.startAt, event.endAt);
+
+              return (
+                <Link
+                  key={event.id}
+                  href={`/event/${event.slug}`}
+                  className="group min-w-[260px] relative rounded-xl overflow-hidden shadow-lg"
+                >
+                  {/* POSTER */}
+                  <div className="relative h-[340px]">
+                    <Image
+                      src={event.poster || "/placeholder-event.jpg"}
+                      alt={event.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* OVERLAY – MUNCUL SAAT HOVER */}
+                  <div
+                    className="absolute inset-0 flex flex-col justify-end p-4
+                              bg-gradient-to-t from-black/80 via-black/50 to-transparent
+                              opacity-0 group-hover:opacity-100
+                              transition-all duration-300"
+                  >
+                    {/* STATUS */}
+                    <span className="inline-block w-fit mb-2 px-3 py-1 rounded-full
+                                    bg-pink-600 text-white text-xs">
+                      {eventStatus}
+                    </span>
+
+                    <h3 className="text-white font-semibold text-sm mb-2">
+                      {event.title}
+                    </h3>
+
+                    {/* TANGGAL */}
+                    <p className="text-xs text-gray-200 mb-3">
+                      {new Date(event.startAt).toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+
+                    {/* BUTTON */}
+                    {eventStatus === "UPCOMING" && event.registerLink && (
+                      <form action={event.registerLink} target="_blank">
+                        <button
+                          type="submit"
+                          className="w-full px-4 py-2 rounded-md
+                                    bg-pink-600 text-white text-sm
+                                    hover:bg-pink-700 transition"
+                        >
+                          Daftar Sekarang
+                        </button>
+                      </form>
+                    )}
+
+                    {eventStatus === "ONGOING" && (
+                      <button
+                        disabled
+                        className="w-full px-4 py-2 rounded-md
+                                  bg-yellow-500 text-white text-sm cursor-not-allowed"
+                      >
+                        Sedang Berlangsung
+                      </button>
+                    )}
+
+                    {eventStatus === "FINISHED" && (
+                      <button
+                        disabled
+                        className="w-full px-4 py-2 rounded-md
+                                  bg-gray-400 text-white text-sm cursor-not-allowed"
+                      >
+                        Event Telah Selesai
+                      </button>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+
+            {/* CARD LIHAT SEMUA */}
+            <Link
+              href="/event"
+              className="min-w-[260px] flex items-center justify-center
+                        rounded-xl border-2 border-dashed border-pink-500
+                        text-pink-600 font-semibold hover:bg-pink-50"
+            >
+              Lihat Semua Event →
+            </Link>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+
+}
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+
+  const event = await prisma.event.findFirst({
+    where: {
+      slug,
+      isPublished: true,
+    },
+  });
+
+  if (!event) {
+    return {};
+  }
+
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
+
+  return {
+    title: event.title,
+    description: event.excerpt || "Informasi event terbaru dari Hysteria",
+    openGraph: {
+      title: event.title,
+      description: event.excerpt || event.title,
+      url,
+      siteName: "Hysteria",
+      images: [
+        {
+          url: event.poster || "/placeholder-event.jpg",
+          width: 1200,
+          height: 630,
+          alt: event.title,
+        },
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: event.title,
+      description: event.excerpt || event.title,
+      images: [event.poster || "/placeholder-event.jpg"],
+    },
+  };
+}

@@ -2,34 +2,67 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity } from "../../../components/ui/icon";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness } from "../../../components/ui/icon";
 
 export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
 
   const menus = [
     { key: "dashboard", label: "Dashboard", view: "dashboard", icon: IconDashboard, enabled: true },
-    { key: "users", label: "Users", view: "users", icon: IconUsers, enabled: true, children: [
+    {
+      key: "users",
+      label: "Users",
+      view: "users",
+      icon: IconUsers,
+      enabled: true,
+      children: [
         { key: "user_management", label: "User Management", view: "users.user_management", icon: IconUserManagement, enabled: true },
         { key: "permission", label: "Permission", view: "users.permission", icon: IconPermission, enabled: true },
         { key: "status_management", label: "Status", view: "users.status_management", icon: IconStatus, enabled: true },
       ],
     },
     { key: "category", label: "Category", view: "category", icon: IconCategorySmall, enabled: true },
-    { key: "section", label: "Section",view: "section",icon: IconSection,enabled: true,children: [
-        { key: "hero", label: "Hero", view: "section.hero", icon: IconHero, enabled: true },
+
+    {
+      key: "page",
+      label: "Page",
+      view: "page",
+      icon: IconSection,
+      enabled: true,
+      children: [
+        { key: "home", label: "Page Home", view: "page.home", icon: IconHero, enabled: true },
+        { key: "program", label: "Page Program", view: "page.program", icon: IconHero, enabled: true },
+        { key: "artlab", label: "Page Artlab", view: "page.artlab", icon: IconHero, enabled: true },
+        { key: "ditampart", label: "Page Ditampart", view: "page.ditampart", icon: IconHero, enabled: true },
+        { key: "laki-masak", label: "Page Laki Masak", view: "page.laki-masak", icon: IconHero, enabled: true },
       ],
     },
-    { key: "platform", label: "Platform", view: "platform", icon: IconPlatform, enabled: true, children: [
-       {key: "artlab", label: "Artlab", view: "platform.artlab", icon: IconSocial, enabled: true},
-       {key: "ditampart", label: "Ditampart", view: "platform.ditampart", icon: IconSocial, enabled: true},
-       {key: "laki-masak", label: "Laki Masak", view: "platform.laki-masak", icon: IconSocial, enabled: true},
-       {key: "thumbnail", label: "Thumbnail", view: "platform.thumbnail", icon: IconSocial, enabled: false},
-    ]},
-    { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: false },
-    { key: "post", label: "Post", view: "post", icon: IconPost, enabled: false },
-    { key: "settings", label: "Settings", view: "settings", icon: IconSettings, enabled: true,
-      children: [{ key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true }],
+
+    {
+      key: "platform",
+      label: "Platform",
+      view: "platform",
+      icon: IconPlatform,
+      enabled: true,
+      children: [
+        { key: "hysteria-artlab", label: "Hysteria Artlab", view: "platform.hysteria-artlab", icon: IconPlatform, enabled: true },
+        { key: "ditampart", label: "Ditampart", view: "platform.ditampart", icon: IconPlatform, enabled: true },
+        { key: "laki-masak", label: "Laki Masak", view: "platform.laki-masak", icon: IconPlatform, enabled: true },
+      ],
+    },
+
+    { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: true },
+    { key: "article", label: "Artikel", view: "article", icon: IconPost, enabled: true },
+    {
+      key: "settings",
+      label: "Settings",
+      view: "settings",
+      icon: IconSettings,
+      enabled: true,
+      children: [
+        { key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true },
+        { key: "tentang", label: "Tentang", view: "tentang", icon: IconBusiness, enabled: true },
+      ],
     },
   ];
 
