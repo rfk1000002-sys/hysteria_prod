@@ -67,88 +67,103 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const data = {
-      title           : body.title,
-      description     : body.description,
-      location        : body.location,
-      registerLink    : body.registerLink,
-      mapsEmbedSrc    : body.mapsEmbedSrc,
-      poster          : body.poster || null,
-      driveLink       : body.driveLink ?? null,
-      youtubeLink     : body.youtubeLink ?? null,
-      instagramLink   : body.instagramLink ?? null,
-      drivebukuLink   : body.drivebukuLink ?? null,
-      isPublished     :
-        typeof body.isPublished === "boolean"
-          ? body.isPublished
-          : undefined,
-      isFlexibleTime  :
-        typeof body.isFlexibleTime === "boolean"
-          ? body.isFlexibleTime
-          : undefined,
-    };
-
-    if (body.startAt) data.startAt = new Date(body.startAt);
-    if (body.endAt) data.endAt = new Date(body.endAt);
-
-    if (Array.isArray(body.organizerItemIds)) {
-      await prisma.eventOrganizer.deleteMany({
-        where: { eventId },
-      });
-
-      await prisma.eventOrganizer.createMany({
-        data: body.organizerItemIds.map((id) => ({
-          eventId,
-          categoryItemId: Number(id),
-        })),
-      });
-    }
-
-    if (Array.isArray(body.tagNames)) {
-      await prisma.eventTag.deleteMany({
-        where: { eventId },
-      });
-
-      for (const name of body.tagNames) {
-        const slug = slugify(name, { lower: true, strict: true });
-
-        const tag = await prisma.tag.upsert({
-          where: { slug },
-          update: {},
-          create: { name, slug },
-        });
-
-        await prisma.eventTag.create({
-          data: {
-            eventId,
-            tagId: tag.id,
-          },
-        });
-      }
-    }
-
-    const event = await prisma.event.update({
-      where: { id: eventId },
-      data,
+    /* ================= VALIDATE CATEGORY ================= */
+    const categories = await prisma.categoryItem.findMany({
+      where: { id: { in: body.categoryItemIds.map(Number) } },
+      select: { categoryId: true },
     });
 
-    /* ================= UPDATE KATEGORI ================= */
-    if (Array.isArray(body.categoryItemIds)) {
-      await prisma.eventCategory.deleteMany({
-        where: { eventId },
+    const hasProgramCategory = categories.some(
+      c => c.categoryId === 1
+    );
+
+    /* ================= DETERMINE ORGANIZER ================= */
+    let finalOrganizerIds = (body.organizerItemIds || []).map(Number);
+
+    if (hasProgramCategory) {
+
+      const programParent = await prisma.categoryItem.findFirst({
+        where: { categoryId: 1, parentId: null },
+        select: { id: true }
       });
 
-      await prisma.eventCategory.createMany({
-        data: body.categoryItemIds.map((id, idx) => ({
+      if (programParent) {
+        finalOrganizerIds.push(programParent.id);
+      }
+    }
+    finalOrganizerIds = [...new Set(finalOrganizerIds)];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.event.update({
+        where: { id: eventId },
+        data: {
+          title: body.title,
+          description: body.description,
+          location: body.location,
+          registerLink: body.registerLink,
+          mapsEmbedSrc: body.mapsEmbedSrc,
+          poster: body.poster,
+          driveLink: body.driveLink,
+          youtubeLink: body.youtubeLink,
+          instagramLink: body.instagramLink,
+          drivebukuLink: body.drivebukuLink,
+          isPublished: body.isPublished,
+          isFlexibleTime: body.isFlexibleTime,
+          startAt: new Date(body.startAt),
+          endAt: body.endAt ? new Date(body.endAt) : null
+        }
+      });
+
+      /* ================= REPLACE CATEGORIES ================= */
+      await tx.eventCategory.deleteMany({ where: { eventId } });
+
+      await tx.eventCategory.createMany({
+        data: body.categoryItemIds.map((id, i) => ({
           eventId,
           categoryItemId: Number(id),
-          isPrimary: idx === 0,
-          order: idx,
+          isPrimary: i === 0,
+          order: i
+        }))
+      });
+
+      /* ================= REPLACE ORGANIZERS ================= */
+      await tx.eventOrganizer.deleteMany({ where: { eventId } });
+
+      await tx.eventOrganizer.createMany({
+        data: finalOrganizerIds.map(id => ({
+          eventId,
+          categoryItemId: id,
         })),
       });
-    }
 
-    return NextResponse.json(event);
+    /* ================= REPLACE TAGS ================= */
+      await tx.eventTag.deleteMany({ where: { eventId } });
+
+      if (body.tagNames?.length) {
+
+        const tags = await Promise.all(
+          body.tagNames.map(name => {
+            const slug = slugify(name, { lower: true, strict: true });
+
+            return tx.tag.upsert({
+              where: { slug },
+              update: {},
+              create: { name, slug }
+            });
+          })
+        );
+
+        await tx.eventTag.createMany({
+          data: tags.map(tag => ({
+            eventId,
+            tagId: tag.id
+          }))
+        });
+      }
+    });
+
+    return NextResponse.json({ success: true });
+
   } catch (error) {
     console.error("UPDATE EVENT ERROR:", error);
     return NextResponse.json(

@@ -25,9 +25,9 @@ export async function POST(req) {
       drivebukuLink,
       tagNames = [],
       isPublished,
+      isFlexibleTime,
     } = body;
 
-    /* ================= VALIDASI ================= */
     const errors = {};
 
     if (!title) errors.title = "Judul event wajib diisi";
@@ -35,35 +35,59 @@ export async function POST(req) {
     if (!location) errors.location = "Lokasi wajib diisi";
     if (!poster) errors.poster = "Poster wajib diupload";
     if (!description) errors.description = "Deskripsi wajib diisi";
-    if (
-      !Array.isArray(categoryItemIds) ||
-      categoryItemIds.length === 0
-    ) {
+    if (!Array.isArray(categoryItemIds) || categoryItemIds.length === 0) {
       errors.categoryItemIds = "Minimal pilih 1 kategori";
     }
-    if (!Array.isArray(organizerItemIds) || organizerItemIds.length === 0) {
+
+    /* ================= AMBIL DATA CATEGORY ================= */
+    const categories = await prisma.categoryItem.findMany({
+      where: { id: { in: categoryItemIds.map(Number) } },
+      select: { id: true, categoryId: true },
+    });
+
+    if (categories.length !== categoryItemIds.length) {
+      errors.categoryItemIds = "Salah satu kategori tidak valid";
+    }
+
+    const hasProgramCategory = categories.some(
+      (c) => c.categoryId === 1 // PROGRAM
+    );
+
+    if (
+      (!organizerItemIds || organizerItemIds.length === 0) &&
+      !hasProgramCategory
+    ) {
       errors.organizerItemIds = "Minimal pilih 1 penyelenggara";
     }
 
-    // kalau ada error → return detail
     if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ message: "Validasi gagal", errors }, { status: 400 });
-    }
-
-    /* ================= CEK KATEGORI ================= */
-    const categoriesExist = await prisma.categoryItem.findMany({
-      where: {
-        id: { in: categoryItemIds.map(Number) },
-      },
-      select: { id: true },
-    });
-
-    if (categoriesExist.length !== categoryItemIds.length) {
       return NextResponse.json(
-        { message: "Salah satu kategori tidak valid" },
+        { message: "Validasi gagal", errors },
         { status: 400 }
       );
     }
+
+    /* ================= TENTUKAN ORGANIZER FINAL ================= */
+
+    let finalOrganizerIds = organizerItemIds.map(Number);
+
+    // Jika ada kategori PROGRAM → tambahkan Hysteria
+    if (hasProgramCategory) {
+
+      const programParent = await prisma.categoryItem.findFirst({
+        where: {
+          categoryId: 1,
+          parentId: null,
+        },
+        select: { id: true },
+      });
+
+      if (programParent) {
+        finalOrganizerIds.push(programParent.id);
+      }
+    }
+    // Remove duplicate
+    finalOrganizerIds = [...new Set(finalOrganizerIds)];
 
     /* ================= SLUG ================= */
     const baseSlug = slugify(title, { lower: true, strict: true });
@@ -75,7 +99,7 @@ export async function POST(req) {
 
     /* ================= CREATE EVENT ================= */
     const event = await prisma.$transaction(async (tx) => {
-      const createdEvent  = await tx.event.create({
+      const createdEvent = await tx.event.create({
         data: {
           title,
           slug,
@@ -91,18 +115,19 @@ export async function POST(req) {
           instagramLink,
           drivebukuLink,
           isPublished: Boolean(isPublished),
-          
+          isFlexibleTime: Boolean(isFlexibleTime),
+
           eventCategories: {
             create: categoryItemIds.map((id, idx) => ({
-              categoryItemId: Number(id), 
+              categoryItemId: Number(id),
               isPrimary: idx === 0,
               order: idx,
             })),
           },
 
           organizers: {
-            create: organizerItemIds.map((id) => ({
-              categoryItemId: Number(id),
+            create: finalOrganizerIds.map((id) => ({
+              categoryItemId: id,
             })),
           },
         },
@@ -127,11 +152,13 @@ export async function POST(req) {
       }
       return createdEvent;
     });
-
     return NextResponse.json(event, { status: 201 });
   } catch (err) {
     console.error("POST /api/admin/events ERROR:", err);
-    return NextResponse.json({ message: "Gagal membuat event" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Gagal membuat event" },
+      { status: 500 }
+    );
   }
 }
 

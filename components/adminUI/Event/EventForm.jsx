@@ -21,32 +21,17 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   const router = useRouter();
 
   const [organizerItems, setOrganizerItems] = useState([]);
-  const [programTree, setProgramTree] = useState([]);
   const [platformTree, setPlatformTree] = useState([]);
-
+  const [programTree, setProgramTree] = useState([]);
+  
   const [loading, setLoading] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
   const [organizerOpen, setOrganizerOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [programCategoryId, setProgramCategoryId] = useState(null);
   const [errors, setErrors] = useState({});
 
   const organizerRef = useRef(null);
   const categoryRef = useRef(null);
-  
-  const HYSTERIA_ORGANIZER = {
-    id: "__HYSTERIA__",
-    title: "Hysteria",
-    isVirtual: true,
-  };
-
-  const getOrganizerTitle = (id) => {
-    if (id === "__HYSTERIA__") return "Hysteria";
-    return organizerItems.find(o => o.id === id)?.title || id;
-  };
-
-  const getCategoryTitle = (id) =>
-    filteredCategoryItems.find(
-      (c) => Number(c.id) === Number(id)
-    )?.title || id;
 
   const [form, setForm] = useState({
     title: "",
@@ -71,85 +56,8 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     isFlexibleTime : false,
   });
 
-  // PREFILL EDIT
-  useEffect(() => {
-    if (!initialData) return;
-
-    const start = new Date(initialData.startAt);
-    const end = initialData.endAt ? new Date(initialData.endAt) : null;
-
-    const isFlexible = Boolean(initialData.isFlexibleTime);
-
-    setForm((prev) => ({
-      ...prev,
-
-      title: initialData.title || "",
-
-      categoryItemIds:
-        initialData.eventCategories?.map(ec =>
-          Number(ec.categoryItemId)
-        ) || [],
-
-      organizerIds:
-        initialData.organizers?.map(o =>
-          Number(o.categoryItemId)
-        ) || [],
-
-      description: initialData.description || "",
-
-      startDate: start.toISOString().slice(0, 10),
-
-      startTime: isFlexible ? "" : start.toTimeString().slice(0, 5),
-
-      endDate: end ? end.toISOString().slice(0, 10) : "",
-      endTime: isFlexible
-        ? ""
-        : (end ? end.toTimeString().slice(0, 5) : ""),
-
-      location: initialData.location || "",
-      registerLink: initialData.registerLink || "",
-      poster: initialData.poster || "",
-      status: initialData.isPublished ? "PUBLISHED" : "DRAFT",
-
-      driveLink: initialData.driveLink || "",
-      youtubeLink: initialData.youtubeLink || "",
-      instagramLink: initialData.instagramLink || "",
-      drivebukuLink: initialData.drivebukuLink || "",
-
-      tags:
-        initialData.tags?.map(t =>
-          t.tag?.name
-        ).filter(Boolean) || [],
-
-      mapsEmbed: initialData.mapsEmbedSrc
-        ? `<iframe src="${initialData.mapsEmbedSrc}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`
-        : "",
-
-      isFlexibleTime: isFlexible,
-    }));
-  }, [initialData]);
-
-  useEffect(() => {
-    if (form.isFlexibleTime) {
-      setForm(prev => ({
-        ...prev,
-        startTime: "",
-        endTime: "",
-      }));
-    }
-  }, [form.isFlexibleTime]);
-
-  // CLOSE DROPDOWN ON OUTSIDE CLICK
-  useEffect(() => {
-    const handler = (e) => {
-      if (organizerRef.current && !organizerRef.current.contains(e.target))
-        setOrganizerOpen(false);
-      if (categoryRef.current && !categoryRef.current.contains(e.target))
-        setCategoryOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const PROGRAM_CATEGORY_SLUG = "program-hysteria";
+  const PROGRAM_ORGANIZER_ID = "PROGRAM-HYSTERIA";
 
   // FETCH CATEGORIES
   useEffect(() => {
@@ -159,98 +67,161 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         fetch("/api/categories/program-hysteria"),
       ]);
 
-      const platformItems = (await platformRes.json())?.data?.items || [];
-      const programItems = (await programRes.json())?.data?.items || [];
+      const platformJson = await platformRes.json();
+      const programJson  = await programRes.json();
 
-      const sortAZ = (a, b) =>
-        a.title.localeCompare(b.title, "id-ID", { sensitivity: "base" });
+      const platformItems = platformJson?.data?.items || [];
+      const programItems  = programJson?.data?.items || [];
+
+      setProgramCategoryId(programJson?.data?.category?.id);
 
       setPlatformTree(platformItems);
       setProgramTree(programItems);
 
-      const organizers = platformItems
-        .map(p => ({ id: p.id, title: p.title }))
-        .sort(sortAZ);
-      
-      setOrganizerItems([
-        ...organizers,
-        HYSTERIA_ORGANIZER,
-      ]);
+      const sortAZ = (a, b) =>
+        a.title.localeCompare(b.title, "id-ID", { sensitivity: "base" });
+
+      const organizers = [
+        ...platformItems.map(item => ({
+          id: Number(item.id),
+          title: item.title,
+        })),
+        {
+          id: PROGRAM_ORGANIZER_ID,
+          title: "Hysteria", 
+        }
+      ].sort(sortAZ);
+
+      setOrganizerItems(organizers);
     };
 
     fetchData();
   }, []);
 
-  // SUB CATEGORY LOGIC
-  const getPlatformSubCategories = () => {
+  // PREFILL EDIT
+  useEffect(() => {
+    if (!initialData) return;
+    if (!platformTree.length && !programTree.length) return;
+
+    const start = new Date(initialData.startAt);
+    const end = initialData.endAt ? new Date(initialData.endAt) : null;
+    const isFlexible = Boolean(initialData.isFlexibleTime);
+
+    setForm((prev) => ({
+      ...prev,
+      title: initialData.title || "",
+      organizerIds: [
+        ...new Set(
+          initialData.organizers?.map(o => {
+
+            const isProgram = programTree.some(
+              item => Number(item.id) === Number(o.categoryItemId)
+            );
+
+            return isProgram
+              ? PROGRAM_ORGANIZER_ID
+              : Number(o.categoryItemId);
+
+          }) || []
+        )
+      ],
+      categoryItemIds:
+        initialData.eventCategories?.map(ec =>
+          Number(ec.categoryItemId)
+        ) || [],
+
+      description: initialData.description || "",
+      startDate: start.toISOString().slice(0, 10),
+      startTime: isFlexible ? "" : start.toTimeString().slice(0, 5),
+      endDate: end ? end.toISOString().slice(0, 10) : "",
+      endTime: isFlexible
+        ? ""
+        : (end ? end.toTimeString().slice(0, 5) : ""),
+
+      location: initialData.location || "",
+      registerLink: initialData.registerLink || "",
+      poster: initialData.poster || "",
+      status: initialData.isPublished ? "PUBLISHED" : "DRAFT",
+      driveLink: initialData.driveLink || "",
+      youtubeLink: initialData.youtubeLink || "",
+      instagramLink: initialData.instagramLink || "",
+      drivebukuLink: initialData.drivebukuLink || "",
+      tags:
+        initialData.tags?.map(t =>
+          t.tag?.name
+        ).filter(Boolean) || [],
+      mapsEmbed: initialData.mapsEmbedSrc
+        ? `<iframe src="${initialData.mapsEmbedSrc}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`
+        : "",
+
+      isFlexibleTime: isFlexible,
+    }));
+  }, [initialData, platformTree, programTree, programCategoryId]);
+
+  const filteredCategoryItems = useMemo(() => {
     const subs = [];
 
-    for (const organizer of platformTree) {
-      if (!form.organizerIds.includes(Number(organizer.id))) continue;
+    for (const organizerId of form.organizerIds) {
 
-      for (const child of organizer.children || []) {
-        subs.push({
-          id: child.id,
-          title: child.title,
-          source: organizer.title,
-        });
+      // PLATFORM
+      const platform = platformTree.find(
+        p => Number(p.id) === Number(organizerId)
+      );
+
+      if (platform) {
+        for (const child of platform.children || []) {
+          subs.push({
+            id: child.id,
+            title: child.title,
+            source: platform.title
+          });
+        }
+      }
+
+      // PROGRAM-HYSTERIA
+      if (organizerId === PROGRAM_ORGANIZER_ID) {
+        for (const item of programTree) {
+          // kalau punya children pakai children
+          if (item.children?.length) {
+            for (const child of item.children) {
+              subs.push({
+                id: child.id,
+                title: child.title,
+                source: "Hysteria"
+              });
+            }
+          } else {
+            // kalau tidak punya children → root itu sendiri jadi sub kategori
+            subs.push({
+              id: item.id,
+              title: item.title,
+              source: "Hysteria"
+            });
+          }
+        }
       }
     }
+
     return subs;
-  };
 
-  const getHysteriaSubCategories = () => {
-    if (!form.organizerIds.includes("__HYSTERIA__")) return [];
-
-    const result = [];
-
-    for (const group of programTree) {
-      for (const child of group.children || []) {
-        result.push({
-          id: child.id,
-          title: child.title,
-          source: "Hysteria",
-        });
-      }
-    }
-    return result;
-  };
-  
-  const filteredCategoryItems = useMemo(() => {
-    return [
-      ...getPlatformSubCategories(),
-      ...getHysteriaSubCategories(),
-    ];
   }, [form.organizerIds, platformTree, programTree]);
-  
+
   // CLEAN CATEGORY WHEN ORGANIZER CHANGES
   useEffect(() => {
-    if (!form.organizerIds.length) return;
-    if (!filteredCategoryItems.length) return;
-
     setForm((prev) => ({
       ...prev,
-      categoryItemIds: prev.categoryItemIds.filter((id) =>
-        filteredCategoryItems.some(
-          (c) => Number(c.id) === Number(id)
-        )
+      categoryItemIds: prev.categoryItemIds.filter(id =>
+        filteredCategoryItems.some(c => Number(c.id) === Number(id))
       ),
     }));
-  }, [form.organizerIds]);
-
-  const normalizeId = (id) => {
-    if (id === "__HYSTERIA__") return "__HYSTERIA__";
-    return Number(id);
-  };
+  }, [filteredCategoryItems]);
 
   const toggleOrganizer = (id) => {
-    const normalized = normalizeId(id);
-
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
-      organizerIds: prev.organizerIds.includes(normalized)
-        ? prev.organizerIds.filter((x) => x !== normalized)
-        : [...prev.organizerIds, normalized],
+      organizerIds: prev.organizerIds.includes(id)
+        ? prev.organizerIds.filter(x => x !== id)
+        : [...prev.organizerIds, id],
     }));
   };
 
@@ -267,21 +238,106 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const extractMapSrc = (iframeHtml) => {
-    if (!iframeHtml) return null;
-    const match = iframeHtml.match(/src="([^"]+)"/);
-    return match ? match[1] : null;
+  const organizerItemIds = form.organizerIds.flatMap(id => {
+    // kalau Hysteria
+    if (id === PROGRAM_ORGANIZER_ID) {
+      // ambil root pertama sebagai representasi organizer
+      return programTree.length
+        ? [Number(programTree[0].id)]
+        : [];
+    }
+
+    return [Number(id)];
+  });
+
+  useEffect(() => {
+    if (form.isFlexibleTime) {
+      setForm(prev => ({
+        ...prev,
+        startTime: "",
+        endTime: "",
+      }));
+    }
+  }, [form.isFlexibleTime]);
+
+  const getOrganizerTitle = (id) => {
+    if (id === PROGRAM_ORGANIZER_ID) return "Hysteria";
+
+    if (!organizerItems.length) return "";
+
+    return organizerItems.find(item => item.id === id)?.title || "";
   };
-  const mapSrc = extractMapSrc(form.mapsEmbed);
+
+  const getCategoryTitle = (id) => {
+
+    const fromFiltered = filteredCategoryItems.find(
+      (item) => Number(item.id) === Number(id)
+    );
+
+    if (fromFiltered) return fromFiltered.title;
+
+    const fromInitial = initialData?.eventCategories?.find(
+      (ec) => Number(ec.categoryItemId) === Number(id)
+    );
+
+    if (fromInitial) {
+      return fromInitial.categoryItem?.title || "";
+    }
+
+    return "";
+  };
+
+  // CLOSE DROPDOWN ON OUTSIDE CLICK
+  useEffect(() => {
+    const handler = (e) => {
+      if (organizerRef.current && !organizerRef.current.contains(e.target))
+        setOrganizerOpen(false);
+      if (categoryRef.current && !categoryRef.current.contains(e.target))
+        setCategoryOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const convertGoogleMapsToEmbed = (input) => {
+    if (!input) return null;
+
+    // jika admin paste iframe
+    if (input.includes("<iframe")) {
+      const match = input.match(/src="([^"]+)"/);
+      return match ? match[1] : null;
+    }
+
+    // shortlink maps.app.goo.gl
+    if (input.includes("maps.app.goo.gl")) {
+      return input;
+    }
+
+    // link google maps biasa
+    if (input.includes("google.com/maps")) {
+      if (input.includes("/embed")) return input;
+
+      if (input.includes("?")) {
+        return `${input}&output=embed`;
+      }
+
+      return `${input}?output=embed`;
+    }
+
+    return null;
+  };
+
+  const isIframeEmbed = (input) => {
+    if (!input) return false;
+    return input.includes("<iframe");
+  };
+
+  const mapSrc = isIframeEmbed(form.mapsEmbed)
+    ? convertGoogleMapsToEmbed(form.mapsEmbed)
+    : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -306,14 +362,20 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       return;
     }
 
+    const organizerItemIds = form.organizerIds.flatMap(id => {
+
+      // kalau Hysteria → pakai parent PROGRAM-HYSTERIA
+      if (id === PROGRAM_ORGANIZER_ID) {
+        const parent = programTree.find(item => !item.parentId);
+        return parent ? [Number(parent.id)] : [];
+      }
+      return [Number(id)];
+    });
+
     const payload = {
       title           : form.title,
+      organizerItemIds,
       categoryItemIds : form.categoryItemIds,
-
-      organizerItemIds: form.organizerIds.filter(
-        (id) => id !== "__HYSTERIA__"
-      ),
-      
       description     : form.description,
 
       startAt: form.isFlexibleTime
@@ -328,7 +390,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       
       location        : form.location,
       registerLink    : form.registerLink,
-      mapsEmbedSrc    : extractMapSrc(form.mapsEmbed),
+      mapsEmbedSrc    : convertGoogleMapsToEmbed(form.mapsEmbed),
       poster          : form.poster,
       isPublished     : form.status === "PUBLISHED", 
       driveLink       : form.driveLink,                
@@ -370,7 +432,11 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       <div className="right items-right justify-between">
         {/* ACTION */}
         <div className="flex justify-end">
-          <button type="submit">
+          <button type="submit" className="px-5 py-2 rounded-2xl bg-[var(--Color-1)] text-white
+               transition-all duration-300 ease-out
+               hover:bg-[#5c4a65] hover:shadow-xl hover:-translate-y-1
+               active:translate-y-0 active:shadow-md active:scale-95"
+          >
             {loading ? "Menyimpan..." : "Simpan Event"}
           </button>
         </div>
