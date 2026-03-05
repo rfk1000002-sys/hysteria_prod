@@ -4,11 +4,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useDebounce } from '@/hooks/use-debounce';
 import SearchField from '@/components/adminUI/SearchField';
-import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
 import DataTable from '@/components/ui/DataTable';
 import PageFilter from '@/components/ui/PageFilter';
 import SubForm from './form/sub.form';
+
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const FALLBACK_ITEMS = [
   { id: 1, no: 1, title: 'example', year: 2026, url: 'https://example.com' },
@@ -218,19 +222,17 @@ export default function PlatformIndex({
       align: 'center',
       headerAlign: 'justify-center',
       render: (row) => (
-        <div className="flex flex-wrap gap-2 justify-start items-center ">
-          <button
-            onClick={() => handleEdit(row)}
-            className="text-white bg-pink-500 px-2 py-1 rounded-md text-xs cursor-pointer hover:bg-pink-600"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => effectiveDelete?.(row)}
-            className="text-white bg-[#43334C] px-2 py-1 rounded-md text-xs cursor-pointer hover:bg-red-500"
-          >
-            ✕
-          </button>
+        <div className="flex gap-1 justify-start items-center">
+          <Tooltip title="Edit" arrow>
+            <IconButton size="small" onClick={() => handleEdit(row)} sx={{ color: '#ec4899', '&:hover': { color: '#db2777' } }}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Hapus" arrow>
+            <IconButton size="small" onClick={() => effectiveDelete?.(row)} sx={{ color: '#43334C', '&:hover': { color: '#ef4444' } }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </div>
       ),
     },
@@ -277,25 +279,34 @@ export default function PlatformIndex({
       <div className="flex w-full items-start justify-between mb-4 gap-4">
         <div>
           <h3 className="text-2xl font-extrabold">{title}</h3>
-          {/* <p className="text-sm text-gray-600 mt-1">{subtitle}</p> */}
+          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
         </div>
         <div className="ml-auto flex flex-end items-end md:flex-row md:items-start gap-2">
-          <button
-            type="button"
-            onClick={() => handleAdd()}
-            disabled={saving}
-            className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
-          >
-            {actionLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => close?.()}
-            aria-label="close"
-            className="px-3 py-2 text-zinc-100 bg-red-500 rounded-md hover:bg-red-600 cursor-pointer"
-          >
-            ✕
-          </button>
+          <Tooltip title="tambah postingan" arrow>
+            <span>
+              <button
+                type="button"
+                onClick={() => handleAdd()}
+                disabled={saving}
+                className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
+              >
+                {actionLabel}
+              </button>
+            </span>
+          </Tooltip>
+
+          <Tooltip title="close" arrow>
+            <span>
+              <button
+                type="button"
+                onClick={() => close?.()}
+                aria-label="close"
+                className="px-3 py-2 text-zinc-100 bg-red-500 rounded-md hover:bg-red-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            </span>
+          </Tooltip>
         </div>
       </div>
 

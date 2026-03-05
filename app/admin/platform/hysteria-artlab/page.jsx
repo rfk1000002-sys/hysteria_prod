@@ -153,8 +153,8 @@ export default function HysteriaArtlabPage() {
               <PlatformIndex
                 platformSlug="hysteria-artlab"
                 categoryItemSlug="anitalk"
-                title="Podcast Artlab"
-                subtitle="Kelola Podcast Artlab"
+                title="Anitalk"
+                subtitle="Kelola Anitalk Konten"
                 actionLabel="+Add"
                 searchPlaceholder="Cari judul podcast..."
                 close={() => setOpenAntalk(false)}

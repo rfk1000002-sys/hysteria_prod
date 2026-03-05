@@ -17,7 +17,7 @@ export default function ArtistCard({ src, alt, name, role, episode, subtitle }) 
   const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
   return (
-    <div className="group relative w-full aspect-[1/2] overflow-hidden rounded-3xl bg-zinc-800 cursor-pointer">
+    <div className="group relative w-full aspect-[9/16] overflow-hidden rounded-3xl bg-zinc-800 cursor-pointer">
       {/* Background image */}
       <Image
         src={imgSrc}

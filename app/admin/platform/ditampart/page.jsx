@@ -219,7 +219,9 @@ export default function DitampartPage() {
               <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
                       <PlatformIndex
                         platformSlug="ditampart"
-                        categoryItemSlug={platformModal.categoryItemSlug}                        showImageUpload={platformModal.showImageUpload}                        title={platformModal.title}
+                        categoryItemSlug={platformModal.categoryItemSlug}
+                        showImageUpload={platformModal.showImageUpload}
+                        title={platformModal.title}
                         subtitle={platformModal.subtitle}
                         actionLabel="+add"
                         searchPlaceholder="Cari konten..."

@@ -67,7 +67,7 @@ export const PLATFORM_DATA = {
             linkUrl: '#',
             items: [
               { src: 'https://youtu.be/D0UnqGm_miA', alt: 'Anitalk 1', title: 'Anitalk Episode 1', timestamp: '22.00' },
-              { src: '/image/video.webp', alt: 'Anitalk 2', title: 'Anitalk Episode 2', timestamp: '22.00' },
+              { src: 'https://www.youtube.com/shorts/bcsGz0BiHAw?feature=share', alt: 'Anitalk 2', title: 'Anitalk Episode 2', timestamp: '22.00' },
               { src: '/image/video.webp', alt: 'Anitalk 3', title: 'Anitalk Episode 3', timestamp: '22.00' },
             ]
           },
