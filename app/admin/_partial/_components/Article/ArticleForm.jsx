@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ArticlePreviewModal from "./ArticlePreviewModal";
+import ArticlePreviewModal from "@/components/adminUI/ArticlePreviewModal";
 import dynamic from "next/dynamic";
 
 const TextEditor = dynamic(
@@ -44,32 +44,9 @@ export default function ArticleForm({
 
   const [openCategory, setOpenCategory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [editorReady, setEditorReady] = useState(false);
 
   const [newTag, setNewTag] = useState("");
-
-  useEffect(() => {
-    if (!initialData) return;
-
-    setForm({
-      title: initialData.title || "",
-      slug: initialData.slug || "",
-      content:
-        typeof initialData.content === "string"
-          ? JSON.parse(initialData.content)
-          : initialData.content,
-
-      excerpt: initialData.excerpt || "",
-      categoryIds: initialData.categories?.map((c) => c.categoryId) || [],
-      authorName: initialData.authorName || "",
-      editorName: initialData.editorName || "",
-      tagNames: initialData.tags?.map((t) => t.tag.name) || [],
-      publishedAt: initialData.publishedAt
-        ? new Date(initialData.publishedAt).toISOString().split("T")[0]
-        : "",
-      featuredImageFile: null,
-      featuredImagePreview: initialData.featuredImage || "",
-    });
-  }, [initialData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -142,14 +119,72 @@ export default function ArticleForm({
 
     if (form.featuredImageFile)
       formData.append("featuredImage", form.featuredImageFile);
+
     formData.append("tagNames", JSON.stringify(form.tagNames));
 
-    onSubmit(formData);
+    onSubmit(formData); // 🔥 PENTING
   };
+
+  const previewData = {
+    title: form.title,
+    content: form.content,
+    excerpt: form.excerpt,
+    authorName: form.authorName,
+    editorName: form.editorName,
+    featuredImage: form.featuredImagePreview,
+    publishedAt: form.publishedAt,
+
+    // transform categories
+    categories: categories
+      .filter((cat) => form.categoryIds.includes(cat.id))
+      .map((cat) => ({
+        id: cat.id,
+        title: cat.title,
+      })),
+
+    // transform tags
+    tags: form.tagNames.map((tag, index) => ({
+      id: index,
+      name: tag,
+    })),
+  };
+
+  useEffect(() => {
+    if (!initialData) {
+      setEditorReady(true);
+      return;
+    }
+
+    const selectedCategories = initialData.categories?.map((c) => c.id) || [];
+
+    setForm((prev) => ({
+      ...prev,
+      title: initialData.title || "",
+      slug: initialData.slug || "",
+      content:
+        typeof initialData.content === "string"
+          ? JSON.parse(initialData.content)
+          : initialData.content,
+      excerpt: initialData.excerpt || "",
+      categoryIds: selectedCategories,
+      authorName: initialData.authorName || "",
+      editorName: initialData.editorName || "",
+      tagNames:
+        initialData.tags?.map((t) => t?.tag?.name || t?.name).filter(Boolean) ||
+        [],
+      publishedAt: initialData.publishedAt
+        ? new Date(initialData.publishedAt).toISOString().split("T")[0]
+        : "",
+      featuredImageFile: null,
+      featuredImagePreview: initialData.featuredImage || "",
+    }));
+
+    setEditorReady(true);
+  }, [initialData]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="space-y-4">
         <div>
           <h1 className="text-4xl font-bold text-zinc-900">
             {mode === "edit" ? "Edit Artikel" : "Tambah Artikel"}
@@ -159,15 +194,15 @@ export default function ArticleForm({
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex justify-end gap-3 flex-wrap">
           {/* Draft */}
           <button
             type="button"
             onClick={() => handleSubmit("DRAFT")}
             className="px-4 py-2 rounded-2xl border border-pink-400 text-pink-500
-               transition-all duration-300 ease-out
-               hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
-               active:translate-y-0 active:shadow-md active:scale-95"
+        transition-all duration-300 ease-out
+        hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
+        active:translate-y-0 active:shadow-md active:scale-95"
           >
             Simpan Draft
           </button>
@@ -175,11 +210,11 @@ export default function ArticleForm({
           {/* Preview */}
           <button
             type="button"
-            className="px-4 py-2 rounded-2xl border border-pink-400 text-pink-500
-               transition-all duration-300 ease-out
-               hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
-               active:translate-y-0 active:shadow-md active:scale-95"
             onClick={() => setShowPreview(true)}
+            className="px-4 py-2 rounded-2xl border border-pink-400 text-pink-500
+        transition-all duration-300 ease-out
+        hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
+        active:translate-y-0 active:shadow-md active:scale-95"
           >
             Preview
           </button>
@@ -189,9 +224,9 @@ export default function ArticleForm({
             type="button"
             onClick={() => handleSubmit("PUBLISHED")}
             className="px-5 py-2 rounded-2xl bg-[#4B3D52] text-white
-               transition-all duration-300 ease-out
-               hover:bg-[#5c4a65] hover:shadow-xl hover:-translate-y-1
-               active:translate-y-0 active:shadow-md active:scale-95"
+        transition-all duration-300 ease-out
+        hover:bg-[#5c4a65] hover:shadow-xl hover:-translate-y-1
+        active:translate-y-0 active:shadow-md active:scale-95"
           >
             {loading ? "Menyimpan..." : "Publish"}
           </button>
@@ -216,15 +251,23 @@ export default function ArticleForm({
 
           {/* TEXT EDITOR */}
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <TextEditor
-              content={form.content}
-              onUpdate={({ editor }) =>
-                setForm((prev) => ({
-                  ...prev,
-                  content: editor.getJSON(),
-                }))
-              }
-            />
+            {editorReady && (
+              <TextEditor
+                key={initialData?.id}
+                content={
+                  form.content || {
+                    type: "doc",
+                    content: [{ type: "paragraph" }],
+                  }
+                }
+                onUpdate={({ editor }) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    content: editor.getJSON(),
+                  }))
+                }
+              />
+            )}
           </div>
 
           {/* TAGS */}
@@ -302,7 +345,7 @@ export default function ArticleForm({
                             ...prev,
                             categoryIds: checked
                               ? prev.categoryIds.filter((id) => id !== cat.id)
-                              : [...prev.categoryIds, cat.id],
+                              : [...new Set([...prev.categoryIds, cat.id])],
                           }));
                         }}
                         className="accent-pink-500"
@@ -408,7 +451,7 @@ export default function ArticleForm({
       <ArticlePreviewModal
         open={showPreview}
         onClose={() => setShowPreview(false)}
-        data={form}
+        data={previewData}
       />
     </div>
   );

@@ -1,12 +1,25 @@
 import { prisma } from "@/lib/prisma";
-import {
-  findArticles,
-  findById,
-  findBySlug,
-  softDeleteById,
-} from "../repositories/article.repository";
+import { AppError } from "@/lib/response";
+import logger from "@/lib/logger";
 import { createWithUpload } from "@/lib/upload/transactionalUpload";
-import Uploads from "@/lib/upload/uploads";
+
+import {
+  findAllArticles,
+  findArticleById,
+  findArticleBySlug,
+  createArticle,
+  updateArticle,
+  updateFeaturedImage,
+  softDeleteArticle,
+} from "../repositories/article.repository";
+
+import { validateArticle } from "../validators/article.validator";
+import { attachTags, resetTags } from "./tag.service";
+import { uploadMedia } from "./media.service";
+
+/* =========================
+   SLUG HELPERS
+========================= */
 
 function generateSlug(text) {
   return text
@@ -22,188 +35,244 @@ async function generateUniqueSlug(baseSlug, excludeId = null) {
   let counter = 1;
 
   while (true) {
-    const existing = await findBySlug(slug);
+    const existing = await findArticleBySlug(slug);
     if (!existing || existing.id === excludeId) break;
 
-    slug = `${baseSlug}-${counter}`;
-    counter++;
+    slug = `${baseSlug}-${counter++}`;
   }
 
   return slug;
 }
 
-// ================= GET LIST =================
-export async function getArticles({ status }) {
-  const articles = await findArticles({ status });
+async function attachCategories(tx, articleId, categoryIds = []) {
+  if (!categoryIds || categoryIds.length === 0) return;
 
-  return articles.map((a) => ({
-    id: a.id,
-    title: a.title,
-    thumbnail: a.featuredImage,
-    status: a.status,
-    publishedAt: a.publishedAt,
-    categories: a.categories.map((c) => c.category),
-  }));
+  await tx.articleCategory.createMany({
+    data: categoryIds.map((categoryId) => ({
+      articleId,
+      categoryId,
+    })),
+    skipDuplicates: true,
+  });
 }
 
-// ================= GET DETAIL =================
-export async function getArticleById(id) {
-  return findById(id);
+/* =========================
+   GET LIST
+========================= */
+
+export async function getAllArticles(options = {}) {
+  try {
+    const { search, category, status, sort, page = 1, limit = 10 } = options;
+
+    const skip = (page - 1) * limit;
+
+    let orderBy = { createdAt: "desc" };
+    if (sort === "oldest") orderBy = { createdAt: "asc" };
+    if (sort === "az") orderBy = { title: "asc" };
+    if (sort === "za") orderBy = { title: "desc" };
+
+    const where = {
+      isDeleted: false,
+      
+      ...(status && {
+        status: status,
+      }),
+
+      ...(search && {
+        OR: [
+          { title: { contains: search, mode: "insensitive" } },
+          { authorName: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+
+      ...(category &&
+        category !== "all" && {
+          categories: {
+            some: {
+              category: {
+                title: category,
+              },
+            },
+          },
+        }),
+    };
+
+    const [articles, total] = await Promise.all([
+      findAllArticles(where, orderBy, skip, limit),
+      prisma.article.count({ where }),
+    ]);
+
+    const formatted = articles.map(formatArticleList);
+
+    return {
+      data: formatted,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  } catch (error) {
+    logger.error("Error fetching articles", { error: error.message });
+    throw new AppError("Failed to fetch articles", 500);
+  }
 }
 
-// ================= CREATE =================
+/* =========================
+   GET DETAIL
+========================= */
+
+export async function getArticleDetail(id) {
+  const article = await findArticleById(id);
+
+  if (!article) {
+    throw new AppError("Article not found", 404);
+  }
+
+  return {
+    id: article.id,
+    title: article.title,
+    slug: article.slug,
+    content: JSON.parse(article.content),
+    excerpt: article.excerpt,
+    featuredImage: article.featuredImage,
+    authorName: article.authorName,
+    editorName: article.editorName,
+    status: article.status,
+    publishedAt: article.publishedAt,
+    categories: article.categories.map((c) => c.category),
+    tags: article.tags.map((t) => t.tag),
+  };
+}
+
+/* =========================
+   CREATE
+========================= */
+
 export async function createArticleService(data, file) {
-  const baseSlug = generateSlug(data.slug || data.title);
-  const slug = await generateUniqueSlug(baseSlug);
+  let validated;
 
-  const uploads = new Uploads();
+  try {
+    validated = validateArticle(data);
+  } catch (error) {
+    throw new AppError(
+      error.errors?.[0]?.message || "Invalid article data",
+      400,
+      "VALIDATION_ERROR",
+    );
+  }
+
+  const baseSlug = generateSlug(validated.slug || validated.title);
+  const slug = await generateUniqueSlug(baseSlug);
 
   return createWithUpload(
     {
-      createRecord: async () => {
-        return prisma.$transaction(async (tx) => {
-          const article = await tx.article.create({
-            data: {
-              title: data.title,
-              slug,
-              content: JSON.stringify(data.content),
-              excerpt: data.excerpt || null,
-              authorName: data.authorName,
-              editorName: data.editorName || null,
-              status: data.status,
-              publishedAt: data.publishedAt,
-              featuredImage: null,
-
-              categories: {
-                create: data.categoryIds.map((categoryId) => ({
-                  category: { connect: { id: categoryId } },
-                })),
-              },
-            },
+      createRecord: async () =>
+        prisma.$transaction(async (tx) => {
+          const article = await createArticle(tx, {
+            title: validated.title,
+            slug,
+            content: JSON.stringify(validated.content),
+            excerpt: validated.excerpt,
+            authorName: validated.authorName,
+            editorName: validated.editorName,
+            status: validated.status,
+            publishedAt: validated.publishedAt,
           });
 
-          // TAGS
-          if (data.tagNames?.length) {
-            for (const name of data.tagNames) {
-              const tagSlug = generateSlug(name);
+          // 🔹 attach category
+          await attachCategories(tx, article.id, validated.categoryIds);
 
-              let tag = await tx.tag.findUnique({
-                where: { slug: tagSlug },
-              });
-
-              if (!tag) {
-                tag = await tx.tag.create({
-                  data: { name, slug: tagSlug },
-                });
-              }
-
-              await tx.articleTag.create({
-                data: {
-                  articleId: article.id,
-                  tagId: tag.id,
-                },
-              });
-            }
-          }
+          // 🔹 attach tags
+          await attachTags(tx, article.id, validated.tagNames);
 
           return article;
-        });
-      },
-
-      uploadFile: async (file) => uploads.handleUpload(file),
-
-      updateSource: async (id, url) =>
-        prisma.article.update({
-          where: { id },
-          data: { featuredImage: url },
         }),
 
-      deleteRecord: async (id) =>
-        prisma.article.delete({
-          where: { id },
-        }),
+      uploadFile: uploadMedia,
+
+      updateSource: async (id, url) => updateFeaturedImage(id, url),
+
+      deleteRecord: async (id) => prisma.article.delete({ where: { id } }),
     },
-    file
+    file,
   );
 }
 
-// ================= UPDATE =================
+/* =========================
+   UPDATE
+========================= */
+
 export async function updateArticleService(id, data) {
-  const existing = await findById(id);
-  if (!existing) throw new Error("Artikel tidak ditemukan");
+  const existing = await findArticleById(id);
 
-  let slug = existing.slug;
-
-  if (data.slug !== existing.slug) {
-    const baseSlug = generateSlug(data.slug || data.title);
-    slug = await generateUniqueSlug(baseSlug, id);
+  if (!existing) {
+    throw new AppError("Article not found", 404);
   }
 
   return prisma.$transaction(async (tx) => {
+    // 1️⃣ update article utama
     const article = await tx.article.update({
       where: { id },
       data: {
         title: data.title,
-        slug,
+        slug: data.slug,
         content: JSON.stringify(data.content),
-        excerpt: data.excerpt || null,
+        excerpt: data.excerpt,
         authorName: data.authorName,
-        editorName: data.editorName || null,
+        editorName: data.editorName,
         status: data.status,
         publishedAt: data.publishedAt,
       },
     });
 
-    // RESET CATEGORY
+    // 2️⃣ reset categories
     await tx.articleCategory.deleteMany({
       where: { articleId: id },
     });
 
     if (data.categoryIds?.length) {
+      const uniqueCategories = [...new Set(data.categoryIds)];
+
       await tx.articleCategory.createMany({
-        data: data.categoryIds.map((categoryId) => ({
+        data: uniqueCategories.map((categoryId) => ({
           articleId: id,
           categoryId,
         })),
+        skipDuplicates: true,
       });
     }
 
-    // RESET TAGS
-    await tx.articleTag.deleteMany({
-      where: { articleId: id },
-    });
-
-    if (data.tagNames?.length) {
-      for (const name of data.tagNames) {
-        const tagSlug = generateSlug(name);
-
-        let tag = await tx.tag.findUnique({
-          where: { slug: tagSlug },
-        });
-
-        if (!tag) {
-          tag = await tx.tag.create({
-            data: { name, slug: tagSlug },
-          });
-        }
-
-        await tx.articleTag.create({
-          data: {
-            articleId: id,
-            tagId: tag.id,
-          },
-        });
-      }
-    }
+    // 3️⃣ reset tags
+    await resetTags(tx, id, data.tagNames || []);
 
     return article;
   });
 }
 
-// ================= DELETE =================
-export async function deleteArticleService(id) {
-  const existing = await findById(id);
-  if (!existing) throw new Error("Artikel tidak ditemukan");
+/* =========================
+   DELETE
+========================= */
 
-  return softDeleteById(id);
+export async function deleteArticleService(id) {
+  const existing = await findArticleById(id);
+  if (!existing) throw new AppError("Article not found", 404);
+
+  return softDeleteArticle(id);
+}
+
+/* =========================
+   FORMATTER
+========================= */
+
+function formatArticleList(article) {
+  return {
+    id: article.id,
+    title: article.title,
+    thumbnail: article.featuredImage,
+    status: article.status,
+    publishedAt: article.publishedAt,
+    categories: article.categories.map((c) => c.category),
+  };
 }

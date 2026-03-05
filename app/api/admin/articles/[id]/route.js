@@ -1,64 +1,61 @@
-import { NextResponse } from "next/server";
+import { respondSuccess, respondError } from "@/lib/response";
+import logger from "@/lib/logger";
 import {
-  getArticleById,
+  getArticleDetail,
   updateArticleService,
   deleteArticleService,
-} from "@/modules/admin/articles/services/article.service.js";
+} from "@/modules/admin/articles";
 
-function extractId(request) {
-  const { pathname } = request.nextUrl;
-  return Number(pathname.split("/").pop());
+function extractIdFromUrl(req) {
+  const segments = req.nextUrl.pathname.split("/");
+  const id = segments[segments.length - 1];
+
+  if (!id) {
+    throw new Error("Article ID is missing");
+  }
+
+  const numericId = parseInt(id, 10);
+
+  if (Number.isNaN(numericId)) {
+    throw new Error(`Invalid article ID: ${id}`);
+  }
+
+  return numericId;
 }
 
-// ======================
-// GET
-// ======================
-export async function GET(request) {
+export async function GET(req) {
   try {
-    const id = extractId(request);
+    const id = extractIdFromUrl(req);
 
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid ID" },
-        { status: 400 }
-      );
-    }
+    const article = await getArticleDetail(id);
 
-    const article = await getArticleById(id);
-
-    if (!article) {
-      return NextResponse.json(
-        { success: false, error: "Artikel tidak ditemukan" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: article });
+    return respondSuccess(article, 200);
   } catch (error) {
-    console.error("GET ERROR:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    logger.error("Error fetching article detail", {
+      error: error.message,
+    });
+
+    return respondError({
+      message: error.message,
+      status: 400,
+    });
   }
 }
 
-// ======================
-// PUT
-// ======================
-export async function PUT(request) {
+export async function PUT(req) {
   try {
-    const id = extractId(request);
-    const formData = await request.formData();
+    const id = extractIdFromUrl(req);
 
-    const payload = {
+    const formData = await req.formData();
+
+    const data = {
       title: formData.get("title"),
       slug: formData.get("slug"),
-      content: JSON.parse(formData.get("content")),
+      content: JSON.parse(formData.get("content") || "{}"),
       excerpt: formData.get("excerpt"),
-      categoryIds: JSON.parse(formData.get("categoryIds")),
+      categoryIds: JSON.parse(formData.get("categoryIds") || "[]"),
       authorName: formData.get("authorName"),
-      editorName: formData.get("editorName") || null,
+      editorName: formData.get("editorName"),
       status: formData.get("status"),
       publishedAt: formData.get("publishedAt")
         ? new Date(formData.get("publishedAt"))
@@ -66,40 +63,36 @@ export async function PUT(request) {
       tagNames: JSON.parse(formData.get("tagNames") || "[]"),
     };
 
-    const updated = await updateArticleService(id, payload);
+    const updated = await updateArticleService(id, data);
 
-    return NextResponse.json({ success: true, data: updated });
+    return respondSuccess(updated, 200);
   } catch (error) {
-    console.error("UPDATE ERROR:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 400 }
-    );
+    logger.error("Error updating article", {
+      error: error.message,
+    });
+
+    return respondError({
+      message: error.message,
+      status: error.statusCode || 500,
+    });
   }
 }
 
-// ======================
-// DELETE
-// ======================
-export async function DELETE(request) {
+export async function DELETE(req) {
   try {
-    const id = extractId(request);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid ID" },
-        { status: 400 }
-      );
-    }
+    const id = extractIdFromUrl(req);
 
     await deleteArticleService(id);
 
-    return NextResponse.json({ success: true });
+    return respondSuccess({ message: "Article deleted successfully" }, 200);
   } catch (error) {
-    console.error("DELETE ERROR:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 400 }
-    );
+    logger.error("Error deleting article", {
+      error: error.message,
+    });
+
+    return respondError({
+      message: error.message,
+      status: error.statusCode || 500,
+    });
   }
 }

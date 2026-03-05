@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-export const articleStatusEnum = z.enum(["DRAFT", "PUBLISHED", "SCHEDULED"]);
+export const articleStatusEnum = z.enum([
+  "DRAFT",
+  "PUBLISHED",
+  "SCHEDULED",
+]);
 
 export const createArticleSchema = z.object({
   title: z.string().min(3).max(255),
