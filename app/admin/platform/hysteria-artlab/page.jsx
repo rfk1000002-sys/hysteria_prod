@@ -163,6 +163,7 @@ export default function HysteriaArtlabPage() {
                 showDescription={true}
                 showGuests={true}
                 showHost={true}
+                showMeta={true}
                 close={() => setOpenAntalk(false)}
               />
             </div>
@@ -187,9 +188,11 @@ export default function HysteriaArtlabPage() {
                 showTags={true}
                 showInstagram={true}
                 showYoutube={true}
+                showPrevDescription={true}
                 showDescription={true}
                 showHost={true}
                 showGuests={true}
+                showMeta={true}
                 close={() => setOpenArtistRadar(false)}
               />
             </div>

@@ -108,6 +108,18 @@ const optionalGuestsArray = z.preprocess(
   z.array(z.string().max(255)).max(50, "Maksimal 50 guests").optional(),
 );
 
+/** Helper: flexible meta field — menerima JSON string atau nilai bebas. */
+const optionalMeta = z.preprocess(
+  (val) => {
+    if (val === undefined || val === null || val === "" || val === "null") return undefined;
+    if (typeof val === 'string') {
+      try { return JSON.parse(val); } catch { return val; }
+    }
+    return val;
+  },
+  z.any().optional(),
+);
+
 // ─── CONTENT SCHEMAS ─────────────────────────────────────────────────────────
 
 /** Schema validasi saat membuat konten baru (POST). */
@@ -118,10 +130,12 @@ export const createContentSchema = z.object({
   ),
   categoryItemId: optionalInt(1),
   title: z.string().min(1, "Judul wajib diisi").max(500, "Judul terlalu panjang"),
+  prevdescription: optionalText(140, "Prev description terlalu panjang"),
   description: optionalText(5000, "Deskripsi terlalu panjang"),
   url: optionalUrl(500),
   instagram: optionalInstagramUrl(500),
   youtube: optionalYoutubeUrl(500),
+  meta: optionalMeta,
   host: optionalText(255, "Host terlalu panjang"),
   guests: optionalGuestsArray,
   year: optionalYear,
@@ -143,9 +157,11 @@ export const updateContentSchema = z
     ),
     title: optionalText(500, "Judul terlalu panjang"),
     description: optionalText(5000, "Deskripsi terlalu panjang"),
+    prevdescription: optionalText(140, "Prev description terlalu panjang"),
     url: optionalUrl(500),
     instagram: optionalInstagramUrl(500),
     youtube: optionalYoutubeUrl(500),
+    meta: optionalMeta,
     year: optionalYear,
     tags: optionalTagsArray,
     order: optionalInt(0),

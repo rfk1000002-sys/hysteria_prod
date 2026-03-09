@@ -55,7 +55,7 @@ export default function DitampartPage() {
   const openModalForCategory = async (cat) => {
     // cat id 2 → PlatformIndex modal (Mock up dan Poster)
     if (cat.id === 2) {
-      setPlatformModal({ open: true, title: 'Mock up dan Poster', subtitle: 'Kelola konten Mock up dan Poster', categoryItemSlug: 'mockup-dan-poster', showImageUpload: true, showDescription: true });
+      setPlatformModal({ open: true, title: 'Mock up dan Poster', subtitle: 'Kelola konten Mock up dan Poster', categoryItemSlug: 'mockup-dan-poster', showImageUpload: true, showDescription: true, showMeta: true });
       return;
     }
 
@@ -231,6 +231,7 @@ export default function DitampartPage() {
                   showURL={true}
                   showDescription={platformModal.showDescription}
                   showImageUpload={platformModal.showImageUpload}
+                  showMeta={platformModal.showMeta}
                 />
               </div>
             </div>
