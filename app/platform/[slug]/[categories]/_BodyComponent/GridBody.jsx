@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import PosterCard from "./cards/PosterCard";
 import MockUpPosterCard from "./cards/MockUpPosterCard";
 import Tooltip from '@mui/material/Tooltip';
+import SortMenu from "@/components/ui/SortMenu";
 import Pagination from "@/components/ui/Pagination";
 
 /**
@@ -348,10 +349,7 @@ export default function GridBody({ items = [], filters = [] }) {
     setPage(1);
   };
 
-  const handleSortChange = (e) => {
-    setSortMode(e.target.value);
-    setPage(1);
-  };
+  
 
   const allFilters = ["Semua", ...resolvedFilters];
  
@@ -379,43 +377,38 @@ export default function GridBody({ items = [], filters = [] }) {
           </span>
         </div>
 
-        {/* Action icons filter tag*/}
-        <Tooltip title="Filter Tag" arrow>
-          <button
-            className="flex-none w-10 h-10 border border-zinc-300 rounded-full bg-white shadow-md flex items-center justify-center text-pink-500 hover:bg-pink-50 transition cursor-pointer"
-            aria-label="Toggle filter tags"
-            aria-expanded={showFilters}
-            aria-controls="filter-tags"
-            onClick={toggleFilters}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-          </button>
-        </Tooltip>
-        {/* sort select */}
-        <Tooltip title="Sort By" arrow>
-          <div className="flex-none">
-            <select
-              value={sortMode}
-              onChange={handleSortChange}
-              aria-label="Urutkan item"
-              className="h-10 border border-zinc-300 rounded-full bg-white px-3 text-sm text-pink-500 shadow-md hover:bg-pink-50 transition cursor-pointer"
+        {/* Action icons filter tag (hidden for mockup layout) */}
+        {!isMockupLayout && (
+          <Tooltip title="Filter Tag" arrow>
+            <button
+              className="flex-none w-10 h-10 border border-zinc-300 rounded-full bg-white shadow-md flex items-center justify-center text-pink-500 hover:bg-pink-50 transition cursor-pointer"
+              aria-label="Toggle filter tags"
+              aria-expanded={showFilters}
+              aria-controls="filter-tags"
+              onClick={toggleFilters}
             >
-              <option value="terbaru">Terbaru</option>
-              <option value="terlama">Terlama</option>
-              <option value="a-z">A → Z</option>
-              <option value="z-a">Z → A</option>
-            </select>
-          </div>
-        </Tooltip>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+            </button>
+          </Tooltip>
+        )}
+        {/* shared sort menu component (icon-only control) */}
+        <SortMenu
+          value={sortMode}
+          onChange={(m) => {
+            setSortMode(m);
+            setPage(1);
+          }}
+          className="flex-none"
+        />
       </div>
 
-      {/* Filter */}
-      {resolvedFilters.length > 0 && (
+      {/* Filter (hidden for mockup layout) */}
+      {resolvedFilters.length > 0 && !isMockupLayout && (
         <div id="filter-tags" className={`${showFilters ? "block" : "hidden"} flex flex-wrap gap-2 justify-center mb-8`}>
           {allFilters.map((f) => (
             <button
@@ -444,7 +437,7 @@ export default function GridBody({ items = [], filters = [] }) {
                 alt={item.alt}
                 year={item.year}
                 title={item.title}
-                description={item.description}
+                prevdescription={item.prevdescription}
                 href={item.href || item.url}
                 buttonLabel={item.buttonLabel}
               />

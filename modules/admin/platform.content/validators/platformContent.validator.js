@@ -12,6 +12,17 @@ const optionalText = (max, message) =>
     z.string().max(max, message).optional(),
   );
 
+/**
+ * Helper untuk UPDATE: string nullable dengan batas panjang.
+ * Kosong / null → null  (artinya "hapus nilai ini di DB").
+ * undefined           → undefined (artinya "jangan ubah field ini").
+ */
+const clearableText = (max, message) =>
+  z.preprocess(
+    (val) => (val === "" || val === "null" ? null : val === undefined ? undefined : val),
+    z.string().max(max, message).nullable().optional(),
+  );
+
 /** Pola domain yang diizinkan untuk field URL konten. */
 const ALLOWED_URL_PATTERN =
   /^https?:\/\/(www\.)?(instagram\.com|instagr\.am|youtube\.com|youtu\.be|drive\.google\.com)/i;
@@ -156,8 +167,8 @@ export const updateContentSchema = z
       z.number().int().positive().nullable().optional(),
     ),
     title: optionalText(500, "Judul terlalu panjang"),
-    description: optionalText(5000, "Deskripsi terlalu panjang"),
-    prevdescription: optionalText(140, "Prev description terlalu panjang"),
+    description: clearableText(5000, "Deskripsi terlalu panjang"),
+    prevdescription: clearableText(140, "Prev description terlalu panjang"),
     url: optionalUrl(500),
     instagram: optionalInstagramUrl(500),
     youtube: optionalYoutubeUrl(500),
@@ -166,7 +177,7 @@ export const updateContentSchema = z
     tags: optionalTagsArray,
     order: optionalInt(0),
     isActive: optionalBool,
-    host: optionalText(255, "Host terlalu panjang"),
+    host: clearableText(255, "Host terlalu panjang"),
     guests: optionalGuestsArray,
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {

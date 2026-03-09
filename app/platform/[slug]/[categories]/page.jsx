@@ -56,7 +56,7 @@ export default async function Page({ params }) {
 
   return (
     <div className="bg-white">
-      <main className="font-sans w-full max-w-[1920px] mx-auto bg-white min-h-screen">
+      <main className="font-sans w-full max-w-[1920px] mx-auto bg-zinc-100 min-h-screen">
         {/* Shared hero section — same component, different metadata */}
         <HeroSection
           imageUrl={item.image || "/image/ilustrasi-menu.png"}

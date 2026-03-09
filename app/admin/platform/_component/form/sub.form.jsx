@@ -86,6 +86,16 @@ export default function SubForm({
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [files, setFiles] = useState([]);
 
+  // Character limits (sync with frontend validator)
+  const MAX_TITLE = 500;
+  const MAX_PREVDESC = 140;
+  const MAX_DESCRIPTION = 5000;
+  const MAX_HOST = 255;
+  const titleLen = String(title ?? "").length;
+  const prevdescLen = String(prevdescription ?? "").length;
+  const descriptionLen = String(description ?? "").length;
+  const hostLen = String(host ?? "").length;
+
   if (!open) return null;
 
   function handleAddTag() {
@@ -178,9 +188,14 @@ export default function SubForm({
             placeholder="Title"
             required
           />
-          {errors.title ? (
-            <p className="text-sm text-red-600 mt-1">{errors.title}</p>
-          ) : null}
+          <div className="flex justify-between mt-1 items-center">
+            {errors.title ? (
+              <p className="text-sm text-red-600">{errors.title}</p>
+            ) : (
+              <div />
+            )}
+            <p className={`text-sm ${titleLen > MAX_TITLE ? 'text-red-600' : 'text-gray-500'}`}>{titleLen}/{MAX_TITLE}</p>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -260,11 +275,14 @@ export default function SubForm({
               className="w-full text-black border border-gray-300 rounded-md px-3 py-2 resize-y min-h-[100px]"
               placeholder="Preview deskripsi konten..."
             />
-            {errors.prevdescription ? (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.prevdescription}
-              </p>
-            ) : null}
+            <div className="flex justify-between mt-1 items-center">
+              {errors.prevdescription ? (
+                <p className="text-sm text-red-600">{errors.prevdescription}</p>
+              ) : (
+                <div />
+              )}
+              <p className={`text-sm ${prevdescLen > MAX_PREVDESC ? 'text-red-600' : 'text-gray-500'}`}>{prevdescLen}/{MAX_PREVDESC}</p>
+            </div>
           </div>
         )}
 
@@ -279,9 +297,14 @@ export default function SubForm({
               className="w-full text-black border border-gray-300 rounded-md px-3 py-2 resize-y min-h-[100px]"
               placeholder="Deskripsi konten..."
             />
-            {errors.description ? (
-              <p className="text-sm text-red-600 mt-1">{errors.description}</p>
-            ) : null}
+            <div className="flex justify-between mt-1 items-center">
+              {errors.description ? (
+                <p className="text-sm text-red-600">{errors.description}</p>
+              ) : (
+                <div />
+              )}
+              <p className={`text-sm ${descriptionLen > MAX_DESCRIPTION ? 'text-red-600' : 'text-gray-500'}`}>{descriptionLen}/{MAX_DESCRIPTION}</p>
+            </div>
           </div>
         )}
 
@@ -383,6 +406,14 @@ export default function SubForm({
               className="w-full text-black border border-gray-300 rounded-md px-3 py-2"
               placeholder="Nama host"
             />
+            <div className="flex justify-between mt-1 items-center">
+              {errors.host ? (
+                <p className="text-sm text-red-600">{errors.host}</p>
+              ) : (
+                <div />
+              )}
+              <p className={`text-sm ${hostLen > MAX_HOST ? 'text-red-600' : 'text-gray-500'}`}>{hostLen}/{MAX_HOST}</p>
+            </div>
           </div>
         )}
 

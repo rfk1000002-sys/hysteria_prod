@@ -47,6 +47,7 @@ function mapToGridItem(content) {
     imageUrl: img?.imageUrl ?? null,
     alt: img?.alt || content.title,
     title: content.title,
+    prevdescription: content.prevdescription ?? null,
     description: content.description ?? null,
     tags: content.tags || [],
     year: content.year ? String(content.year) : null,
