@@ -31,6 +31,8 @@ export default async function EventDetailPage({ params }) {
           categoryItem: {
             select: {
               title: true,
+              slug: true,
+              categoryId: true,
             },
           },
         },
@@ -115,17 +117,45 @@ export default async function EventDetailPage({ params }) {
 
   const formattedTime = event.isFlexibleTime
     ? "Menyesuaikan"
-    : `${startDate.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}${
-        endDate
-          ? ` – ${endDate.toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })} WIB`
-          : ""
-      }`;
+    : endDate
+      ? `${startDate.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })} – ${endDate.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })} WIB`
+      : `${startDate.toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })} WIB`;
+  
+  const isEmbedMap =
+  event.mapsEmbedSrc &&
+  event.mapsEmbedSrc.includes("google.com/maps/embed");
+
+  // DETEKSI APAKAH EVENT PROGRAM (HYSTERIA)
+  const isProgramEvent = event.eventCategories.some(
+    (cat) => cat.categoryItem.categoryId === 1 // PROGRAM
+  );
+
+  const organizers = [
+    ...new Map(
+      event.organizers.map((org) => {
+        const isProgram = org.categoryItem.categoryId === 1;
+
+        const key = isProgram ? "Hysteria" : org.categoryItem.slug;
+
+        return [
+          key,
+          {
+            title: isProgram ? "Hysteria" : org.categoryItem.title,
+            slug: isProgram ? "hysteria" : org.categoryItem.slug,
+          },
+        ];
+      })
+    ).values(),
+  ];
 
   return (
     <div className="w-full">
@@ -188,13 +218,14 @@ export default async function EventDetailPage({ params }) {
             <p className="text-sm text-gray-600">
               Diselenggarakan oleh:
               <span className="ml-2 inline-flex flex-wrap gap-2">
-                {event.organizers?.map((org) => (
-                  <span
-                    key={org.categoryItemId ?? org.id}
-                    className="inline-block px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs"
+                {organizers.map((org) => (
+                  <Link
+                    key={org.slug}
+                    href={`/platform/${org.slug}`}
+                    className="inline-block px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs hover:bg-pink-200 transition"
                   >
-                    {org.categoryItem.title}
-                  </span>
+                    {org.title}
+                  </Link>
                 ))}
               </span>
             </p>
@@ -279,15 +310,28 @@ export default async function EventDetailPage({ params }) {
               </p>
 
               {event.mapsEmbedSrc && (
-                <div className="w-full h-[280px] rounded-xl overflow-hidden border">
-                  <iframe
-                    src={event.mapsEmbedSrc}
-                    className="w-full h-full"
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
+                <>
+                  {isEmbedMap ? (
+                    <div className="w-full h-[280px] rounded-xl overflow-hidden border">
+                      <iframe
+                        src={event.mapsEmbedSrc}
+                        className="w-full h-full"
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      href={event.mapsEmbedSrc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-2 px-5 py-3 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition"
+                    >
+                      Buka Lokasi di Google Maps
+                    </a>
+                  )}
+                </>
               )}
               
               {/* BUTTONS */}
@@ -433,7 +477,7 @@ export default async function EventDetailPage({ params }) {
                     {/* STATUS */}
                     <span className="inline-block w-fit mb-2 px-3 py-1 rounded-full
                                     bg-pink-600 text-white text-xs">
-                      {eventStatus}
+                      {EVENT_STATUS_LABEL[eventStatus]}
                     </span>
 
                     <h3 className="text-white font-semibold text-sm mb-2">
@@ -523,7 +567,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: event.title,
-    description: event.excerpt || "Informasi event terbaru dari Hysteria",
+    description: event.description?.replace(/<[^>]+>/g, "").slice(0, 160) || "Informasi event terbaru dari Hysteria",
     openGraph: {
       title: event.title,
       description: event.excerpt || event.title,
