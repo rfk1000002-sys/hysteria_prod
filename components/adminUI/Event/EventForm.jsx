@@ -27,11 +27,13 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   const [loading, setLoading] = useState(false);
   const [organizerOpen, setOrganizerOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [programCategoryId, setProgramCategoryId] = useState(null);
-  const [errors, setErrors] = useState({});
+  
+  const [categoryItems, setCategoryItems] = useState([]);
 
   const organizerRef = useRef(null);
   const categoryRef = useRef(null);
+
+  const PROGRAM_ORGANIZER_ID = "PROGRAM-HYSTERIA";
 
   const [form, setForm] = useState({
     title: "",
@@ -52,53 +54,94 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     youtubeLink: "", 
     instagramLink: "",
     drivebukuLink: "",
+    instagramLiveLink: "",
+    tiktokLiveLink: "",
+    youtubeLiveLink: "",
     tags: [],
     isFlexibleTime : false,
   });
 
-  const PROGRAM_CATEGORY_SLUG = "program-hysteria";
-  const PROGRAM_ORGANIZER_ID = "PROGRAM-HYSTERIA";
-
-  // FETCH CATEGORIES
+  /* FETCH ORGANIZER DATA */
   useEffect(() => {
     const fetchData = async () => {
-      const [platformRes, programRes] = await Promise.all([
-        fetch("/api/categories/platform"),
-        fetch("/api/categories/program-hysteria"),
-      ]);
+      try {
+        const [platformRes, programRes] = await Promise.all([
+          fetch("/api/categories/platform"),
+          fetch("/api/categories/program-hysteria"),
+        ]);
 
-      const platformJson = await platformRes.json();
-      const programJson  = await programRes.json();
+        const platformJson = await platformRes.json();
+        const programJson = await programRes.json();
 
-      const platformItems = platformJson?.data?.items || [];
-      const programItems  = programJson?.data?.items || [];
+        const platformItems = platformJson?.data?.items || [];
+        const programItems = programJson?.data?.items || [];
 
-      setProgramCategoryId(programJson?.data?.category?.id);
+        setPlatformTree(platformItems);
+        setProgramTree(programItems);
 
-      setPlatformTree(platformItems);
-      setProgramTree(programItems);
-
-      const sortAZ = (a, b) =>
-        a.title.localeCompare(b.title, "id-ID", { sensitivity: "base" });
-
-      const organizers = [
-        ...platformItems.map(item => ({
-          id: Number(item.id),
-          title: item.title,
-        })),
-        {
-          id: PROGRAM_ORGANIZER_ID,
-          title: "Hysteria", 
-        }
-      ].sort(sortAZ);
-
-      setOrganizerItems(organizers);
+        const organizers = [
+          ...platformItems.map(item => ({
+            id: Number(item.id),
+            title: item.title
+          })),
+          {
+            id: PROGRAM_ORGANIZER_ID,
+            title: "Hysteria"
+          }
+        ].sort((a, b) =>
+          a.title.localeCompare(b.title, "id-ID", { sensitivity: "base" })
+        );
+        setOrganizerItems(organizers);
+      } catch (err) {
+        console.error("fetch organizer error", err);
+      }
     };
-
     fetchData();
   }, []);
 
-  // PREFILL EDIT
+  /* FETCH CATEGORY DATA */
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!form.organizerIds.length) {
+        setCategoryItems([]);
+        return;
+      }
+
+      const organizerItemIds = form.organizerIds.map(id => {
+        if (id === PROGRAM_ORGANIZER_ID) {
+          const parent = programTree.find(item => !item.parentId);
+          return parent?.id;
+        }
+        return id;
+      }).filter(Boolean);
+
+      try {
+        const res = await fetch(
+          `/api/admin/events/categories?organizerIds=${organizerItemIds.join(",")}`
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        setCategoryItems(data);
+      } catch (err) {
+        console.error("fetch categories error", err);
+      }
+    };
+    fetchCategories();
+  }, [form.organizerIds, programTree]);
+
+  /* CLEAN CATEGORY WHEN ORGANIZER CHANGE */
+  useEffect(() => {
+      setForm(prev => ({
+        ...prev,
+        categoryItemIds: prev.categoryItemIds.filter(id =>
+          categoryItems.some(c => c.id === id)
+        )
+      }));
+    }, [categoryItems]);
+
+  /* PREFILL EDIT */
   useEffect(() => {
     if (!initialData) return;
     if (!platformTree.length && !programTree.length) return;
@@ -113,7 +156,6 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       organizerIds: [
         ...new Set(
           initialData.organizers?.map(o => {
-
             const isProgram = programTree.some(
               item => Number(item.id) === Number(o.categoryItemId)
             );
@@ -121,7 +163,6 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
             return isProgram
               ? PROGRAM_ORGANIZER_ID
               : Number(o.categoryItemId);
-
           }) || []
         )
       ],
@@ -146,6 +187,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       youtubeLink: initialData.youtubeLink || "",
       instagramLink: initialData.instagramLink || "",
       drivebukuLink: initialData.drivebukuLink || "",
+      instagramLiveLink: initialData.instagramLiveLink || "",
+      tiktokLiveLink: initialData.tiktokLiveLink || "",
+      youtubeLiveLink: initialData.youtubeLiveLink || "",
       tags:
         initialData.tags?.map(t =>
           t.tag?.name
@@ -153,68 +197,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       mapsEmbed: initialData.mapsEmbedSrc
         ? `<iframe src="${initialData.mapsEmbedSrc}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`
         : "",
-
       isFlexibleTime: isFlexible,
     }));
-  }, [initialData, platformTree, programTree, programCategoryId]);
-
-  const filteredCategoryItems = useMemo(() => {
-    const subs = [];
-
-    for (const organizerId of form.organizerIds) {
-
-      // PLATFORM
-      const platform = platformTree.find(
-        p => Number(p.id) === Number(organizerId)
-      );
-
-      if (platform) {
-        for (const child of platform.children || []) {
-          subs.push({
-            id: child.id,
-            title: child.title,
-            source: platform.title
-          });
-        }
-      }
-
-      // PROGRAM-HYSTERIA
-      if (organizerId === PROGRAM_ORGANIZER_ID) {
-        for (const item of programTree) {
-          // kalau punya children pakai children
-          if (item.children?.length) {
-            for (const child of item.children) {
-              subs.push({
-                id: child.id,
-                title: child.title,
-                source: "Hysteria"
-              });
-            }
-          } else {
-            // kalau tidak punya children → root itu sendiri jadi sub kategori
-            subs.push({
-              id: item.id,
-              title: item.title,
-              source: "Hysteria"
-            });
-          }
-        }
-      }
-    }
-
-    return subs;
-
-  }, [form.organizerIds, platformTree, programTree]);
-
-  // CLEAN CATEGORY WHEN ORGANIZER CHANGES
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      categoryItemIds: prev.categoryItemIds.filter(id =>
-        filteredCategoryItems.some(c => Number(c.id) === Number(id))
-      ),
-    }));
-  }, [filteredCategoryItems]);
+  }, [initialData, platformTree, programTree]);
 
   const toggleOrganizer = (id) => {
     setForm(prev => ({
@@ -241,18 +226,6 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const organizerItemIds = form.organizerIds.flatMap(id => {
-    // kalau Hysteria
-    if (id === PROGRAM_ORGANIZER_ID) {
-      // ambil root pertama sebagai representasi organizer
-      return programTree.length
-        ? [Number(programTree[0].id)]
-        : [];
-    }
-
-    return [Number(id)];
-  });
-
   useEffect(() => {
     if (form.isFlexibleTime) {
       setForm(prev => ({
@@ -266,31 +239,22 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   const getOrganizerTitle = (id) => {
     if (id === PROGRAM_ORGANIZER_ID) return "Hysteria";
 
-    if (!organizerItems.length) return "";
-
     return organizerItems.find(item => item.id === id)?.title || "";
   };
 
   const getCategoryTitle = (id) => {
+    const found = categoryItems.find(c => c.id === id);
 
-    const fromFiltered = filteredCategoryItems.find(
-      (item) => Number(item.id) === Number(id)
-    );
-
-    if (fromFiltered) return fromFiltered.title;
+    if (found) return found.title;
 
     const fromInitial = initialData?.eventCategories?.find(
-      (ec) => Number(ec.categoryItemId) === Number(id)
+      ec => Number(ec.categoryItemId) === Number(id)
     );
 
-    if (fromInitial) {
-      return fromInitial.categoryItem?.title || "";
-    }
-
-    return "";
+    return fromInitial?.categoryItem?.title || "";
   };
 
-  // CLOSE DROPDOWN ON OUTSIDE CLICK
+  /* CLOSE DROPDOWN ON OUTSIDE CLICK */
   useEffect(() => {
     const handler = (e) => {
       if (organizerRef.current && !organizerRef.current.contains(e.target))
@@ -302,21 +266,19 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  /* GOOGLE MAP EMBED */
   const convertGoogleMapsToEmbed = (input) => {
     if (!input) return null;
 
-    // jika admin paste iframe
     if (input.includes("<iframe")) {
       const match = input.match(/src="([^"]+)"/);
       return match ? match[1] : null;
     }
 
-    // shortlink maps.app.goo.gl
     if (input.includes("maps.app.goo.gl")) {
       return input;
     }
 
-    // link google maps biasa
     if (input.includes("google.com/maps")) {
       if (input.includes("/embed")) return input;
 
@@ -326,7 +288,6 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
       return `${input}?output=embed`;
     }
-
     return null;
   };
 
@@ -339,28 +300,10 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     ? convertGoogleMapsToEmbed(form.mapsEmbed)
     : null;
 
+  /* SUBMIT */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    // Validasi
-    const missingFields = [];
-
-    if (!form.title) missingFields.push("Judul Event");
-    if (!Array.isArray(form.categoryItemIds) || form.categoryItemIds.length === 0)
-      missingFields.push("Kategori");
-    if (!form.startDate)
-      missingFields.push("Tanggal Mulai");
-    if (!form.isFlexibleTime && !form.startTime)
-      missingFields.push("Waktu Mulai");
-    if (!form.poster) missingFields.push("Poster Event");
-    if (!form.location) missingFields.push("Lokasi");
-
-    if (missingFields.length > 0) {
-      alert("Field berikut belum diisi:\n- " + missingFields.join("\n- "));
-      setLoading(false);
-      return;
-    }
 
     const organizerItemIds = form.organizerIds.flatMap(id => {
 
@@ -370,7 +313,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         return parent ? [Number(parent.id)] : [];
       }
       return [Number(id)];
-    });
+    }).filter(Boolean);
 
     const payload = {
       title           : form.title,
@@ -397,7 +340,10 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       youtubeLink     : form.youtubeLink,
       instagramLink   : form.instagramLink,
       drivebukuLink   : form.drivebukuLink,
-      isFlexibleTime: form.isFlexibleTime,
+      instagramLiveLink   : form.drivebukuLink,
+      tiktokLiveLink  : form.drivebukuLink,
+      youtubeLink     : form.drivebukuLink,
+      isFlexibleTime  : form.isFlexibleTime,
       tagNames: Array.isArray(form.tags)
         ? form.tags.filter(Boolean)
         : [],
@@ -415,9 +361,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     if (!res.ok) {
       const err = await res.json();
       alert(err.message);
+      setLoading(false);
       return;
     }
-
     router.push("/admin/events");
   };
 
@@ -508,6 +454,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
           <Card title="Arsip Kegiatan">
             <div className="space-y-3">
+
               <p className="text-xs text-gray-500 mt-2">Link Drive Dokumentasi</p>
               <input
                 type="url"
@@ -548,9 +495,40 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
+              <p className="text-xs text-gray-500 mt-2">Link Instagram Live</p>
+              <input
+                type="url"
+                name="instagramLiveLink"
+                value={form.instagramLiveLink}
+                onChange={handleChange}
+                placeholder="https://www.instagram.com/..."
+                className={inputClass}
+              />
+
+              <p className="text-xs text-gray-500 mt-2">Link TikTok Live</p>
+              <input
+                type="url"
+                name="tiktokLiveLink"
+                value={form.tiktokLiveLink}
+                onChange={handleChange}
+                placeholder="https://www.tiktok.com/..."
+                className={inputClass}
+              />
+
+              <p className="text-xs text-gray-500 mt-2">Link YouTube Live</p>
+              <input
+                type="url"
+                name="youtubeLiveLink"
+                value={form.youtubeLiveLink}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/live/..."
+                className={inputClass}
+              />
+
               <p className="text-xs text-pink-600">
                 Lakukan pengisian link sesuai dengan kebutuhan
               </p>
+
             </div>
           </Card>
         </div>
@@ -664,7 +642,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               {/* DROPDOWN */}
               {categoryOpen && (
                 <div className="absolute z-20 mt-2 w-full max-h-64 overflow-auto rounded-lg border bg-white shadow">
-                  {filteredCategoryItems.map((item) => (
+                  {categoryItems.map((item) => (
                     <label
                       key={item.id}
                       className="flex items-start gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer"
@@ -677,12 +655,12 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                       />
                       <div>
                         <p className="text-sm text-black">{item.title}</p>
-                        <p className="text-xs text-gray-500">{item.source}</p>
+                        <p className="text-xs text-gray-500">{item.category?.title}</p>
                       </div>
                     </label>
                   ))}
 
-                  {filteredCategoryItems.length === 0 && (
+                  {categoryItems.length === 0 && (
                     <p className="px-3 py-2 text-sm text-gray-500">
                       Tidak ada kategori
                     </p>
