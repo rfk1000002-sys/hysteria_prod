@@ -5,29 +5,29 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import SearchButton from "../ui/SearchButton";
+import { withWebsiteInfoDefaults } from "../../lib/defaults/website-info";
 
 // Recursive component untuk render category items dalam mega menu
 function MegaMenuItems({ items, onClose, depth = 0 }) {
   if (!items || items.length === 0) return null;
-  
+
   return (
-    <ul className={`${depth === 0 ? 'grid grid-cols-2 gap-x-8 gap-y-2' : 'space-y-1 ml-4'}`}>
-      {items.map(item => (
+    <ul className={`${depth === 0 ? "grid grid-cols-2 gap-x-8 gap-y-2" : "space-y-1 ml-4"}`}>
+      {items.map((item) => (
         <li key={item.id}>
           <div>
-            <Link 
-              href={item.url || '#'} 
-              onClick={onClose} 
-              className={`block ${depth === 0 ? 'font-semibold text-gray-900' : 'text-gray-700'} hover:text-pink-600 transition-colors py-1`}
-            >
+            <Link
+              href={item.url || "#"}
+              onClick={onClose}
+              className={`block ${depth === 0 ? "font-semibold text-gray-900" : "text-gray-700"} hover:text-pink-600 transition-colors py-1`}>
               {item.title}
             </Link>
             {item.children && item.children.length > 0 && (
               <div className="mt-1">
-                <MegaMenuItems 
-                  items={item.children} 
-                  onClose={onClose} 
-                  depth={depth + 1} 
+                <MegaMenuItems
+                  items={item.children}
+                  onClose={onClose}
+                  depth={depth + 1}
                 />
               </div>
             )}
@@ -38,8 +38,9 @@ function MegaMenuItems({ items, onClose, depth = 0 }) {
   );
 }
 
-export default function Header({ onMenuToggle }) {
+export default function Header({ onMenuToggle, websiteInfo }) {
   const pathname = usePathname() || "";
+  const resolvedWebsiteInfo = withWebsiteInfoDefaults(websiteInfo || {});
   const [isAtTop, setIsAtTop] = useState(true);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [categoryCache, setCategoryCache] = useState({});
@@ -77,25 +78,25 @@ export default function Header({ onMenuToggle }) {
   return (
     <header
       style={{
-        backgroundColor: showBg ? '#e83c92c8' : 'transparent',
-        borderBottom: showBg ? '1px solid rgba(250, 1, 225, 0.1)' : '1px solid transparent'
+        backgroundColor: showBg ? "#e83c92c8" : "transparent",
+        borderBottom: showBg ? "1px solid rgba(250, 1, 225, 0.1)" : "1px solid transparent",
       }}
-      className={`${headerPositionClass} transition-all duration-200`}
-    >
+      className={`${headerPositionClass} transition-all duration-200`}>
       <div className="mx-auto w-full max-w-[1920px] px-4 md:px-6 h-[72px] md:h-[70px] flex items-center justify-between">
         {/* Left: Logo */}
         <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3">
             <Image
-              src="/svg/Logo-hysteria.svg"
-              alt="Hysteria"
+              src={resolvedWebsiteInfo.logoWebsite}
+              alt={resolvedWebsiteInfo.judul}
               width={63}
               height={12}
               priority
             />
           </Link>
         </div>
-        
 
         {/* Center placeholder (desktop only) — keeps layout spacing for large screens */}
         <div className="hidden lg:block flex-1" />
@@ -116,9 +117,12 @@ export default function Header({ onMenuToggle }) {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
-              >
-                <circle cx="11" cy="11" r="6" />
+                strokeWidth={2}>
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="6"
+                />
                 <path d="M21 21l-4.35-4.35" />
               </svg>
             )}
@@ -128,17 +132,19 @@ export default function Header({ onMenuToggle }) {
           <button
             onClick={onMenuToggle}
             aria-label="Toggle menu"
-            className="p-2 rounded-md text-zinc-700 dark:text-zinc-50 cursor-pointer flex items-center hover:md:text-pink-500 transition-colors"
-          >
+            className="p-2 rounded-md text-zinc-700 dark:text-zinc-50 cursor-pointer flex items-center hover:md:text-pink-500 transition-colors">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              strokeWidth={2}>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
         </div>
@@ -146,18 +152,15 @@ export default function Header({ onMenuToggle }) {
 
       {/* Mega Menu Dropdown - positioned absolutely */}
       {activeDropdown && (
-        <div 
+        <div
           className="absolute left-0 right-0 top-full bg-white shadow-lg border-t border-gray-200 z-40"
           onMouseEnter={() => setActiveDropdown(activeDropdown)}
-          onMouseLeave={handleMouseLeave}
-        >
+          onMouseLeave={handleMouseLeave}>
           <div className="mx-auto max-w-7xl px-6 py-8">
             {categoryCache[activeDropdown] ? (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  {categoryCache[activeDropdown].title}
-                </h3>
-                <MegaMenuItems 
+                <h3 className="text-lg font-bold text-gray-900 mb-4">{categoryCache[activeDropdown].title}</h3>
+                <MegaMenuItems
                   items={categoryCache[activeDropdown].items}
                   onClose={closeDropdown}
                   depth={0}
