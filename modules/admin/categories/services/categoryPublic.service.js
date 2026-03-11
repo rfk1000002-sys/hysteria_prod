@@ -67,6 +67,7 @@ export async function getCategoryBySlugWithItems(slug) {
             url: true,
             order: true,
             isActive: true,
+            isIndependent: true,
             meta: true,
             parentId: true,
             children: {
@@ -78,6 +79,7 @@ export async function getCategoryBySlugWithItems(slug) {
                 url: true,
                 order: true,
                 isActive: true,
+                isIndependent: true,
                 meta: true,
                 parentId: true,
                 children: {
@@ -89,6 +91,7 @@ export async function getCategoryBySlugWithItems(slug) {
                     url: true,
                     order: true,
                     isActive: true,
+                    isIndependent: true,
                     meta: true,
                     parentId: true,
                     children: {
@@ -100,6 +103,7 @@ export async function getCategoryBySlugWithItems(slug) {
                         url: true,
                         order: true,
                         isActive: true,
+                        isIndependent: true,
                         meta: true,
                         parentId: true,
                         children: {
@@ -111,6 +115,7 @@ export async function getCategoryBySlugWithItems(slug) {
                             url: true,
                             order: true,
                             isActive: true,
+                            isIndependent: true,
                             meta: true,
                             parentId: true
                           }

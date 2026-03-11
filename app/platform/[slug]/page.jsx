@@ -5,6 +5,38 @@ import HeadSection from '../../../_sectionComponents/halaman_platform/head.secti
 import ListCategorySection from '../../../_sectionComponents/halaman_platform/list_category.section'
 import MediaSection from '../../../_sectionComponents/halaman_platform/media.section'
 import { listPlatforms } from '../../../modules/admin/platform/services/platform.service'
+import { getPublicPlatform } from '../../../modules/public/platform/services/platform.public.service.js'
+
+export async function generateMetadata({ params }) {
+  const { slug } = (await params) || {};
+  if (!slug) return {};
+  try {
+    const platform = await getPublicPlatform(slug);
+    if (!platform) return {};
+    const logoPath = '/svg/Logo-hysteria.svg';
+    const ogImage = platform.head?.images?.[0]?.src || logoPath;
+
+    return {
+      title: platform.head?.title || slug,
+      description: platform.head?.description || undefined,
+      icons: {
+        icon: logoPath,
+        shortcut: logoPath,
+        apple: logoPath,
+      },
+      openGraph: {
+        title: platform.head?.title || slug,
+        description: platform.head?.description || undefined,
+        images: [{ url: ogImage, alt: platform.head?.title || 'Hysteria' }],
+      },
+      twitter: {
+        images: [ogImage],
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 const MAINTENNACE = false
 
