@@ -1,4 +1,4 @@
-import { prisma } from "../../../../lib/prisma.js";
+import { prisma } from "@/lib/prisma";
 
 export function findAllEvents() {
   return prisma.event.findMany({
@@ -6,10 +6,12 @@ export function findAllEvents() {
     include: {
       eventCategories: {
         include: {
-          categoryItem: { select: { title: true } }
-        }
-      }
-    }
+          categoryItem: {
+            select: { title: true },
+          },
+        },
+      },
+    },
   });
 }
 
@@ -18,41 +20,61 @@ export function findEventById(id) {
     where: { id },
     include: {
       eventCategories: {
-        include: { categoryItem: true }
+        include: { categoryItem: true },
       },
       organizers: true,
       tags: {
-        include: { tag: true }
-      }
-    }
+        include: { tag: true },
+      },
+    },
+  });
+}
+
+export function createEvent(data) {
+  return prisma.event.create({
+    data,
+  });
+}
+
+export function updateEvent(id, data) {
+  return prisma.event.update({
+    where: { id },
+    data,
   });
 }
 
 export function deleteEvent(id) {
   return prisma.event.delete({
-    where: { id }
+    where: { id },
   });
 }
 
-export function findCategories(ids) {
-  return prisma.categoryItem.findMany({
-    where: { id: { in: ids }, isIndependent: false },
-    select: { id: true, categoryId: true }
+export function deleteEventCategories(eventId) {
+  return prisma.eventCategory.deleteMany({
+    where: { eventId },
   });
 }
 
-export function findProgramParent() {
-  return prisma.categoryItem.findFirst({
-    where: {
-      categoryId: 1,
-      parentId: null
-    },
-    select: { id: true }
+export function createEventCategories(data) {
+  return prisma.eventCategory.createMany({
+    data,
   });
 }
 
-export function countSlug(baseSlug) {
-  return prisma.event.count({
-    where: { slug: { startsWith: baseSlug } }
+export function deleteEventOrganizers(eventId) {
+  return prisma.eventOrganizer.deleteMany({
+    where: { eventId },
+  });
+}
+
+export function createEventOrganizers(data) {
+  return prisma.eventOrganizer.createMany({
+    data,
+  });
+}
+
+export function deleteEventTags(eventId) {
+  return prisma.eventTag.deleteMany({
+    where: { eventId },
   });
 }

@@ -1,101 +1,74 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function TagInput({ value = [], onChange }) {
   const [newTag, setNewTag] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [allTags, setAllTags] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const inputRef = useRef(null);
+  const [suggestions, setSuggestions] = useState([]);
 
-  // Ambil semua tag dari DB
+  const normalize = (tag) => tag.trim().toLowerCase();
+
+  // fetch tag dari DB
   useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const res = await fetch("/api/admin/tags");
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch tags");
-        }
-
-        const data = await res.json();
-        setAllTags(data || []);
-      } catch (err) {
-        console.error("Gagal ambil tag:", err);
-      }
-    };
-
-    fetchTags();
+    fetch("/api/tags")
+      .then((res) => res.json())
+      .then((data) => {
+        setAllTags(data.data || []);
+      })
+      .catch(() => setAllTags([]));
   }, []);
 
-  const normalize = (tag) =>
-    tag.trim().toLowerCase().replace(/\s+/g, "");
+  // filter suggestion
+  useEffect(() => {
+    if (!newTag) {
+      setSuggestions([]);
+      return;
+    }
 
-  const addTag = (customTag = null) => {
-    const tag = normalize(customTag ?? newTag);
+    const filtered = allTags.filter((tag) =>
+      tag.name.toLowerCase().includes(newTag.toLowerCase())
+    );
+
+    setSuggestions(filtered);
+  }, [newTag, allTags]);
+
+  const addTag = (tagInput = newTag) => {
+    const tag = normalize(tagInput);
 
     if (!tag) return;
+    if (tag.includes(" ")) return; // 🚫 tidak boleh spasi
     if (value.includes(tag)) return;
 
     onChange([...value, tag]);
     setNewTag("");
-    setShowDropdown(false);
+    setSuggestions([]);
   };
 
   const removeTag = (tag) => {
     onChange(value.filter((t) => t !== tag));
   };
 
-  // Handle typing (tanpa spasi)
-  const handleChange = (e) => {
-    const cleanValue = e.target.value.replace(/\s/g, "");
-    setNewTag(cleanValue);
-
-    if (!cleanValue) {
-      setSuggestions([]);
-      return;
-    }
-
-    const filtered = allTags
-      .filter((tag) => {
-        const normalizedTag = tag.name
-          .toLowerCase()
-          .replace(/\s+/g, "");
-
-        return (
-          normalizedTag.includes(cleanValue.toLowerCase()) &&
-          !value.includes(normalizedTag)
-        );
-      })
-      .slice(0, 6);
-      
-    setSuggestions(filtered);
-    setShowDropdown(true);
-  };
-
   return (
-    <div className="bg-white p-6 rounded-xl border shadow-sm relative">
+    <div className="bg-white p-6 rounded-xl border shadow-sm">
       <label className="block font-semibold mb-2">
         Tags / Keywords
       </label>
 
-      <div className="flex gap-2">
+      <div className="relative flex gap-2">
         <input
-          ref={inputRef}
           value={newTag}
-          onChange={handleChange}
+          onChange={(e) => setNewTag(e.target.value)}
           className="flex-1 border rounded-lg px-4 py-2"
-          placeholder="Masukkan tag (tanpa spasi)"
+          placeholder="Masukkan tag"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               addTag();
             }
-          }}
-          onFocus={() => {
-            if (suggestions.length > 0) {
-              setShowDropdown(true);
+
+            if (e.key === " ") {
+              e.preventDefault(); // 🚫 blok spasi
             }
           }}
         />
@@ -107,22 +80,22 @@ export default function TagInput({ value = [], onChange }) {
         >
           +
         </button>
-      </div>
 
-      {/* Dropdown Suggestion */}
-      {showDropdown && suggestions.length > 0 && (
-        <div className="absolute z-20 mt-1 w-full bg-white border rounded-lg shadow max-h-40 overflow-auto">
-          {suggestions.map((tag) => (
-            <div
-              key={tag.id}
-              onClick={() => addTag(tag.name)}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-            >
-              #{tag.name}
-            </div>
-          ))}
-        </div>
-      )}
+        {/* suggestion dropdown */}
+        {suggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow z-20">
+            {suggestions.map((tag) => (
+              <div
+                key={tag.name}
+                onClick={() => addTag(tag.name)}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+              >
+                {tag.name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-4">
@@ -131,7 +104,7 @@ export default function TagInput({ value = [], onChange }) {
               key={`${tag}-${idx}`}
               className="px-3 py-1 bg-gray-200 rounded-md text-sm flex items-center gap-2"
             >
-              #{tag}
+              {tag}
               <button
                 type="button"
                 onClick={() => removeTag(tag)}

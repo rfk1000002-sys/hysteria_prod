@@ -1,5 +1,4 @@
-export function validateEvent(body) {
-
+export function validateCreateEvent(body) {
   const errors = {};
 
   if (!body.title) errors.title = "Judul event wajib diisi";
@@ -10,6 +9,10 @@ export function validateEvent(body) {
 
   if (!Array.isArray(body.categoryItemIds) || body.categoryItemIds.length === 0) {
     errors.categoryItemIds = "Minimal pilih 1 kategori";
+  }
+
+  if (!Array.isArray(body.organizerItemIds) || body.organizerItemIds.length === 0) {
+    errors.organizerItemIds = "Minimal pilih 1 penyelenggara";
   }
 
   return errors;

@@ -1,60 +1,68 @@
-import { NextResponse } from "next/server";
-import { getEventById, updateEvent, removeEvent } from "@/modules/admin/events";
+import {
+  getEventById,
+  updateEvent,
+  deleteEvent
+} from "@/modules/admin/events";
+
+/* ================= GET ================= */
 
 export async function GET(req, { params }) {
-  try {
+  const { id } = await params;
+  const eventId = Number(id);
 
-    const { id } = await params;
+  if (isNaN(eventId)) {
+    return Response.json(
+      { message: "Invalid event ID" },
+      { status: 400 }
+    );
+  }
 
-    const eventId = Number(id);
+  const event = await getEventById(eventId);
 
-    const event = await getEventById(eventId);
-
-    return NextResponse.json(event);
-  } catch (error) {
-    return NextResponse.json(
-      { message: error.message },
+  if (!event) {
+    return Response.json(
+      { message: "Event tidak ditemukan" },
       { status: 404 }
     );
   }
+
+  return Response.json(event);
 }
+
+/* ================= PUT ================= */
 
 export async function PUT(req, { params }) {
+  const { id } = await params;
+  const eventId = Number(id);
 
-  try {
-
-    const id = Number(params.id);
-
-    const body = await req.json();
-
-    const result = await updateEvent(id, body);
-
-    return NextResponse.json(result);
-
-  } catch (error) {
-
-    return NextResponse.json(
-      { message: "Gagal update event" },
-      { status: 500 }
+  if (isNaN(eventId)) {
+    return Response.json(
+      { message: "Invalid event ID" },
+      { status: 400 }
     );
   }
+
+  const body = await req.json();
+
+  const event = await updateEvent(eventId, body);
+
+  return Response.json(event);
 }
 
+/* ================= DELETE ================= */
+
 export async function DELETE(req, { params }) {
+  const { id } = await params;
+  const eventId = Number(id);
 
-  try {
-
-    const id = Number(params.id);
-
-    await removeEvent(id);
-
-    return NextResponse.json({ success: true });
-
-  } catch (error) {
-
-    return NextResponse.json(
-      { message: "Gagal menghapus event" },
-      { status: 500 }
+  if (isNaN(eventId)) {
+    return Response.json(
+      { message: "Invalid event ID" },
+      { status: 400 }
     );
   }
+
+  await deleteEvent(eventId);
+
+  return Response.json({ success: true });
 }

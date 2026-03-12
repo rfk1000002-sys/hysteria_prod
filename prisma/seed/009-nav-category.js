@@ -102,7 +102,7 @@ module.exports = async function seed() {
 			{ categorySlug: 'platform', title: 'Meramu', slug: 'meramu', url: '/platform/laki-masak/meramu', order: 0, parentSlug: 'laki-masak', isIndependent: false },
 			{ categorySlug: 'platform', title: 'Homecooked', slug: 'homecooked', url: '/platform/laki-masak/homecooked', order: 1, parentSlug: 'laki-masak', isIndependent: true },
 			{ categorySlug: 'platform', title: 'Komik Ramuan', slug: 'komik-ramuan', url: '/platform/laki-masak/komik-ramuan', order: 2, parentSlug: 'laki-masak', isIndependent: true },
-			{ categorySlug: 'platform', title: 'Pre-Order', slug: 'pre-order', url: '/platform/laki-masak/pre-order', order: 3, parentSlug: 'laki-masak', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Pre-Order', slug: 'pre-order', url: '/platform/laki-masak/pre-order', order: 3, parentSlug: 'laki-masak', isIndependent: false },
 
 		{ categorySlug: 'platform', title: 'Pekakota', slug: 'pekakota', url: '/platform/pekakota', order: 3, parentSlug: null, isIndependent: false },
 		{ categorySlug: 'platform', title: 'Bukit Buku', slug: 'bukit-buku', url: '/platform/bukit-buku', order: 4, parentSlug: null, isIndependent: false },
@@ -151,7 +151,7 @@ module.exports = async function seed() {
 				// update
 				const upd = await client.query(
 					`UPDATE "CategoryItem"
-					 SET "title" = $1, "url" = $2, "order" = $3, "isIndependent" = $4, "isActive" = true, "updatedAt" = now()
+					 SET "title" = $1, "url" = $2, "order" = $3, "isActive" = true, "isIndependent" = $4, "updatedAt" = now()
 					 WHERE id = $5
 					 RETURNING id`,
 					[it.title, it.url, it.order, it.isIndependent ?? false, found.rows[0].id]
@@ -159,8 +159,8 @@ module.exports = async function seed() {
 				itemMap[`${it.categorySlug}|${it.slug}`] = upd.rows[0].id
 			} else {
 				const ins = await client.query(
-					`INSERT INTO "CategoryItem" ("categoryId", "parentId", "title", "slug", "url", "order", "meta", "isIndependent", "isActive", "createdAt", "updatedAt")
-					 VALUES ($1, NULL, $2, $3, $4, $5, NULL, $6, true, now(), now())
+					`INSERT INTO "CategoryItem" ("categoryId", "parentId", "title", "slug", "url", "order", "meta", "isActive", "isIndependent", "createdAt", "updatedAt")
+					 VALUES ($1, NULL, $2, $3, $4, $5, NULL, true, $6, now(), now())
 					 RETURNING id`,
 					[categoryId, it.title, it.slug, it.url, it.order, it.isIndependent ?? false]
 				)
