@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/use-debounce";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
@@ -12,12 +13,10 @@ import PageFilter from "@/components/ui/PageFilter";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import {
-  subKategoriDitampartOptions,
   statusOptions,
-  buildPlatformColumns,
-  ditampartDummyData,
-  filterDitampartData,
+  fetchDitampartEventData,
 } from "../_handler/data";
+import { buildEventColumns } from "../_handler/TablePlatformColom";
 
 const categories = [
   { id: 1, title: "3D" },
@@ -28,9 +27,11 @@ const categories = [
 
 export default function DitampartPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [subKategori, setSubKategori] = useState(null);
   const [statusFilter, setStatusFilter] = useState(null);
   const [perPage, setPerPage] = useState(10);
+
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
@@ -47,6 +48,45 @@ export default function DitampartPage() {
   });
 
   const debouncedSearch = useDebounce(searchQuery);
+  const router = useRouter();
+
+  // ── fetch event data dari API (cursor-based pagination) ─────────────────────
+  const [nextCursor, setNextCursor] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRows([]);
+    setNextCursor(null);
+    setLoading(true);
+    fetchDitampartEventData({ query: debouncedSearch, status: statusFilter, limit: perPage })
+      .then(({ data, nextCursor: nc }) => {
+        if (cancelled) return;
+        setRows(data);
+        setNextCursor(nc);
+      })
+      .catch((err) => { if (!cancelled) console.error("Gagal memuat event ditampart:", err); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [debouncedSearch, statusFilter, perPage]);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!nextCursor || loading) return;
+    setLoading(true);
+    try {
+      const { data, nextCursor: nc } = await fetchDitampartEventData({
+        query: debouncedSearch,
+        status: statusFilter,
+        limit: perPage,
+        cursor: nextCursor,
+      });
+      setRows((prev) => [...prev, ...data]);
+      setNextCursor(nc);
+    } catch (err) {
+      console.error("Gagal memuat lebih banyak event ditampart:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [nextCursor, loading, debouncedSearch, statusFilter, perPage]);
 
   // ── handlers ──────────────────────────────────────────────────────────────
   const handleEdit = (row) => console.log("Edit:", row);
@@ -128,19 +168,8 @@ export default function DitampartPage() {
 
   // ── columns (memoised agar referensi stabil) ──────────────────────────────
   const columns = useMemo(
-    () => buildPlatformColumns({ onEdit: handleEdit, onDelete: handleDelete }),
+    () => buildEventColumns({ onEdit: handleEdit, onDelete: handleDelete }),
     [],
-  );
-
-  // ── data (filter lokal dari dummy; ganti fetchDitampartData jika API siap) ─
-  const rows = useMemo(
-    () =>
-      filterDitampartData(ditampartDummyData, {
-        query: debouncedSearch,
-        subKategori,
-        status: statusFilter,
-      }),
-    [debouncedSearch, subKategori, statusFilter],
   );
 
   return (
@@ -193,8 +222,7 @@ export default function DitampartPage() {
               Event Ditampart
             </h2>
             <p className="text-sm text-gray-600 mb-6 font-poppins">
-              Kumpulan postingan dari 3D, Mock up dan Poster, Foto Kegiatan, dan
-              Short Film Dokumenter
+              Kelola Event Ditampart
             </p>
           </div>
           <div>
@@ -206,6 +234,7 @@ export default function DitampartPage() {
                 "&:hover": { backgroundColor: "#352837" },
                 textTransform: "none",
               }}
+              onClick={() => router.push("/admin/events/create")}
             >
               Tambah Event
             </Button>
@@ -230,14 +259,6 @@ export default function DitampartPage() {
           </div>
 
           <SelectField
-            className="w-full md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
-            value={subKategori}
-            onChange={setSubKategori}
-            options={subKategoriDitampartOptions}
-            emptyOptionLabel="Semua Sub Kategori"
-          />
-
-          <SelectField
             className="w-[206px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
             value={statusFilter}
             onChange={setStatusFilter}
@@ -251,9 +272,24 @@ export default function DitampartPage() {
         <DataTable
           columns={columns}
           rows={rows}
-          loading={false}
+          loading={loading}
           getRowId={(r) => r.id}
         />
+        {nextCursor && (
+          <div className="flex justify-center mt-4">
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={loading}
+              onClick={handleLoadMore}
+              sx={{ textTransform: "none" }}
+            >
+              {loading ? "Memuat..." : "Muat Lebih Banyak"}
+            </Button>
+          </div>
+        )}
+
+        {/* modals */}
         {platformModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
