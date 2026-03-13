@@ -21,9 +21,11 @@ export default function Footer({ websiteInfo }) {
   });
 
   const pathname = usePathname() || "";
-  if (pathname.startsWith("/admin")) return null;
+  const isAdminRoute = pathname.startsWith("/admin");
 
   useEffect(() => {
+    if (isAdminRoute) return;
+
     let isMounted = true;
 
     async function loadFooterData() {
@@ -62,7 +64,9 @@ export default function Footer({ websiteInfo }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isAdminRoute]);
+
+  if (isAdminRoute) return null;
 
   const year = new Date().getFullYear();
   return (
