@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebounce } from "../../../../../hooks/use-debounce";
 import PosterCard from "./cards/PosterCard";
 import MockUpPosterCard from "./cards/MockUpPosterCard";
 import KomikRamuanCard from "./cards/KomikRamuanCard";
@@ -9,241 +10,11 @@ import Tooltip from '@mui/material/Tooltip';
 import SortMenu from "@/components/ui/SortMenu";
 import Pagination from "@/components/ui/Pagination";
 
-/**
- * GridBody — layout "grid"
- *
- * Renders:
- *  - Search input
- *  - Filter tag buttons (optional)
- *  - Responsive card grid (Tailwind-based cards)
- *  - Pagination
- *
- * Props:
- *   items   : Array<{ src, alt?, title, subtitle?, tag? }>
- *   filters : string[]  (unique tag labels for filtering)
- */
-
-const DUMMY_FILTERS = ["Having Fun Artlab", "Peltoe", "test1", "test2", "test3"];
-
-const DUMMY_ITEMS = [
-  { src: "/image/DummyPoster.webp", title: "AI SUNRISE WALK MERAPI", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "NIGHT MARKET SEMARANG", tag: "Having Fun Artlab", badge: "Akan Berlangsung", meta: "Sabtu, 14 Maret 2026" },
-  { src: "/image/DummyPoster.webp", title: "BATIK WORKSHOP PELTOE", tag: "Peltoe", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "PRINTMAKING DASAR", tag: "Peltoe", badge: "Sedang Berlangsung", meta: "Sabtu, 7 Maret 2026" },
-  { src: "/image/DummyPoster.webp", title: "ZINE MAKING 101", tag: "Having Fun Artlab", badge: "Telah Berakhir", meta: "Sabtu, 28 Feb 2026" },
-  { src: "/image/DummyPoster.webp", title: "URBAN SKETCHING SESSION", tag: "test1", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "MURAL & STREET ART", tag: "test2", badge: "Akan Berlangsung", meta: "Sabtu, 21 Maret 2026" },
-  { src: "/image/DummyPoster.webp", title: "FOTO JALANAN", tag: "test2", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "KOLASE & MIXED MEDIA", tag: "Peltoe", badge: "Telah Berakhir", meta: "Sabtu, 22 Feb 2026" },
-  { src: "/image/DummyPoster.webp", title: "DESAIN POSTER ANALOG", tag: "test3", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "LINOCUT PRINTING", tag: "test3", badge: "Akan Berlangsung", meta: "Sabtu, 28 Maret 2026" },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-  { src: "/image/DummyPoster.webp", title: "BOOKBINDING WORKSHOP", tag: "Having Fun Artlab", badge: null, meta: null },
-];
-
 const DEFAULT_ITEMS_PER_PAGE = 10; // default: 5 kolom × 2 baris
 
-export default function GridBody({ items = [], filters = [], cardType = "poster" }) {
-  const resolvedItems = items.length > 0 ? items : DUMMY_ITEMS;
-  const resolvedFilters = filters.length > 0 ? filters : DUMMY_FILTERS;
+export default function GridBody({ items = [], filters = [], cardType = "poster", showFilterIcon = true, itemsPerPageOverride = undefined, gridCols = undefined }) {
+  const resolvedItems = items;
+  const resolvedFilters = filters;
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [showFilters, setShowFilters] = useState(true);
@@ -284,6 +55,8 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
     }
     return null;
   };
+  const debouncedSearch = useDebounce(search);
+
   const filteredItems = useMemo(() => {
     let result = resolvedItems;
 
@@ -292,9 +65,9 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
       result = result.filter((item) => item.tag === activeFilter);
     }
 
-    // Filter by search
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    // Filter by search (debounced)
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       result = result.filter(
         (item) =>
           (item.title || "").toLowerCase().includes(q) ||
@@ -332,12 +105,12 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
     }
 
     return sorted;
-  }, [resolvedItems, activeFilter, search, sortMode]);
+  }, [resolvedItems, activeFilter, debouncedSearch, sortMode]);
 
   /* ---------- pagination ---------- */
   const isKomikRamuan = cardType === "komik-ramuan";
   const isMockupLayout = isKomikRamuan || resolvedItems.some((item) => item.meta === "mockup" || item.meta === "video");
-  const itemsPerPage = isMockupLayout ? 8 : DEFAULT_ITEMS_PER_PAGE;
+  const itemsPerPage = isMockupLayout ? 8 : (itemsPerPageOverride ?? DEFAULT_ITEMS_PER_PAGE);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
   const paginatedItems = filteredItems.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -352,12 +125,7 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
     setPage(1);
   };
 
-  
-
   const allFilters = ["Semua", ...resolvedFilters];
- 
-
-  
 
   return (
     <div className="w-full max-w-[1920px] mx-auto px-4 md:px-24 py-10">
@@ -380,8 +148,8 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
           </span>
         </div>
 
-        {/* Action icons filter tag (hidden for mockup layout) */}
-        {!isMockupLayout && (
+        {/* Action icons filter tag (hidden for mockup layout and when explicitly disabled) */}
+        {!isMockupLayout && showFilterIcon && (
           <Tooltip title="Filter Tag" arrow>
             <button
               className="flex-none w-10 h-10 border border-zinc-300 rounded-full bg-white shadow-md flex items-center justify-center text-pink-500 hover:bg-pink-50 transition cursor-pointer"
@@ -431,7 +199,7 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
 
       {/* Grid — Tailwind-based cards */}
       {paginatedItems.length > 0 ? (
-        <div className={`grid gap-5 ${ isMockupLayout ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-5' }`}>
+      <div className={`grid gap-5 ${ isMockupLayout ? 'grid-cols-2 md:grid-cols-4' : `grid-cols-2 md:grid-cols-${gridCols ?? 5}` }`}>
           {paginatedItems.map((item, i) =>
             isKomikRamuan ? (
               <KomikRamuanCard
@@ -476,8 +244,9 @@ export default function GridBody({ items = [], filters = [], cardType = "poster"
                 alt={item.alt}
                 title={item.title}
                 description={item.description}
+                badge={item.badge}
                 tags={item.tags}
-                meta={item.year}
+                meta={item.meta || item.year}
               />
             )
           )}

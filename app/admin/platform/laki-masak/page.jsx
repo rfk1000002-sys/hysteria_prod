@@ -186,7 +186,7 @@ export default function LakiMasakPage() {
   return (
     <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
       {/* bagian atas */}
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Laki Masak
@@ -231,7 +231,7 @@ export default function LakiMasakPage() {
       </div>
 
       {/* bagian bawah */}
-      <div className="max-w-6xl mx-auto mt-12">
+      <div className="max-w-5xl mx-auto mt-12">
         <div className="flex flex-col md:flex-row md:gap-0 justify-between items-start md:items-center mb-6 md:mb-0">
           <div>
             <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">

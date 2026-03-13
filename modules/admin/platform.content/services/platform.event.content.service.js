@@ -3,7 +3,7 @@
  *
  * Service layer untuk query event per platform:
  *  - Ditampart  : events berdasarkan organizer slug "ditampart"
- *  - Artlab     : events per kategori — workshop, screening-film, untuk-perhatian
+ *  - Artlab     : events per kategori — workshop, screening-film, untuk-perhatian, stonen-29-radio-show
  *  - Laki Masak : events kategori meramu
  *
  * Slug CategoryItem di bawah diasumsikan sesuai data seed.
@@ -17,6 +17,7 @@ const SLUG_ORG_DITAMPART = "ditampart";
 const SLUG_CAT_WORKSHOP = "workshop-artlab";
 const SLUG_CAT_SCREENING = "screening-film";
 const SLUG_CAT_UNTUK_PERHATIAN = "untuk-perhatian";
+const SLUG_CAT_STONEN = "stonen-29-radio-show";
 
 const SLUG_CAT_MERAMU = "meramu";
 
@@ -45,7 +46,7 @@ export function getArtlabEvents(filters = {}) {
   const { categorySlug, ...rest } = filters;
   const slugs = categorySlug
     ? [categorySlug]
-    : [SLUG_CAT_WORKSHOP, SLUG_CAT_SCREENING, SLUG_CAT_UNTUK_PERHATIAN];
+    : [SLUG_CAT_WORKSHOP, SLUG_CAT_SCREENING, SLUG_CAT_UNTUK_PERHATIAN, SLUG_CAT_STONEN];
   return repo.findEventsByCategory(slugs, rest);
 }
 

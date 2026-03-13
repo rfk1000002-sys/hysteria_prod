@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useDebounce } from "../../../../../../hooks/use-debounce";
 import { useParams } from "next/navigation";
 import VideoCard from "../../_BodyComponent/cards/VideoCard";
 import PosterCard from "../../_BodyComponent/cards/PosterCard";
 import ArtistCard from "../../_BodyComponent/cards/ArtistCard";
 
 const PAGE_SIZE = 8;
+const STONEN_RADIO_SLUG = "stonen-29-radio-show";
 
 function CardByType({ cardType, item, detailBase }) {
 //   if (cardType === "video") {
@@ -49,6 +51,7 @@ function CardByType({ cardType, item, detailBase }) {
       title={item.title}
       description={item.description || item.subtitle}
       tags={item.tags || []}
+      badge={item.badge}
       meta={item.meta}
     />
   );
@@ -76,12 +79,16 @@ export default function GenericSubCategorySection({ selectedSub, cardType, items
     ? `/platform/${slug}/${categories}/${subCategory}`
     : null;
 
+  const isRadioShow = subCategory === STONEN_RADIO_SLUG;
+  const pageSize = isRadioShow ? 18 : PAGE_SIZE;
+
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [page, setPage] = useState(1);
   const [openFilter, setOpenFilter] = useState(false);
 
-  const normalizedQuery = query.trim().toLowerCase();
+  const debouncedQuery = useDebounce(query);
+  const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
   const filteredItems = useMemo(() => {
     const matched = items.filter((it) => {
@@ -114,9 +121,9 @@ export default function GenericSubCategorySection({ selectedSub, cardType, items
     return sorted;
   }, [items, normalizedQuery, sortBy]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const safePage = Math.min(page, totalPages);
-  const pagedItems = filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pagedItems = filteredItems.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const applySort = (value) => {
     setSortBy(value);
@@ -172,7 +179,7 @@ export default function GenericSubCategorySection({ selectedSub, cardType, items
         {!pagedItems.length ? (
           <p className="text-zinc-500">Belum ada konten untuk kategori ini.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
+          <div className={`grid gap-4 sm:gap-5 md:gap-6 ${isRadioShow ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'}`}>
             {pagedItems.map((item, idx) => (
               <CardByType key={`${selectedSub.slug}-${safePage}-${idx}`} cardType={cardType} item={item} detailBase={detailBase} />
             ))}

@@ -8,11 +8,20 @@ import {
   listPublicPlatforms,
   getPublicPlatform,
   getPublicCategory,
+  getPublicEventItems,
 } from "../../../../../modules/public/platform/services/platform.public.service.js";
 import AnitalkInteractiveSection from "./_components/AnitalkInteractiveSection";
 import GenericSubCategorySection from "./_components/GenericSubCategorySection";
 
 const ANITALK_SLUG = "anitalk";
+
+// Sub-kategori yang datanya bersumber dari model Event (bukan PlatformContent)
+const EVENT_DRIVEN_SLUGS = new Set([
+  "stonen-29-radio-show",
+  "workshop-artlab",
+  "screening-film",
+  "untuk-perhatian",
+]);
 
 export async function generateStaticParams() {
   try {
@@ -87,9 +96,12 @@ export default async function Page({ params }) {
   const { slug, categories, subCategory } = (await params) || {};
   if (!slug || !categories || !subCategory) return notFound();
 
-  const [categoryData, platformData] = await Promise.all([
+  const isEventDriven = EVENT_DRIVEN_SLUGS.has(subCategory);
+
+  const [categoryData, platformData, eventItems] = await Promise.all([
     getPublicCategory(slug, categories),
     getPublicPlatform(slug),
+    isEventDriven ? getPublicEventItems(subCategory) : Promise.resolve(null),
   ]);
 
   if (!categoryData || !platformData) return notFound();
@@ -101,7 +113,7 @@ export default async function Page({ params }) {
   if (!selectedSub) return notFound();
 
   const cardType = selectedSub.cardType || "poster";
-  const items = selectedSub.items || [];
+  const items = isEventDriven && eventItems ? eventItems : (selectedSub.items || []);
   const isAnitalkPage = subCategory === ANITALK_SLUG;
   return (
     <div className="bg-[#f3f3f3] overflow-x-hidden">

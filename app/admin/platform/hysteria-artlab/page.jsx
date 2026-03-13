@@ -26,6 +26,7 @@ const artlabEventCategoryOptions = [
   { id: 'workshop-artlab', name: 'Workshop Artlab' },
   { id: 'screening-film',  name: 'Screening Film' },
   { id: 'untuk-perhatian', name: 'Untuk Perhatian' },
+  { id: 'stonen-29-radio-show', name: 'Stonen 29 Radio Show' },
 ];
 
 export default function HysteriaArtlabPage() {
@@ -38,15 +39,34 @@ export default function HysteriaArtlabPage() {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+  const [deletingId, setDeletingId] = useState(null);
+
   const [openAntalk, setOpenAntalk] = useState(false);
   const [openArtistRadar, setOpenArtistRadar] = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery);
   const router = useRouter();
 
-  const handleEdit   = (row) => console.log('Edit:', row);
-  const handleDelete = (row) => console.log('Delete:', row);
+  const handleEdit = useCallback((row) => {
+    router.push(`/admin/events/${row.id}/edit`);
+  }, [router]);
+
+  const handleDelete = useCallback(async (row) => {
+    const confirmed = window.confirm(
+      `Yakin ingin menghapus event "${row.title}"? Tindakan ini tidak dapat dibatalkan.`
+    );
+    if (!confirmed) return;
+    try {
+      setDeletingId(row.id);
+      const res = await fetch(`/api/admin/events/${row.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Gagal menghapus event');
+      setRows((prev) => prev.filter((e) => e.id !== row.id));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   // ── fetch event data dari API (cursor-based pagination) ────────────────────
   const [nextCursor, setNextCursor] = useState(null);
@@ -91,15 +111,15 @@ export default function HysteriaArtlabPage() {
     () => buildEventColumns({
       onEdit: handleEdit,
       onDelete: handleDelete,
-      preferredCategorySlugs: ['workshop-artlab', 'screening-film', 'untuk-perhatian'],
+      preferredCategorySlugs: ['workshop-artlab', 'screening-film', 'untuk-perhatian', 'stonen-29-radio-show'],
     }),
-    [],
+    [handleEdit, handleDelete],
   );
 
   return (
     <div className="p-2 md:p-6 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
       {/* Bagian atas  */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
           <h1 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">Hysteria Artlab</h1>
           <p className="text-sm text-gray-700 mb-6 font-poppins">Kelola semua konten dari platform Hysteria Artlab</p>
 
@@ -141,7 +161,7 @@ export default function HysteriaArtlabPage() {
 
               <div className="p-5 border border-gray-500 rounded-lg bg-white shadow-xl flex flex-col space-y-3 md:space-y-5 md:col-span-3">
                   <h2 className="text-pink-500 font-bold mb-3 font-poppins">Podcast Artlab</h2>
-                  <button className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer">Tambah Stonen 29 Radio Show</button>
+                  <button onClick={() => router.push('/admin/events/create?category=stonen-29-radio-show')} className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer">Tambah Stonen 29 Radio Show</button>
                   <button
                     onClick={() => setOpenAntalk(true)}
                     className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
@@ -257,7 +277,7 @@ export default function HysteriaArtlabPage() {
       )}
 
       {/* Bagian bawah */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
           <div>
             <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">

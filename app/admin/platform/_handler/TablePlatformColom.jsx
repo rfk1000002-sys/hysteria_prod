@@ -83,16 +83,60 @@ export function buildEventColumns({ onEdit, onDelete, preferredCategorySlugs } =
       width: 180,
       render: (row) => {
         const cats = row.categories ?? [];
-        const preferred =
-          preferredCategorySlugs?.length
-            ? cats.find((c) => preferredCategorySlugs.includes(c.slug))
-            : undefined;
-        const display =
-          preferred ??
-          cats.find((c) => c.isPrimary) ??
-          cats[0];
+        if (!cats.length) return <span className="text-zinc-700 text-sm">-</span>;
+
+        let ordered = [];
+        if (preferredCategorySlugs?.length) {
+          const preferredOrder = preferredCategorySlugs;
+          const preferredCats = preferredOrder
+            .map((slug) => cats.find((c) => c.slug === slug))
+            .filter(Boolean);
+          const rest = cats.filter((c) => !preferredOrder.includes(c.slug));
+          ordered = [...preferredCats, ...rest];
+        } else {
+          const primary = cats.find((c) => c.isPrimary);
+          const rest = cats.filter((c) => c !== primary);
+          ordered = primary ? [primary, ...rest] : cats;
+        }
+
+        const titles = ordered.map((c) => c.title).filter(Boolean);
         return (
-          <span className="text-zinc-700 text-sm">{display?.title ?? "-"}</span>
+          <span className="text-zinc-700 text-sm">{titles.length ? titles.join(', ') : '-'}</span>
+        );
+      },
+    },
+    {
+      field: "organizers",
+      headerName: "Penyelenggara",
+      width: 160,
+      render: (row) => {
+        const orgs = row.organizers ?? [];
+        if (!orgs.length) return <span className="text-zinc-700 text-sm">-</span>;
+        return (
+          <span className="text-zinc-700 text-sm">
+            {orgs.map((o) => o.title).filter(Boolean).join(", ")}
+          </span>
+        );
+      },
+    },
+    {
+      field: "tags",
+      headerName: "Tags",
+      width: 180,
+      render: (row) => {
+        const tags = row.tags ?? [];
+        if (!tags.length) return <span className="text-zinc-700 text-sm">-</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {tags.map((t) => (
+              <span
+                key={t.id}
+                className="inline-block px-1.5 py-0.5 rounded bg-pink-500 text-zinc-100 text-xs"
+              >
+                {t.name}
+              </span>
+            ))}
+          </div>
         );
       },
     },
@@ -117,6 +161,16 @@ export function buildEventColumns({ onEdit, onDelete, preferredCategorySlugs } =
       },
     },
     {
+      field: "location",
+      headerName: "Lokasi",
+      width: 200,
+      render: (row) => (
+        <span className="text-zinc-700 text-sm line-clamp-2">
+          {row.location ?? "-"}
+        </span>
+      ),
+    },
+    {
       field: "status",
       headerName: "Status",
       width: 160,
@@ -124,6 +178,24 @@ export function buildEventColumns({ onEdit, onDelete, preferredCategorySlugs } =
       headerAlign: "center",
       render: (row) => (
         <StatusBadge status={STATUS_LABEL[row.status] ?? row.status} />
+      ),
+    },
+    {
+      field: "isPublished",
+      headerName: "Publikasi",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+      render: (row) => (
+        <span
+          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+            row.isPublished
+              ? "bg-green-100 text-green-700"
+              : "bg-zinc-100 text-zinc-500"
+          }`}
+        >
+          {row.isPublished ? "Publik" : "Draft"}
+        </span>
       ),
     },
     {
