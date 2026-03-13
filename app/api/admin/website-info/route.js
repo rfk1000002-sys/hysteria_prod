@@ -8,7 +8,7 @@ const MAX_UPLOAD_SIZE = 2 * 1024 * 1024;
 
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, ["tentang.read"]);
+    await requireAuthWithPermission(request, ["website-info.read"]);
     const websiteInfo = await getAdminWebsiteInfo();
     return respondSuccess({ websiteInfo }, 200);
   } catch (error) {
@@ -20,7 +20,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    await requireAuthWithPermission(request, ["tentang.update"]);
+    await requireAuthWithPermission(request, ["website-info.update"]);
 
     const contentType = request.headers.get("content-type") || "";
     let fields = {};

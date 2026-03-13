@@ -87,6 +87,15 @@ module.exports = async function seed() {
     );
     let tentangGroupId = tentangGroupResult.rows[0]?.id;
 
+    const websiteInfoGroupResult = await client.query(
+      `INSERT INTO "PermissionGroup" (key, name, description, "createdAt")
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (key) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
+       RETURNING id`,
+      ["website-info-management", "Website Info Management", "Permissions related to website information management"],
+    );
+    let websiteInfoGroupId = websiteInfoGroupResult.rows[0]?.id;
+
     // If groups not returned (already exist), fetch them
     if (!userGroupId) {
       const existing = await client.query(`SELECT id FROM "PermissionGroup" WHERE key = $1`, ["user-management"]);
@@ -119,6 +128,10 @@ module.exports = async function seed() {
     if (!tentangGroupId) {
       const existing = await client.query(`SELECT id FROM "PermissionGroup" WHERE key = $1`, ["tentang-management"]);
       tentangGroupId = existing.rows[0].id;
+    }
+    if (!websiteInfoGroupId) {
+      const existing = await client.query(`SELECT id FROM "PermissionGroup" WHERE key = $1`, ["website-info-management"]);
+      websiteInfoGroupId = existing.rows[0].id;
     }
 
     // Define all permissions
@@ -435,6 +448,20 @@ module.exports = async function seed() {
         name: "Delete Tentang",
         description: "Delete tentang content",
         groupId: tentangGroupId,
+      },
+
+      // Website info management
+      {
+        key: "website-info.read",
+        name: "Read Website Info",
+        description: "View website information and settings",
+        groupId: websiteInfoGroupId,
+      },
+      {
+        key: "website-info.update",
+        name: "Update Website Info",
+        description: "Update website information and settings",
+        groupId: websiteInfoGroupId,
       },
     ];
 
