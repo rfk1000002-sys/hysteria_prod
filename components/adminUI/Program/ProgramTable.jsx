@@ -1,56 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ProgramTable() {
   const router = useRouter();
-
-  // 1. DATA DUMMY LANGSUNG DI SINI
-  const dummyData = [
-    {
-      id: 1,
-      title: "Manifesto Seni Kontemporer",
-      poster: null, // null akan memunculkan "No Image"
-      isPublished: true,
-      type: "UMUM",
-      startAt: "2026-02-12T08:00:00Z", // Tanggal akan otomatis diformat
-    },
-    {
-      id: 2,
-      title: "Hysteria Berkelana: Telusur Kampung Lama",
-      poster: "https://via.placeholder.com/150", // Contoh jika ada gambar
-      isPublished: false,
-      type: "HYSTERIA_BERKELANA",
-      startAt: "2026-03-20T08:00:00Z",
-    },
-    {
-      id: 3,
-      title: "Diskusi Publik: Ruang Kreatif Kota",
-      poster: null,
-      isPublished: true,
-      type: "UMUM",
-      startAt: "2025-10-10T08:00:00Z", // Sengaja pakai tanggal masa lalu biar statusnya "Selesai"
-    }
-  ];
-
-  // 2. STATE LANGSUNG PAKAI DATA DUMMY
-  const [programs, setPrograms] = useState(dummyData);
+  
+  // 1. STATE UNTUK MENYIMPAN DATA ASLI DARI DATABASE
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  // 3. FUNGSI HAPUS (DUMMY VERSION)
-  const handleDelete = (id) => {
+  // 2. FETCH DATA DARI API (Saat halaman dimuat)
+  useEffect(() => {
+    async function fetchPrograms() {
+      try {
+        const res = await fetch("/api/admin/programs", { cache: "no-store" });
+        if (!res.ok) throw new Error("Gagal mengambil data");
+        const data = await res.json();
+        setPrograms(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPrograms();
+  }, []);
+
+  // 3. FUNGSI HAPUS ASLI (Nembak API Delete)
+  const handleDelete = async (id) => {
     const confirmed = window.confirm("Yakin ingin menghapus postingan ini?");
     if (!confirmed) return;
 
-    setDeletingId(id);
-    
-    // Simulasi delay seolah-olah lagi komunikasi sama server
-    setTimeout(() => {
+    try {
+      setDeletingId(id);
+      const res = await fetch(`/api/admin/programs/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Gagal menghapus data");
+
+      // Hapus dari layar tanpa harus refresh browser
       setPrograms((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      alert(err.message);
+    } finally {
       setDeletingId(null);
-    }, 500); 
+    }
   };
 
   // Fungsi bantuan untuk menentukan status pelaksanaan acara
@@ -58,10 +54,12 @@ export default function ProgramTable() {
     if (!startAt) return "-";
     const startDate = new Date(startAt);
     const today = new Date();
-    
-    if (startDate > today) return "Akan Berlangsung";
-    return "Selesai";
+    return startDate > today ? "Akan Berlangsung" : "Selesai";
   };
+
+  // Tampilan Loading & Error
+  if (loading) return <div className="text-center py-20 font-medium text-gray-500 text-lg">Memuat data dari database...</div>;
+  if (error) return <div className="text-center py-20 font-medium text-[#E83C91] text-lg">Error: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -98,9 +96,9 @@ export default function ProgramTable() {
               <tr>
                 <th className="py-4 px-6 text-center w-24">Thumbnail</th>
                 <th className="py-4 px-6 text-left">Title</th>
-                <th className="py-4 px-6 text-center">Sub Kategori</th>
+                <th className="py-4 px-6 text-center">Tipe</th>
                 <th className="py-4 px-6 text-center">Date</th>
-                <th className="py-4 px-6 text-center">Status</th>
+                <th className="py-4 px-6 text-center">Status Acara</th>
                 <th className="py-4 px-6 text-center">Action</th>
               </tr>
             </thead>
@@ -108,7 +106,7 @@ export default function ProgramTable() {
               {programs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-10 text-gray-500">
-                    Belum ada data program yang ditambahkan.
+                    Belum ada data program yang ditambahkan di Database.
                   </td>
                 </tr>
               ) : (
@@ -146,10 +144,10 @@ export default function ProgramTable() {
                         </span>
                       </td>
 
-                      {/* Sub Kategori Kolom */}
+                      {/* Tipe Kategori Kolom */}
                       <td className="py-4 px-6 text-center">
-                        <span className="inline-block max-w-[150px] whitespace-pre-wrap text-sm text-gray-600">
-                          {program.type === "HYSTERIA_BERKELANA" ? "Hysteria Berkelana" : "Program Umum"}
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                          {program.type === "HYSTERIA_BERKELANA" ? "Hysteria Berkelana" : "Umum"}
                         </span>
                       </td>
 

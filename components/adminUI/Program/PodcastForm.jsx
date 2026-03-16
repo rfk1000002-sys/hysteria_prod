@@ -1,45 +1,87 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Terima props submitBtnId dari page.jsx
 export default function PodcastForm({ submitBtnId = "podcast-submit-btn" }) {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  
+  // 👉 NAMA STATE DISAMAKAN DENGAN DATABASE PRISMA
   const [form, setForm] = useState({
-    astonPlaylist: "",
-    soreDiStonenPlaylist: "",
+    astonLink: "",
+    soreDiStonenLink: "",
   });
+
+  // 👉 MENGAMBIL DATA LAMA SAAT HALAMAN DIBUKA
+  useEffect(() => {
+    async function loadPodcastData() {
+      try {
+        const res = await fetch("/api/admin/programs/podcast");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setForm({
+              astonLink: data.astonLink || "",
+              soreDiStonenLink: data.soreDiStonenLink || "",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Gagal memuat link podcast lama", error);
+      } finally {
+        setFetching(false);
+      }
+    }
+    loadPodcastData();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validasi sederhana
-    if (!form.astonPlaylist || !form.soreDiStonenPlaylist) {
+    if (!form.astonLink || !form.soreDiStonenLink) {
       alert("Harap isi kedua link playlist!");
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      alert("Link Playlist berhasil disimpan!");
+
+    try {
+      // 👉 MENYIMPAN DATA KE API YANG BARU KITA BUAT
+      const res = await fetch("/api/admin/programs/podcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan ke server");
+      
+      alert("Link Playlist Podcast berhasil disimpan!");
+    } catch (error) {
+      alert(error.message);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   // Styling input disesuaikan dengan border dan padding dari desain UI
   const inputClass =
     "w-full border border-gray-400 bg-white text-black placeholder-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E83C91] transition-all";
 
+  // Tampilan saat sedang memuat data lama
+  if (fetching) {
+    return <div className="p-6 text-gray-500 font-medium">Memuat pengaturan podcast...</div>;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full font-poppins space-y-6">
       
-      {/* TOMBOL SUBMIT RAHASIA 🥷
-        Ini yang akan di-klik secara tidak terlihat oleh tombol "Simpan" di page.jsx kamu 
-      */}
-      <button type="submit" id={submitBtnId} className="hidden">
+      {/* TOMBOL SUBMIT RAHASIA 🥷 */}
+      <button type="submit" id={submitBtnId} className="hidden" disabled={loading}>
         Submit Rahasia
       </button>
 
@@ -50,8 +92,8 @@ export default function PodcastForm({ submitBtnId = "podcast-submit-btn" }) {
         </label>
         <input
           type="url"
-          name="astonPlaylist"
-          value={form.astonPlaylist}
+          name="astonLink" // 👉 Nama property name harus sesuai state
+          value={form.astonLink}
           onChange={handleChange}
           placeholder="https://www.youtube.com/playlist . . ."
           className={inputClass}
@@ -70,8 +112,8 @@ export default function PodcastForm({ submitBtnId = "podcast-submit-btn" }) {
         </label>
         <input
           type="url"
-          name="soreDiStonenPlaylist"
-          value={form.soreDiStonenPlaylist}
+          name="soreDiStonenLink" // 👉 Nama property name harus sesuai state
+          value={form.soreDiStonenLink}
           onChange={handleChange}
           placeholder="https://www.youtube.com/playlist . . ."
           className={inputClass}
@@ -85,4 +127,4 @@ export default function PodcastForm({ submitBtnId = "podcast-submit-btn" }) {
       
     </form>
   );
-}
+}               

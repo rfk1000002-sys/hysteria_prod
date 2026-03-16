@@ -257,67 +257,78 @@ export default function ProgramForm({ initialData = null, isEdit = false, progra
     e.preventDefault();
     setLoading(true);
 
-    // Validasi
+    // 👉 VALIDASI KETAT
     const missingFields = [];
     if (!form.title) missingFields.push("Judul Postingan");
+    if (!form.description || form.description === "<p></p>") missingFields.push("Deskripsi");
+    if (form.organizerIds.length === 0) missingFields.push("Penyelenggara");
     if (!Array.isArray(form.categoryItemIds) || form.categoryItemIds.length === 0)
-      missingFields.push("Kategori");
+      missingFields.push("Sub Kategori");
     if (!form.poster) missingFields.push("Foto Utama");
 
     if (missingFields.length > 0) {
-      alert("Field berikut belum diisi:\n- " + missingFields.join("\n- "));
+      alert("Field berikut wajib diisi:\n- " + missingFields.join("\n- "));
       setLoading(false);
       return;
     }
 
-    const payload = {
-      title           : form.title,
-      type            : "UMUM", // Default untuk form ini
-      categoryItemIds : form.categoryItemIds,
-      organizerItemIds: form.organizerIds.filter((id) => id !== "__HYSTERIA__"),
-      description     : form.description,
-      startAt: form.startDate
-        ? form.isFlexibleTime
-          ? new Date(`${form.startDate}T00:00`).toISOString()
-          : new Date(`${form.startDate}T${form.startTime || "00:00"}`).toISOString()
-        : null,
-      endAt: form.endDate
-        ? form.isFlexibleTime
-          ? new Date(`${form.endDate}T00:00`).toISOString()
-          : new Date(`${form.endDate}T${form.endTime || "00:00"}`).toISOString()
-        : null,
-      location        : form.location,
-      registerLink    : form.registerLink,
-      mapsEmbedSrc    : extractMapSrc(form.mapsEmbed),
-      poster          : form.poster,
-      isPublished     : form.status === "PUBLISHED", 
-      driveLink       : form.driveLink,                
-      youtubeLink     : form.youtubeLink,
-      instagramLink   : form.instagramLink,
-      drivebukuLink   : form.drivebukuLink,
-      isFlexibleTime  : form.isFlexibleTime,
-      tagNames: Array.isArray(form.tags) ? form.tags.filter(Boolean) : [],
-    };
+    try {
+      const payload = {
+        title           : form.title,
+        type            : "UMUM", 
+        categoryItemIds : form.categoryItemIds,
+        organizerItemIds: form.organizerIds.filter((id) => id !== "__HYSTERIA__"),
+        description     : form.description,
+        startAt: form.startDate
+          ? form.isFlexibleTime
+            ? new Date(`${form.startDate}T00:00`).toISOString()
+            : new Date(`${form.startDate}T${form.startTime || "00:00"}`).toISOString()
+          : null,
+        endAt: form.endDate
+          ? form.isFlexibleTime
+            ? new Date(`${form.endDate}T00:00`).toISOString()
+            : new Date(`${form.endDate}T${form.endTime || "00:00"}`).toISOString()
+          : null,
+        location        : form.location,
+        registerLink    : form.registerLink,
+        mapsEmbedSrc    : extractMapSrc(form.mapsEmbed),
+        poster          : form.poster,
+        isPublished     : form.status === "PUBLISHED", 
+        driveLink       : form.driveLink,                
+        youtubeLink     : form.youtubeLink,
+        instagramLink   : form.instagramLink,
+        drivebukuLink   : form.drivebukuLink,
+        isFlexibleTime  : form.isFlexibleTime,
+        tagNames: Array.isArray(form.tags) ? form.tags.filter(Boolean) : [],
+      };
 
-    // MENGARAH KE API PROGRAMS, BUKAN EVENTS
-    const res = await fetch(
-      isEdit ? `/api/admin/programs/${programId}` : "/api/admin/programs",
-      {
-        method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const res = await fetch(
+        isEdit ? `/api/admin/programs/${programId}` : "/api/admin/programs",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null); 
+        alert(errData?.message || errData?.error || "Gagal menyimpan data ke server! Cek terminal VS Code.");
+        setLoading(false);
+        return;
       }
-    );
 
-    if (!res.ok) {
-      const err = await res.json();
-      alert(err.message || err.error);
+      // 👉 SOLUSI FIX: Menggunakan router.push untuk navigasi halus tanpa merusak session login
+      router.push("/admin/programs");
+      
+      // 👉 Memaksa tabel refresh data terbarunya tanpa kedip
+      router.refresh();
+
+    } catch (error) {
+      console.error("Terjadi kesalahan:", error);
+      alert("Terjadi kesalahan jaringan atau sistem.");
       setLoading(false);
-      return;
     }
-
-    // KEMBALI KE HALAMAN TABEL PROGRAM
-    router.push("/admin/programs");
   };
 
   const inputClass =
@@ -389,6 +400,7 @@ export default function ProgramForm({ initialData = null, isEdit = false, progra
 
         {/* RIGHT */}
         <div className="space-y-6">
+          
           <Card title="Penyelenggara *">
             <div ref={organizerRef} className="relative space-y-2">
               {form.organizerIds.length > 0 && (

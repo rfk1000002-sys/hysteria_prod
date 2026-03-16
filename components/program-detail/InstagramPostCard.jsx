@@ -8,9 +8,11 @@ export default function InstagramPostCard({
 }) {
   return (
     <Link href={href} className="group block" aria-label="Open post detail">
-      <div className="relative aspect-9/16 w-full overflow-hidden rounded-3xl shadow-[0_18px_45px_rgba(0,0,0,0.18)]">
+      <div className="relative aspect-[9/16] w-full overflow-hidden rounded-3xl shadow-[0_18px_45px_rgba(0,0,0,0.18)] bg-gray-200">
+        
         <Image
-          src={thumbnailUrl}
+          // Kasih gambar fallback dari placeholder kalau thumbnailUrl-nya kosong/undefined
+          src={thumbnailUrl || "https://via.placeholder.com/400x600?text=No+Image"}
           alt={alt}
           fill
           sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"

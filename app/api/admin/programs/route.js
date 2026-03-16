@@ -1,13 +1,7 @@
+// app/api/admin/programs/route.js
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-// Fungsi kecil untuk membuat slug URL otomatis dari Judul
-// Contoh: "Bincang Seni" -> "bincang-seni-16789..."
-const generateSlug = (title) => {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
-};
+import { prisma } from "@/lib/prisma"; // Pakai jalur '@' biar rapi
+import slugify from "slugify";
 
 // ==========================================
 // METHOD GET: Mengambil Semua Data Program
@@ -16,12 +10,12 @@ export async function GET() {
   try {
     const programs = await prisma.program.findMany({
       orderBy: { createdAt: "desc" },
-      // Kita ambil relasinya sekalian untuk dimunculkan di tabel nanti
       include: {
-        programCategories: { include: { categoryItem: true } },
+        programCategories: {
+          include: { categoryItem: true },
+        },
       },
     });
-
     return NextResponse.json(programs, { status: 200 });
   } catch (error) {
     console.error("Penyebab Error Prisma GET:", error);
@@ -35,89 +29,73 @@ export async function GET() {
 // ==========================================
 // METHOD POST: Menyimpan Data Postingan Baru
 // ==========================================
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const body = await request.json();
+    const body = await req.json();
 
-    // 1. Ekstrak semua data yang dikirim dari Form Frontend
     const {
-      title,
-      type,
-      description,
-      startAt,
-      endAt,
-      isFlexibleTime,
-      location,
-      registerLink,
-      mapsEmbedSrc,
-      poster,
-      isPublished,
-      driveLink,
-      youtubeLink,
-      instagramLink,
-      drivebukuLink,
-      categoryItemIds,
-      organizerItemIds,
-      tagNames,
+      title, type = "UMUM", description, startAt, endAt, isFlexibleTime, location,
+      registerLink, mapsEmbedSrc, poster, isPublished, driveLink,
+      youtubeLink, instagramLink, drivebukuLink, categoryItemIds = [],
+      organizerItemIds = [], tagNames = [],
     } = body;
 
-    // 2. Siapkan logika untuk Tag (Cari tag yang sudah ada, atau buat baru)
-    const tagConnectOrCreate = (tagNames || []).map((name) => ({
-      tag: {
-        connectOrCreate: {
-          where: { name },
-          create: { name, slug: generateSlug(name) },
-        },
-      },
-    }));
+    // 1. VALIDASI ID AGAR PASTI ANGKA (Mencegah error dari string)
+    const validCategoryIds = categoryItemIds.map(Number).filter(n => !isNaN(n));
+    const validOrganizerIds = organizerItemIds.map(Number).filter(n => !isNaN(n));
 
-    // 3. Simpan seluruh data ke Database menggunakan Prisma
-    const newProgram = await prisma.program.create({
-      data: {
-        title,
-        slug: generateSlug(title),
-        type,
-        description,
-        startAt,
-        endAt,
-        isFlexibleTime,
-        location,
-        registerLink,
-        mapsEmbedSrc,
-        poster,
-        isPublished,
-        driveLink,
-        youtubeLink,
-        instagramLink,
-        drivebukuLink,
+    // 2. BIKIN SLUG AMAN PAKAI SLUGIFY
+    const baseSlug = slugify(title, { lower: true, strict: true });
+    const slugCount = await prisma.program.count({
+      where: { slug: { startsWith: baseSlug } },
+    });
+    const slug = slugCount > 0 ? `${baseSlug}-${slugCount + 1}` : baseSlug;
 
-        // Relasi ke Sub Kategori (Menyimpan banyak ID kategori sekaligus)
-        programCategories: {
-          create: (categoryItemIds || []).map((id) => ({
-            categoryItemId: id,
-          })),
+    // 3. PROSES SIMPAN BERANTAI (TRANSACTION) BIAR ANTI GAGAL
+    const newProgram = await prisma.$transaction(async (tx) => {
+      // Bikin Program Utama & Sambungin Kategori
+      const createdProgram = await tx.program.create({
+        data: {
+          title, slug, description: description || "", type, poster,
+          isPublished: Boolean(isPublished),
+          startAt: startAt ? new Date(startAt) : null,
+          endAt: endAt ? new Date(endAt) : null,
+          isFlexibleTime: Boolean(isFlexibleTime),
+          location, registerLink, mapsEmbedSrc, driveLink, youtubeLink, instagramLink, drivebukuLink,
+          
+          programCategories: {
+            create: validCategoryIds.map((id, idx) => ({ categoryItemId: id, isPrimary: idx === 0, order: idx })),
+          },
+          programOrganizers: {
+            create: validOrganizerIds.map((id) => ({ categoryItemId: id })),
+          },
         },
+      });
 
-        // Relasi ke Penyelenggara
-        programOrganizers: {
-          create: (organizerItemIds || []).map((id) => ({
-            categoryItemId: id,
-          })),
-        },
+      // Proses Tagging
+      for (const name of tagNames) {
+        if (!name) continue;
+        const tagSlug = slugify(name, { lower: true, strict: true });
+        
+        const tag = await tx.tag.upsert({
+          where: { slug: tagSlug },
+          update: {},
+          create: { name, slug: tagSlug },
+        });
 
-        // Relasi ke Tag
-        programTags: {
-          create: tagConnectOrCreate,
-        },
-      },
+        await tx.programTag.create({
+          data: { programId: createdProgram.id, tagId: tag.id },
+        });
+      }
+
+      return createdProgram;
     });
 
-    // Kembalikan respons sukses ke Frontend
     return NextResponse.json(newProgram, { status: 201 });
   } catch (error) {
     console.error("Penyebab Error Prisma POST:", error);
     return NextResponse.json(
-      { error: "Gagal menyimpan postingan ke database." },
+      { error: "Gagal menyimpan data Program.", details: error.message },
       { status: 500 }
     );
   }

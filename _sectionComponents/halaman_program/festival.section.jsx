@@ -1,6 +1,4 @@
 // _components/halaman_program/FestivalSection.jsx
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { Poppins } from "next/font/google";
@@ -10,37 +8,20 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// ==========================================
-// DATA FESTIVAL (CONNECTING POINT)
-// Link di sini harus sesuai dengan KEY di page.jsx
-// ==========================================
-const FESTIVALS = [
-  {
-    id: 1,
-    title: "Festival Kampung",
-    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=800&q=80",
-    // Link ke: app/program/[slug]/page.jsx (slug: festival-kampung)
-    link: "/program/festival-kampung", 
-  },
-  {
-    id: 2,
-    title: "Festival Kota",
-    image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-    // Link ke: app/program/[slug]/page.jsx (slug: festival-kota)
-    link: "/program/festival-kota",
-  },
-  {
-    id: 3,
-    title: "Biennale",
-    image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=800&q=80",
-    // Link ke: app/program/[slug]/page.jsx (slug: festival-biennale)
-    link: "/program/festival-biennale",
-  },
-];
+// KOMPONEN MENERIMA DATA "covers" DARI PAGE INDUK
+export default function FestivalSection({ covers }) {
+  
+  // Siapkan fallback image kalau admin belum upload gambar di CMS
+  const fallbackKampung = "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=800&q=80";
+  const fallbackKota = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80";
+  const fallbackBiennale = "https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=800&q=80";
 
-export default function FestivalSection() {
+  // Ambil gambar dari database, kalau kosong pakai fallback
+  const imgKampung = covers?.festivalKampung || fallbackKampung;
+  const imgKota = covers?.festivalKota || fallbackKota;
+  const imgBiennale = covers?.biennale || fallbackBiennale;
+
   return (
-    // TAMBAHAN: id="festival" ditambahkan di sini agar bisa diakses lewat /program#festival
     <section id="festival" className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 py-10 mb-10">
       
       {/* JUDUL SECTION */}
@@ -48,20 +29,17 @@ export default function FestivalSection() {
         <h2 className={`${poppins.className} text-[28px] md:text-[32px] font-bold text-black`}>
             Festival dan Pameran
         </h2>
-        {/* Opsional: Tombol Lihat Semua jika perlu */}
-        {/* <Link href="/program" className="text-pink-600 font-semibold hover:underline">Lihat Semua</Link> */}
       </div>
 
       {/* GRID LAYOUT */}
       <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[500px]">
         
         {/* --- KOLOM KIRI (ITEM BESAR/UTAMA - Festival Kampung) --- */}
-        {/* Kita bungkus dengan Link langsung di parent div agar seluruh area bisa diklik */}
         <Link 
-            href={FESTIVALS[0].link} 
+            href="/program/festival-kampung" 
             className="relative w-full lg:w-3/5 h-[300px] lg:h-full rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
         >
-             <FestivalCardContent item={FESTIVALS[0]} />
+             <FestivalCardContent title="Festival Kampung" image={imgKampung} />
         </Link>
 
         {/* --- KOLOM KANAN (2 ITEM KECIL DITUMPUK) --- */}
@@ -69,18 +47,18 @@ export default function FestivalSection() {
           
           {/* Item Atas - Festival Kota */}
           <Link 
-            href={FESTIVALS[1].link}
+            href="/program/festival-kota"
             className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
           >
-             <FestivalCardContent item={FESTIVALS[1]} />
+             <FestivalCardContent title="Festival Kota" image={imgKota} />
           </Link>
 
           {/* Item Bawah - Biennale */}
           <Link 
-            href={FESTIVALS[2].link}
+            href="/program/festival-biennale"
             className="relative w-full h-[240px] lg:h-1/2 rounded-2xl overflow-hidden group shadow-md hover:shadow-xl transition-all duration-300"
           >
-             <FestivalCardContent item={FESTIVALS[2]} />
+             <FestivalCardContent title="Biennale" image={imgBiennale} />
           </Link>
 
         </div>
@@ -89,15 +67,15 @@ export default function FestivalSection() {
   );
 }
 
-// Sub-komponen Konten Card (Reusable)
-function FestivalCardContent({ item }) {
+// Sub-komponen Konten Card (Diubah untuk menerima title dan image langsung)
+function FestivalCardContent({ title, image }) {
   return (
     <>
       {/* Background Image dengan efek zoom saat hover */}
       <div className="absolute inset-0 w-full h-full">
          <Image 
-            src={item.image} 
-            alt={item.title} 
+            src={image} 
+            alt={title} 
             fill 
             className="object-cover transition-transform duration-700 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -111,7 +89,7 @@ function FestivalCardContent({ item }) {
       <div className="absolute inset-0 p-6 flex items-end justify-between z-10">
         
         <h3 className={`${poppins.className} text-white text-xl md:text-2xl font-bold drop-shadow-md`}>
-          {item.title}
+          {title}
         </h3>
         
         {/* Icon Panah Bulat */}

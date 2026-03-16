@@ -1,6 +1,4 @@
-// _components/VideoSeriesSection.jsx
-"use client";
-
+// GAK ADA LAGI "use client" DI SINI YA! 😎
 import Image from "next/image";
 import Link from "next/link";
 import { Poppins } from "next/font/google";
@@ -10,25 +8,29 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// Data Dummy Video Series
-const VIDEO_ITEMS = [
-  {
-    id: 1,
-    title: "Sapa Warga",
-    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1000&auto=format&fit=crop",
-    // UBAH: Langsung mengarah ke slug-nya
-    link: "/program/sapa-warga"
-  },
-  {
-    id: 2,
-    title: "Hysteria Berkelana",
-    image: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000&auto=format&fit=crop",
-    // UBAH: Langsung mengarah ke slug-nya
-    link: "/program/hysteria-berkelana"
-  },
-];
+// KOMPONEN MENERIMA DATA "covers" DARI PAGE INDUK
+export default function VideoSeriesSection({ covers }) {
+  
+  // Siapkan fallback image kalau admin belum upload gambar di CMS
+  const fallbackSapaWarga = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1000&auto=format&fit=crop";
+  const fallbackBerkelana = "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=1000&auto=format&fit=crop";
 
-export default function VideoSeriesSection() {
+  // Susun data secara dinamis menggunakan data dari database
+  const videoItems = [
+    {
+      id: 1,
+      title: "Sapa Warga",
+      image: covers?.sapaWarga || fallbackSapaWarga,
+      link: "/program/sapa-warga"
+    },
+    {
+      id: 2,
+      title: "Hysteria Berkelana",
+      image: covers?.hysteriaBerkelana || fallbackBerkelana,
+      link: "/program/hysteria-berkelana"
+    },
+  ];
+
   return (
     <section id="video-series" className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mb-20">
       
@@ -41,7 +43,7 @@ export default function VideoSeriesSection() {
 
       {/* GRID LAYOUT (2 Kolom) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {VIDEO_ITEMS.map((item) => (
+        {videoItems.map((item) => (
           <Link
             href={item.link}
             key={item.id}
@@ -57,14 +59,8 @@ export default function VideoSeriesSection() {
                  sizes="(max-width: 768px) 100vw, 50vw"
                />
                
-               {/* Play Icon Overlay (Efek Pop-up) */}
-               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 z-10">
-                  <div className="bg-white/20 backdrop-blur-md p-4 rounded-full border border-white/40 transform scale-50 group-hover:scale-100 transition-transform duration-300 delay-75 shadow-lg">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white" stroke="currentColor" strokeWidth="0">
-                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                  </div>
-               </div>
+               {/* Efek Hover Baru: Gradasi gelap elegan dari bawah ke atas */}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
             </div>
 
             {/* 2. FOOTER BAR (Judul & Panah) */}

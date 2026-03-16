@@ -1,6 +1,4 @@
-// _components/ResidencySection.jsx
-"use client";
-
+// _components/halaman_program/ResidencySection.jsx
 import Image from "next/image";
 import Link from "next/link"; 
 import { Poppins } from "next/font/google";
@@ -10,27 +8,29 @@ const poppins = Poppins({
   weight: ["600", "700"],
 });
 
-// Data dengan URL gambar Unsplash
-const RESIDENCY_ITEMS = [
-  {
-    id: 1,
-    title: "Flash Residency",
-    // Gambar studio seni
-    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1000&auto=format&fit=crop",
-    // UBAH: Langsung mengarah ke slug-nya sesuai PROGRAM_DATA
-    link: "/program/flash-residency",
-  },
-  {
-    id: 2,
-    title: "Kandang Tandang",
-    // Gambar workshop kolaboratif
-    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1000&auto=format&fit=crop",
-    // UBAH: Langsung mengarah ke slug-nya sesuai PROGRAM_DATA
-    link: "/program/kandang-tandang",
-  },
-];
+// KOMPONEN MENERIMA DATA "covers" DARI PAGE INDUK
+export default function ResidencySection({ covers }) {
+  
+  // Siapkan fallback image kalau admin belum upload gambar di CMS
+  const fallbackFlash = "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=1000&auto=format&fit=crop";
+  const fallbackKandang = "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1000&auto=format&fit=crop";
 
-export default function ResidencySection() {
+  // Susun ulang data secara dinamis menggunakan data dari database
+  const residencyItems = [
+    {
+      id: 1,
+      title: "Flash Residency",
+      image: covers?.flashResidency || fallbackFlash,
+      link: "/program/flash-residency",
+    },
+    {
+      id: 2,
+      title: "Kandang Tandang",
+      image: covers?.kandangTandang || fallbackKandang,
+      link: "/program/kandang-tandang",
+    },
+  ];
+
   return (
     // id="residensi-workshop" tetap dipertahankan agar navbar bisa auto-scroll ke sini
     <section id="residensi-workshop" className="w-full max-w-[1440px] mx-auto px-6 md:px-10 lg:px-20 mb-20">
@@ -44,7 +44,7 @@ export default function ResidencySection() {
 
       {/* GRID LAYOUT (2 Kolom) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-        {RESIDENCY_ITEMS.map((item) => (
+        {residencyItems.map((item) => (
           // Mengubah div pembungkus menjadi Link agar bisa diklik dan berpindah halaman
           <Link
             href={item.link}

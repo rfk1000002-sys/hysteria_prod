@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { notFound, useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Poppins } from 'next/font/google';
 import Link from 'next/link';
 
@@ -23,38 +23,12 @@ const PROGRAM_DATA = {
   // KELOMPOK 6 CARD (TANPA SIDEBAR)
   'flash-residency': { title: 'Flash Residency', desc: 'Program residensi singkat.', categories: [] },
   'kandang-tandang': { title: 'Kandang Tandang', desc: 'Pertukaran seniman antar wilayah.', categories: [] },
-  'safari-memori': {
-    title: 'Safari Memori', 
-    desc: 'Penelusuran sejarah dan ingatan kolektif warga melalui medium siniar dan obrolan.',
-    categories: [] 
-  },
+  'safari-memori': { title: 'Safari Memori', desc: 'Penelusuran sejarah dan ingatan kolektif warga melalui medium siniar dan obrolan.', categories: [] },
   'aston': { title: 'Aston', desc: 'Seri podcast yang membahas fenomena urban.', categories: [] },
   'sore-di-stonen': { title: 'Sore di Stonen', desc: 'Bincang santai menjelang senja.', categories: [] },
   'sapa-warga': { title: 'Sapa Warga', desc: 'Dokumentasi video interaksi warga.', categories: [] }
 };
 
-const generateDummyData = (targetSlug) => {
-  const rawCategories = PROGRAM_DATA[targetSlug]?.categories || [];
-  const categories = rawCategories.map(c => typeof c === 'object' ? c.name : c).filter(c => c !== 'Semua');
-  const hasCategories = categories.length > 0;
-  const statusOptions = ['Akan Berlangsung', 'Telah Berakhir'];
-  const dateOptions = ['Sabtu, 8 Maret 2026', 'Selasa, 15 Juli 2025'];
-
-  return Array.from({ length: 150 }).map((_, index) => {
-    const category = hasCategories ? categories[index % categories.length] : 'Umum'; 
-    return {
-      id: index,
-      title: `Contoh Program Hysteria - Karya ke-${index + 1}`, 
-      year: 2023 + (index % 3),
-      category: category,
-      isChoice: index % 3 === 0, 
-      status: statusOptions[index % 2], 
-      date: dateOptions[index % 2],     
-    };
-  });
-};
-
-// UBAH: Sekarang menerima actualSlug dari server, bukan dari params Next.js
 export default function DefaultProgramView({ actualSlug }) {
   const data = PROGRAM_DATA[actualSlug];
 
@@ -66,10 +40,86 @@ export default function DefaultProgramView({ actualSlug }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
-  // Logika andalanmu: Jika categories kosong, sidebar hilang (6 card akan muncul)
+  const [realItems, setRealItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const hasSidebar = data?.categories && data.categories.length > 0;
   const itemsPerPage = hasSidebar ? 15 : 18; 
 
+  // 👉 FETCH DATA & FILTERING STRICT BERDASARKAN "SUB KATEGORI" DATABASE
+  useEffect(() => {
+    async function fetchPrograms() {
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/admin/programs');
+        if (!res.ok) throw new Error('Gagal memuat data');
+        const dbPrograms = await res.json();
+
+        // 1. KUMPULKAN KATA KUNCI SAH UNTUK HALAMAN INI
+        const mainTitle = data?.title.toLowerCase().trim() || "";
+        const fallbackTitle = actualSlug.toLowerCase().replace(/-/g, ' ').trim();
+        
+        // Ambil nama sub-kategori (Kecuali kata 'semua')
+        const validCategoryNames = data?.categories
+            ?.map(c => c.name.toLowerCase().trim())
+            .filter(name => name !== 'semua') || [];
+
+        // Gabungkan jadi satu "Daftar Putih" (Whitelist)
+        const validPageTags = [mainTitle, fallbackTitle, ...validCategoryNames];
+
+        const formatted = dbPrograms
+          .filter(p => p.isPublished && p.type !== 'HYSTERIA_BERKELANA')
+          .filter(p => {
+             // 2. AMBIL HANYA SUB KATEGORI DARI DATABASE (Abaikan Tag Manual/Penyelenggara)
+             const catNames = p.programCategories?.map(pc => pc.categoryItem?.title.toLowerCase().trim()) || [];
+
+             // 3. LOGIKA KUNCI: Program ini masuk JIKA punya minimal 1 Sub Kategori yang ada di Daftar Putih
+             return catNames.some(cat => validPageTags.includes(cat));
+          })
+          .map(p => {
+            const startDate = p.startAt ? new Date(p.startAt) : null;
+            const today = new Date();
+            const status = startDate && startDate > today ? 'Akan Berlangsung' : 'Selesai';
+            
+            const dateStr = startDate 
+              ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(startDate)
+              : 'Waktu Menyesuaikan';
+
+            // Ambil nama original (huruf besar/kecil asli) khusus dari Sub Kategori
+            const rawCatNames = p.programCategories?.map(pc => pc.categoryItem?.title.trim()) || [];
+
+            // Cari label paling spesifik untuk kartu (Hindari tulisan "Semua" atau judul halaman utama)
+            const specificCats = rawCatNames.filter(c => 
+                c.toLowerCase() !== mainTitle && 
+                c.toLowerCase() !== fallbackTitle &&
+                c.toLowerCase() !== 'semua'
+            );
+            const primaryCat = specificCats.length > 0 ? specificCats[0] : (data?.title || 'Program');
+
+            return {
+              id: p.id,
+              title: p.title,
+              category: primaryCat, // Label ungu/pink di dalam kartu
+              filterCategories: rawCatNames, // 👉 Strictly untuk filter Sidebar
+              status: status,
+              date: dateStr,
+              image: p.poster,
+              isChoice: false 
+            };
+          });
+
+        setRealItems(formatted);
+      } catch (error) {
+        console.error("Error fetching programs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchPrograms();
+  }, [actualSlug, data]);
+
+  // Efek ganti kategori lewat URL param
   useEffect(() => {
     const paramKategori = searchParams.get('kategori');
     if (paramKategori && data?.categories) {
@@ -91,14 +141,18 @@ export default function DefaultProgramView({ actualSlug }) {
     }
   };
 
-  const allItems = useMemo(() => generateDummyData(actualSlug), [actualSlug]);
+  // 👉 LOGIKA FILTER SIDEBAR (HANYA MENGGUNAKAN SUB-KATEGORI)
   const filteredItems = useMemo(() => {
-    return allItems.filter((item) => {
-      const matchCategory = !hasSidebar || activeCategory === 'Semua' || item.category === activeCategory;
+    return realItems.filter((item) => {
+      // Cek apakah activeCategory ada di dalam array kategori asli milik program ini
+      const matchCategory = !hasSidebar || activeCategory === 'Semua' || 
+          item.filterCategories.some(c => c.toLowerCase() === activeCategory.toLowerCase().trim());
+          
       const matchSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+      
       return matchCategory && matchSearch;
     });
-  }, [allItems, activeCategory, searchQuery, hasSidebar]);
+  }, [realItems, activeCategory, searchQuery, hasSidebar]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const currentDisplayItems = useMemo(() => {
@@ -147,7 +201,7 @@ export default function DefaultProgramView({ actualSlug }) {
             </div>
             {hasSidebar && (
               <button onClick={() => { setSearchQuery(''); handleCategoryChange({ name: 'Semua', id: 'semua' }); }} className="flex-shrink-0 w-12 h-12 rounded-full border border-[#D63384] flex items-center justify-center text-[#D63384] hover:bg-pink-50 transition-colors bg-white shadow-sm">
-                 <span className="font-bold">X</span> {/* Ganti SVG untuk ringkas */}
+                 <span className="font-bold">X</span>
               </button>
             )}
         </div>
@@ -177,7 +231,12 @@ export default function DefaultProgramView({ actualSlug }) {
 
             {/* CARD AREA */}
             <div className={`flex-1 w-full ${!hasSidebar ? 'max-w-7xl' : ''}`}>
-                {currentDisplayItems.length === 0 ? (
+                {/* TAMPILAN LOADING */}
+                {isLoading ? (
+                    <div className="w-full h-[400px] flex flex-col items-center justify-center text-[#D63384]">
+                        <p className="text-lg font-medium animate-pulse">Memuat program...</p>
+                    </div>
+                ) : currentDisplayItems.length === 0 ? (
                     <div className="w-full h-[400px] flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
                         <p className="text-lg font-medium">Tidak ada program yang ditemukan.</p>
                     </div>
@@ -190,14 +249,23 @@ export default function DefaultProgramView({ actualSlug }) {
                                   href={`/program/${actualSlug}/${item.id}`} 
                                   key={item.id} 
                                   className="group relative rounded-[10px] overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 w-full block" 
-                                  style={{ maxWidth: '210px', height: '290px', background: 'linear-gradient(180deg, #F2C94C 0%, #F2994A 100%)' }}
+                                  style={{ 
+                                    maxWidth: '210px', 
+                                    height: '290px', 
+                                    backgroundImage: item.image ? `url(${item.image})` : 'linear-gradient(180deg, #F2C94C 0%, #F2994A 100%)',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center'
+                                  }}
                               >
-                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-0 transition-opacity duration-300 group-hover:opacity-0"></div>
+                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-0 transition-opacity duration-300 group-hover:opacity-0"></div>
                                 <div className="relative z-10 p-4 h-full flex flex-col justify-between text-white transition-opacity duration-300 group-hover:opacity-0">
                                     <div className="self-start">{item.isChoice && <span className="text-[9px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm border border-white/10">Pilihan</span>}</div>
-                                    <div><h3 className="font-bold text-sm leading-tight line-clamp-3">{item.title}</h3></div>
+                                    <div>
+                                      <span className="text-[10px] font-medium text-pink-300 block mb-1">{item.category}</span>
+                                      <h3 className="font-bold text-sm leading-tight line-clamp-3 drop-shadow-md">{item.title}</h3>
+                                    </div>
                                 </div>
-                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex flex-col justify-end p-4">
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex flex-col justify-end p-4">
                                     <div className="flex flex-col transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
                                         <span className="bg-white text-[#D63384] text-[10px] font-bold px-3 py-1 rounded-full w-max mb-2 shadow-sm">{item.status}</span>
                                         <h3 className="font-bold text-sm leading-snug text-white mb-1">{item.title}</h3>

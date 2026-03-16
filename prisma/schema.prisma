@@ -221,6 +221,7 @@ model CategoryItem {
   eventCategories    EventCategory[]
   platformCategories PlatformCategory[]
   eventOrganizers    EventOrganizer[]
+  platformContents   PlatformContent[]
   programCategories  ProgramCategory[]
 
   createdAt DateTime @default(now())
@@ -300,6 +301,7 @@ model Platform {
 
   images     PlatformImage[]
   categories PlatformCategory[]
+  contents   PlatformContent[]
 
   @@index([slug])
 }
@@ -347,6 +349,52 @@ model PlatformImage {
 
   @@unique([platformId, key])
   @@index([platformId])
+  @@index([type])
+}
+
+model PlatformContent {
+  id Int @id @default(autoincrement())
+
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  platformId Int
+
+  // Kategori konten — mengacu ke CategoryItem (sub-nav platform)
+  categoryItem   CategoryItem? @relation(fields: [categoryItemId], references: [id], onDelete: SetNull)
+  categoryItemId Int?
+
+  title    String   @db.VarChar(500)
+  url      String?  @db.VarChar(500)
+  year     Int?
+  tags     String[]             // array tag bebas, disimpan as text[]
+  order    Int      @default(0)
+  isActive Boolean  @default(true)
+
+  images PlatformContentImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platformId])
+  @@index([categoryItemId])
+  @@index([order])
+  @@index([isActive])
+}
+
+model PlatformContentImage {
+  id Int @id @default(autoincrement())
+
+  content   PlatformContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId Int
+
+  imageUrl String? @db.VarChar(500)
+  type     String  @default("thumbnail") @db.VarChar(50) // thumbnail | gallery | cover
+  alt      String? @db.VarChar(255)
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contentId])
   @@index([type])
 }
 
@@ -607,18 +655,20 @@ model Program {
   isPublished Boolean     @default(false)
 
   // Jadwal & Tiket
-  startAt      DateTime?
-  endAt        DateTime?
-  registerLink String?
+  startAt        DateTime?
+  endAt          DateTime?
+  isFlexibleTime Boolean   @default(false) 
+  registerLink   String?
 
-  // Lokasi (Dari temuan UI Frontend)
+  // Lokasi
   location     String?
   mapsEmbedSrc String? @db.Text
 
-  // Arsip & Link Eksternal (Dari temuan UI Frontend)
+  // Arsip & Link Eksternal
   driveLink     String?
   youtubeLink   String?
   instagramLink String?
+  drivebukuLink String? 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -666,3 +716,18 @@ model ProgramOrganizer {
   program      Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
   categoryItem CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
 }
+
+model PageProgram {
+  id        Int      @id @default(autoincrement())
+  pageSlug  String   @unique @default("program") @db.VarChar(100)
+  
+  mainHero  Json?    @db.JsonB
+  covers    Json?    @db.JsonB
+  slugHeros Json?    @db.JsonB
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageSlug])
+}
+ 

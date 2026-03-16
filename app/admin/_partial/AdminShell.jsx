@@ -21,6 +21,7 @@ import LakiMasakPage from "@/app/admin/platform/laki-masak/page.jsx"
 
 // pages
 import PageHome from "../section/PageHome.jsx";
+import PageProgram from "../section/PageProgram.jsx";
 import PageArtlab from "../section/PageArtlab.jsx";
 import PageDitampart from "../section/PageDitampart.jsx";
 import PageLakiMasak from "../section/PageLakiMasak.jsx";
@@ -82,6 +83,8 @@ export default function AdminShell({ children }) {
         return <PageLakiMasak />;
       case "category":
         return <CategoriesPage />;
+      case "page.program":           
+        return <PageProgram />;
 
       case "platform":
       case "platform.hysteria-artlab":
@@ -123,7 +126,7 @@ export default function AdminShell({ children }) {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100 justify-center">
         <div className="lg:flex lg:items-start lg:justify-start">
           <aside
             className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
