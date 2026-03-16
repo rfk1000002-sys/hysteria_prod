@@ -53,6 +53,9 @@ export async function POST(req) {
         ? new Date(formData.get("publishedAt"))
         : null,
       tagNames: JSON.parse(formData.get("tagNames") || "[]"),
+      // NEW
+      references: JSON.parse(formData.get("references") || "[]"),
+      featuredImageSource: formData.get("featuredImageSource"),
     };
 
     const article = await createArticleService(data, file);

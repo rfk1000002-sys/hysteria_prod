@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Person } from "@mui/icons-material";
 import { extractTextFromTiptap } from "@/lib/utils/extractTiptapText";
 
@@ -8,7 +9,7 @@ export default function ArticleCard({ article, variant = "small" }) {
 
   const preview =
     article.excerpt?.trim() ||
-    extractTextFromTiptap(article.content).slice(0, 140);
+    extractTextFromTiptap(article.content || {}).slice(0, 140);
 
   const categories = article.categories || [];
 
@@ -28,10 +29,12 @@ export default function ArticleCard({ article, variant = "small" }) {
             variant === "large" ? "h-full min-h-[260px]" : "h-40"
           }`}
         >
-          <img
+          <Image
             src={article.featuredImage || "/placeholder.jpg"}
             alt={article.title}
-            className={`w-full h-full object-cover transition-all duration-700
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-cover transition-all duration-700
             ${
               variant === "large"
                 ? "group-hover:scale-110 group-hover:blur-[1px]"
@@ -53,10 +56,10 @@ export default function ArticleCard({ article, variant = "small" }) {
                 <div className="flex flex-wrap gap-2 mb-3">
                   {categories.map((cat) => (
                     <span
-                      key={cat.category.id}
+                      key={cat.id}
                       className="px-3 py-1 text-xs bg-pink-500 text-white rounded-full"
                     >
-                      {cat.category.title}
+                      {cat.title}
                     </span>
                   ))}
                 </div>
@@ -91,6 +94,7 @@ export default function ArticleCard({ article, variant = "small" }) {
                       : ""}
                   </span>
                 </div>
+
               </div>
             </div>
           )}
@@ -104,10 +108,10 @@ export default function ArticleCard({ article, variant = "small" }) {
               {categories.length > 0 ? (
                 categories.map((cat) => (
                   <span
-                    key={cat.category.id}
+                    key={cat.id}
                     className="px-3 py-1 text-xs border border-pink-400 text-pink-500 rounded-full"
                   >
-                    {cat.category.title}
+                    {cat.title}
                   </span>
                 ))
               ) : (
@@ -145,6 +149,7 @@ export default function ArticleCard({ article, variant = "small" }) {
                   : ""}
               </span>
             </div>
+
           </div>
         )}
       </div>

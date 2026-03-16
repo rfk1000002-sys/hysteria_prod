@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-export const articleStatusEnum = z.enum([
-  "DRAFT",
-  "PUBLISHED",
-  "SCHEDULED",
-]);
+export const articleStatusEnum = z.enum(["DRAFT", "PUBLISHED", "SCHEDULED"]);
 
 export const createArticleSchema = z.object({
   title: z.string().min(3).max(255),
@@ -25,9 +21,20 @@ export const createArticleSchema = z.object({
   editorName: z.string().max(255).optional().nullable(),
 
   status: articleStatusEnum,
-  publishedAt: z.date().optional().nullable(),
+  publishedAt: z.coerce.date().optional().nullable(),
 
   tagNames: z.array(z.string()).optional(),
+
+  references: z
+    .array(
+      z.object({
+        title: z.string(),
+        url: z.string().url(),
+      }),
+    )
+    .optional(),
+
+  featuredImageSource: z.string().optional().nullable(),
 });
 
 export function validateArticle(data) {

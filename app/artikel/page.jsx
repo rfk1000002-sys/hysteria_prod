@@ -12,6 +12,8 @@ export default function ArtikelPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [showSort, setShowSort] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [sortLabel, setSortLabel] = useState("Terbaru");
   const dropdownRef = useRef(null);
 
   // State Pagination
@@ -22,6 +24,66 @@ export default function ArtikelPage() {
   const tabRefs = useRef({});
   const [indicatorStyle, setIndicatorStyle] = useState({});
 
+  // ================= SKELETON CARD =================
+  function SkeletonCard() {
+    return (
+      <div className="animate-pulse bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-gray-200 h-40 w-full"></div>
+
+        <div className="p-4 space-y-3">
+          <div className="h-3 bg-gray-200 rounded w-20"></div>
+
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+
+          <div className="h-3 bg-gray-200 rounded w-full"></div>
+
+          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // ================= INITIAL EMPTY STATE =================
+  function EmptyInitial() {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-center">
+        <div className="text-5xl mb-6">📝</div>
+
+        <h2 className="text-2xl font-bold mb-2">Belum ada artikel</h2>
+
+        <p className="text-gray-500 max-w-md">
+          Artikel akan muncul di sini ketika sudah dipublikasikan.
+        </p>
+      </div>
+    );
+  }
+
+  // ================= EMPTY SEARCH STATE =================
+  function EmptySearch({ keyword }) {
+    return (
+      <div className="col-span-full text-center py-24">
+        <h3 className="text-xl font-semibold mb-2">Tidak ditemukan artikel</h3>
+
+        <p className="text-gray-500">
+          Tidak ada hasil untuk "<span className="font-medium">{keyword}</span>"
+        </p>
+      </div>
+    );
+  }
+
+  // ================= EMPTY CATEGORY STATE =================
+  function EmptyCategory({ category }) {
+    return (
+      <div className="col-span-full text-center py-24">
+        <h3 className="text-xl font-semibold mb-2">
+          Belum ada artikel di kategori
+        </h3>
+
+        <p className="text-gray-500">"{category}"</p>
+      </div>
+    );
+  }
+
   // ================= FETCH ARTICLES =================
   const fetchArticles = async (
     categoryValue = activeCategory,
@@ -29,6 +91,8 @@ export default function ArtikelPage() {
     sortValue = sortBy,
   ) => {
     try {
+      setLoading(true);
+
       const res = await fetch(
         `/api/articles?search=${keyword}&category=${categoryValue}&sort=${sortValue}`,
       );
@@ -36,10 +100,13 @@ export default function ArtikelPage() {
       if (!res.ok) return [];
 
       const json = await res.json();
+
       return json.data || [];
     } catch (err) {
       console.error("Fetch error:", err);
       return [];
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,6 +253,12 @@ export default function ArtikelPage() {
 
                 <div className="flex flex-col gap-3 text-sm">
                   <button
+                    onClick={() => handleSort("popular")}
+                    className="text-left hover:text-pink-500"
+                  >
+                    Terpopuler
+                  </button>
+                  <button
                     onClick={() => handleSort("newest")}
                     className="text-left hover:text-pink-500"
                   >
@@ -298,36 +371,50 @@ export default function ArtikelPage() {
       </div>
 
       {/* ARTICLES GRID */}
-      <div
-        className={`grid grid-cols-2 lg:grid-cols-4 gap-8
-  ${isAnimating ? "animate-fade-out" : "animate-fade-in"}
-`}
-      >
-        {paginatedArticles.map((article, index) => {
-          const position = index % 5;
+      {/* ================= ARTICLES GRID ================= */}
 
-          let variant = "small";
-          let spanClass = "";
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      ) : articles.length === 0 && search === "" && activeCategory === "all" ? (
+        <EmptyInitial />
+      ) : paginatedArticles.length === 0 && search !== "" ? (
+        <EmptySearch keyword={search} />
+      ) : paginatedArticles.length === 0 && activeCategory !== "all" ? (
+        <EmptyCategory category={activeCategory} />
+      ) : (
+        <div
+          className={`grid grid-cols-2 lg:grid-cols-4 gap-8
+    ${isAnimating ? "animate-fade-out" : "animate-fade-in"}
+    `}
+        >
+          {paginatedArticles.map((article, index) => {
+            const position = index % 5;
 
-          // Row 1 → small small large large
-          if (position === 2) {
-            variant = "large";
-            spanClass = "lg:col-span-2";
-          }
+            let variant = "small";
+            let spanClass = "";
 
-          // Row 3 → large large small small
-          if (position === 8) {
-            variant = "large";
-            spanClass = "lg:col-span-2";
-          }
+            if (position === 2) {
+              variant = "large";
+              spanClass = "lg:col-span-2";
+            }
 
-          return (
-            <div key={article.id} className={spanClass}>
-              <ArticleCard article={article} variant={variant} />
-            </div>
-          );
-        })}
-      </div>
+            if (position === 8) {
+              variant = "large";
+              spanClass = "lg:col-span-2";
+            }
+
+            return (
+              <div key={article.id} className={spanClass}>
+                <ArticleCard article={article} variant={variant} />
+              </div>
+            );
+          })}
+        </div>
+      )}
       {/* ================= PAGINATION ================= */}
       {totalPages > 1 && (
         <div className="flex justify-center mt-16">

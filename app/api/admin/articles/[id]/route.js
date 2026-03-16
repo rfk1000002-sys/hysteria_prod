@@ -61,6 +61,8 @@ export async function PUT(req) {
         ? new Date(formData.get("publishedAt"))
         : null,
       tagNames: JSON.parse(formData.get("tagNames") || "[]"),
+      references: JSON.parse(formData.get("references") || "[]"),
+      featuredImageSource: formData.get("featuredImageSource"),
     };
 
     const updated = await updateArticleService(id, data);

@@ -3,6 +3,7 @@ import TiptapRenderer from "@/components/tiptap/TiptapRenderer";
 import { getPublicArticleDetail } from "@/modules/public/articles/services/article.public.service";
 import { getRecommendedArticles } from "@/modules/public/articles/services/article.public.service";
 import ArticleCard from "@/components/ui/ArticleCard";
+import ArticleViewTracker from "@/components/tracker/ArticleViewTracker";
 
 export default async function ArtikelDetail({ params }) {
   const { slug } = await params;
@@ -17,19 +18,34 @@ export default async function ArtikelDetail({ params }) {
 
   const article = await getPublicArticleDetail(slug);
 
-  const categoryIds = article.categories.map((c) => c.id);
+  if (!article) {
+    return (
+      <div className="text-center py-20 text-gray-500">
+        Artikel Tidak Ditemukan
+      </div>
+    );
+  }
+
+  const categories = article.categories ?? [];
+  const tags = article.tags ?? [];
+  const references = article.references ?? [];
+
+  const categoryIds = categories.map((c) => c.id);
 
   const recommendedArticles = await getRecommendedArticles({
     slug: article.slug,
     categoryIds,
   });
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const articleUrl = `${siteUrl}/artikel/${article.slug}`;
+
   return (
     <article className="max-w-6xl mx-auto px-6 py-20">
       {/* CATEGORY */}
-      {article.categories.length > 0 && (
+      {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {article.categories.map((cat) => (
+          {categories.map((cat) => (
             <span
               key={cat.id}
               className="px-3 py-1 text-xs border border-pink-400 text-pink-500 rounded-full"
@@ -69,31 +85,71 @@ export default async function ArtikelDetail({ params }) {
       {/* FEATURED IMAGE */}
       <div className="w-5/6 mx-auto">
         {article.featuredImage && (
-          <img
-            src={article.featuredImage}
-            alt={article.title}
-            className="rounded-xl mb-10 w-full object-cover"
-          />
+          <>
+            <img
+              src={article.featuredImage}
+              alt={article.title}
+              className="rounded-xl mb-2 w-full object-cover"
+            />
+
+            {article.featuredImageSource && (
+              <p className="text-sm text-pink-500 text-center mb-8">
+                Sumber: {article.featuredImageSource}
+              </p>
+            )}
+          </>
         )}
+
         {/* CONTENT */}
         <TiptapRenderer content={article.content} />
 
+        {/* VIEW TRACKER */}
+        <ArticleViewTracker slug={article.slug} />
+
+        {/* ================= REFERENCES ================= */}
+        {references.length > 0 && (
+          <div className="mt-14 flex flex-wrap items-center text-sm leading-relaxed">
+            <span className="font-semibold mr-2 text-pink-500">Referensi Artikel :</span>
+
+            {references.map((ref, index) => (
+              <a
+                key={index}
+                href={ref.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pink-500 hover:underline mr-2"
+              >
+                {ref.title}
+                {index < references.length - 1 && ","}
+              </a>
+            ))}
+          </div>
+        )}
+
         {/* ================= EDITOR ================= */}
         {article.editorName && (
-          <div className="mt-14 bg-gray-200/60 rounded-2xl px-6 py-4">
+          <div className="mt-7 bg-gray-200/60 rounded-2xl px-6 py-4">
             <span className="font-semibold text-gray-700">Editor:</span>{" "}
             <span className="text-gray-600">{article.editorName}</span>
           </div>
         )}
 
+        {/* ================= VIEWS ================= */}
+        <div className="mt-7 flex justify-start">
+          <div className="px-6 py-2 rounded-full bg-pink-50 text-pink-500 text-xs font-medium">
+            👁 {article.views} views
+          </div>
+        </div>
+
         {/* ================= TAGS + SHARE ================= */}
         <div className="mt-10 flex flex-col md:flex-row md:items-start md:justify-between gap-8">
           {/* TAGS */}
-          {article.tags.length > 0 && (
+          {tags.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold mb-3">Tags</h3>
+
               <div className="flex flex-wrap gap-3">
-                {article.tags.map((tag) => (
+                {tags.map((tag) => (
                   <span
                     key={tag.id}
                     className="px-4 py-2 text-xs bg-gray-100 rounded-full"
@@ -110,9 +166,8 @@ export default async function ArtikelDetail({ params }) {
             <h3 className="text-sm font-semibold mb-3">Share</h3>
 
             <div className="flex gap-2 text-gray-600">
-              {/* Instagram */}
               <a
-                href={`https://www.instagram.com/`}
+                href="https://www.instagram.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-pink-500 transition-colors"
@@ -120,9 +175,8 @@ export default async function ArtikelDetail({ params }) {
                 <Instagram fontSize="large" />
               </a>
 
-              {/* Facebook */}
               <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${process.env.NEXT_PUBLIC_SITE_URL}/artikel/${article.slug}`}
+                href={`https://www.facebook.com/sharer/sharer.php?u=${articleUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-pink-500 transition-colors"
@@ -130,9 +184,8 @@ export default async function ArtikelDetail({ params }) {
                 <Facebook fontSize="large" />
               </a>
 
-              {/* X */}
               <a
-                href={`https://twitter.com/intent/tweet?url=${process.env.NEXT_PUBLIC_SITE_URL}/artikel/${article.slug}`}
+                href={`https://twitter.com/intent/tweet?url=${articleUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-pink-500 transition-colors"
@@ -143,6 +196,7 @@ export default async function ArtikelDetail({ params }) {
           </div>
         </div>
       </div>
+
       {/* ================= ARTIKEL LAINNYA ================= */}
       {recommendedArticles.length > 0 && (
         <section className="mt-20">

@@ -73,7 +73,7 @@ export async function getAllArticles(options = {}) {
 
     const where = {
       isDeleted: false,
-      
+
       ...(status && {
         status: status,
       }),
@@ -137,6 +137,8 @@ export async function getArticleDetail(id) {
     content: JSON.parse(article.content),
     excerpt: article.excerpt,
     featuredImage: article.featuredImage,
+    featuredImageSource: article.featuredImageSource,
+    references: article.references || [],
     authorName: article.authorName,
     editorName: article.editorName,
     status: article.status,
@@ -166,6 +168,26 @@ export async function createArticleService(data, file) {
   const baseSlug = generateSlug(validated.slug || validated.title);
   const slug = await generateUniqueSlug(baseSlug);
 
+  const now = new Date();
+
+  let publishedAt = validated.publishedAt
+    ? new Date(validated.publishedAt)
+    : null;
+
+  let status = validated.status;
+
+  if (status === "PUBLISHED") {
+    // jika kosong → publish sekarang
+    if (!publishedAt) {
+      publishedAt = now;
+    }
+
+    // jika tanggal masa depan → scheduled
+    if (publishedAt > now) {
+      status = "SCHEDULED";
+    }
+  }
+
   return createWithUpload(
     {
       createRecord: async () =>
@@ -177,14 +199,16 @@ export async function createArticleService(data, file) {
             excerpt: validated.excerpt,
             authorName: validated.authorName,
             editorName: validated.editorName,
-            status: validated.status,
-            publishedAt: validated.publishedAt,
+            status,
+            publishedAt,
+            references: validated.references,
+            featuredImageSource: validated.featuredImageSource,
           });
 
-          // 🔹 attach category
+          //attach category
           await attachCategories(tx, article.id, validated.categoryIds);
 
-          // 🔹 attach tags
+          //attach tags
           await attachTags(tx, article.id, validated.tagNames);
 
           return article;
@@ -224,6 +248,8 @@ export async function updateArticleService(id, data) {
         editorName: data.editorName,
         status: data.status,
         publishedAt: data.publishedAt,
+        references: data.references || [],
+        featuredImageSource: data.featuredImageSource,
       },
     });
 
