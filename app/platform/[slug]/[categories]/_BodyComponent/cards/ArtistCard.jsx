@@ -1,59 +1,75 @@
+
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * ArtistCard — kartu vertikal bergaya "Artist Radar" branded
  * Digunakan untuk: Artist Radar, dll.
  *
  * Props:
- *   src      : string
- *   alt      : string
- *   name     : string  — nama artist
- *   role     : string  — peran/deskripsi singkat (e.g. "Vocalist & Lyricist")
- *   episode  : string  — info episode (opsional, e.g. "Edisi 8")
- *   subtitle : string  — fallback teks bawah jika role tidak ada
+ *   src          : string
+ *   alt          : string
+ *   title        : string  — nama artist
+ *   role         : string  — peran/deskripsi singkat (e.g. "Vocalist & Lyricist")
+ *   episode      : string  — info episode (opsional, e.g. "Edisi 8")
+ *   subtitle     : string  — fallback teks bawah jika role tidak ada
+ *   predescription: string  — teks ringkasan/preview sebelum deskripsi penuh
+ *   href         : string  — URL halaman detail (opsional)
  */
-export default function ArtistCard({ src, alt, name, role, episode, subtitle }) {
-  const imgSrc = src || "/image/artist.webp";
+export default function ArtistCard({
+  imageUrl,
+  alt,
+  title,
+  prevdescription,
+  host,  
+  guests,
+  tags,
+  href,
+}) {
+  const imgSrc = imageUrl || "/image/artist.webp";
   const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
-  return (
-    <div className="group relative w-full aspect-[1/2] overflow-hidden rounded-3xl bg-zinc-800 cursor-pointer">
+  const inner = (
+    <div className="group relative w-full aspect-[9/16] overflow-hidden rounded-2xl cursor-pointer shadow-xl transform transition-transform duration-300 hover:-translate-y-4 hover:shadow-2xl">
       {/* Background image */}
       <Image
         src={imgSrc}
-        alt={alt || name || "Artist"}
+        alt={alt || title || "Artist image"}
         fill
         unoptimized={!isLocal}
         sizes="(max-width:640px) 50vw, 260px"
-        className="object-cover brightness-75 transition-transform duration-300 group-hover:scale-105"
+        className="object-cover brightness-75 transition-transform duration-300"
       />
 
-      {/* Branded label "artist radar" di kiri atas */}
-      {/* <div className="absolute top-3 left-3 z-10">
-        <span className="text-white/80 text-[9px] font-bold tracking-widest uppercase leading-none">
-          artist
-        </span>
-        <br />
-        <span className="text-white text-[9px] font-bold tracking-widest uppercase leading-none">
-          radar
-        </span>
-      </div> */}
-
       {/* Bottom overlay — info artist */}
-      {/* <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 pb-3 pt-8">
-        {episode && (
-          <p className="text-white/60 text-[10px] font-medium mb-0.5">{episode}</p>
-        )}
-        {name && (
-          <h3 className="text-white text-sm font-bold leading-tight">{name}</h3>
-        )}
-        {(role || subtitle) && (
-          <p className="text-white/70 text-xs mt-0.5 line-clamp-2">{role || subtitle}</p>
-        )}
-      </div> */}
-
-      {/* Hover ring */}
-      <div className="absolute inset-0 ring-inset ring-2 ring-white/0 group-hover:ring-white/20 rounded-xl transition-all duration-200" />
+      <div className="p-3 absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-3 pt-20">
+          {title && (
+            <h3 className="text-white text-[14px] md:text-sm font-bold leading-tight">{title}</h3>
+          )}
+          {prevdescription && (
+            <p className="text-white/90 text-[11px] md:text-xs font-semibold mt-0.5 line-clamp-4">{prevdescription}</p>
+          )}
+          {host != null && (
+            <p className="text-[10px] md:text-xs font-medium mt-1">
+              <span style={{ color: "#E83C91" }} className="mr-1">Host:</span>
+              <span className="text-white">{host || '—'}</span>
+            </p>
+          )}
+          {guests && (
+            <p className="text-[10px] md:text-xs font-medium mt-1 flex gap-x-1 items-start min-w-0 mb-3">
+              <span style={{ color: "#E83C91" }} className="mr-1 shrink-0">Collabrator:</span>
+              <span className="text-white line-clamp-2 md:line-clamp-3 break-words min-w-0 md:flex-1">{Array.isArray(guests) ? guests.join(", ") : guests || "-"}</span>
+            </p>
+          )}
+      </div>
     </div>
   );
+
+  if (href) {
+    return <Link href={href} className="block">{inner}</Link>;
+  }
+
+  return inner;
 }

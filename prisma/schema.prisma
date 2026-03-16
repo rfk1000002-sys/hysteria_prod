@@ -216,7 +216,8 @@ model CategoryItem {
   // Metadata flexible (JSON)
   meta Json? @db.JsonB
 
-  isActive Boolean @default(true)
+  isActive      Boolean @default(true)
+  isIndependent Boolean @default(false)
 
   eventCategories    EventCategory[]
   platformCategories PlatformCategory[]
@@ -224,6 +225,7 @@ model CategoryItem {
   platformContents   PlatformContent[]
   programCategories  ProgramCategory[]
 
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -364,7 +366,14 @@ model PlatformContent {
 
   title    String   @db.VarChar(500)
   url      String?  @db.VarChar(500)
+  instagram String? @db.VarChar(500)
+  youtube   String? @db.VarChar(500)
+  prevdescription String? @db.Text
+  description String? @db.Text
+  host     String?  @db.VarChar(255)
+  guests   String[]             // array tamu, disimpan as text[]
   year     Int?
+  meta     Json?                // flexible metadata (JSON)
   tags     String[]             // array tag bebas, disimpan as text[]
   order    Int      @default(0)
   isActive Boolean  @default(true)
@@ -475,6 +484,9 @@ model Event {
   youtubeLink   String? @db.VarChar(500)
   instagramLink String? @db.VarChar(500)
   drivebukuLink String? @db.VarChar(500)
+  instagramLiveLink String? @db.VarChar(500)
+  tiktokLiveLink    String? @db.VarChar(500)
+  youtubeLiveLink   String? @db.VarChar(500)
 
   // PUBLISH
   isPublished Boolean @default(false)

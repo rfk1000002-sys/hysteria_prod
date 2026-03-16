@@ -31,6 +31,8 @@ import TeamManagementPage from "../team/page.jsx";
 // event
 import EventPage from "../events/page.jsx";
 import TentangSettingsPage from "../tentang/page.jsx";
+import ContactSettingsPage from "../contact/page.jsx";
+import CollaborationSettingsPage from "../collaboration/page.jsx";
 import { usePathname } from "next/navigation";
 import ArticlesPage from "../articles/page.jsx";
 import CreateArticlePage from "../articles/create/page.jsx";
@@ -104,6 +106,12 @@ export default function AdminShell({ children }) {
 
       case "tentang":
         return <TentangSettingsPage />;
+
+      case "contact":
+        return <ContactSettingsPage />;
+
+      case "collaboration":
+        return <CollaborationSettingsPage />;
 
       case "event":
         return <EventPage />;

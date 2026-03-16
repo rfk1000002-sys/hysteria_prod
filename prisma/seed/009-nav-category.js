@@ -69,58 +69,54 @@ module.exports = async function seed() {
             { categorySlug: 'program-hysteria', title: 'Aston', slug: 'aston', url: '/program#podcast', order: 1, parentSlug: 'podcast' },
             { categorySlug: 'program-hysteria', title: 'Sore di Stonen', slug: 'sore-di-stonen', url: '/program#podcast', order: 2, parentSlug: 'podcast' },
 
-<<<<<<< HEAD
+
         { categorySlug: 'program-hysteria', title: 'Pemutaran Film', slug: 'pemutaran-film', url: '/program#pemutaran-film', order: 5, parentSlug: null },
             { categorySlug: 'program-hysteria', title: 'Screening AM', slug: 'screening-am-film', url: '/program/pemutaran-film?kategori=screening-am-film', order: 0, parentSlug: 'pemutaran-film' },
             { categorySlug: 'program-hysteria', title: 'Lawatan Bandeng Keliling', slug: 'lawatan-bandeng-keliling-film', url: '/program/pemutaran-film?kategori=lawatan-bandeng-keliling-film', order: 1, parentSlug: 'pemutaran-film' },
-=======
-		{ categorySlug: 'program-hysteria', title: 'Pemutaran Film', slug: 'pemutaran-film', url: '/program/pemutaran-film', order: 5, parentSlug: null },
-			{ categorySlug: 'program-hysteria', title: 'Screening AM', slug: 'screening-am-film', url: '/program/pemutaran-film/screening-am', order: 0, parentSlug: 'pemutaran-film' },
-			{ categorySlug: 'program-hysteria', title: 'Lawatan Bandeng Keliling', slug: 'lawatan-bandeng-keliling', url: '/program/pemutaran-film/lawatan-bandeng-keliling', order: 1, parentSlug: 'pemutaran-film' },
->>>>>>> main
 
         { categorySlug: 'program-hysteria', title: 'Video Series', slug: 'video-series', url: '/program#video-series', order: 6, parentSlug: null },
             { categorySlug: 'program-hysteria', title: 'Sapa Warga', slug: 'sapa-warga', url: '/program/sapa-warga', order: 0, parentSlug: 'video-series' },
             { categorySlug: 'program-hysteria', title: 'Hysteria Berkelana', slug: 'hysteria-berkelana', url: '/program/hysteria-berkelana', order: 1, parentSlug: 'video-series' },
 
+
 		// Platform (category: platform)
-		{ categorySlug: 'platform', title: 'Hysteria Artlab', slug: 'hysteria-artlab', url: '/platform/hysteria-artlab', order: 0, parentSlug: null },
-			{ categorySlug: 'platform', title: 'Merchandise', slug: 'merchandise', url: '/platform/hysteria-artlab/merchandise', order: 0, parentSlug: 'hysteria-artlab' },
-			{ categorySlug: 'platform', title: 'Podcast Artlab', slug: 'podcast-artlab', url: '/platform/hysteria-artlab/podcast-artlab', order: 1, parentSlug: 'hysteria-artlab' },
-				{ categorySlug: 'platform', title: 'Stonen 29 Radio Show', slug: 'stonen-29-radio-show', url: '/platform/hysteria-artlab/podcast-artlab/stonen-29-radio-show', order: 0, parentSlug: 'podcast-artlab' },
-				{ categorySlug: 'platform', title: 'Anitalk', slug: 'anitalk', url: '/platform/hysteria-artlab/podcast-artlab/anitalk', order: 1, parentSlug: 'podcast-artlab' },
-				{ categorySlug: 'platform', title: 'Artist Radar', slug: 'artist-radar', url: '/platform/hysteria-artlab/podcast-artlab/artist-radar', order: 2, parentSlug: 'podcast-artlab' },
-			{ categorySlug: 'platform', title: 'Workshop', slug: 'workshop', url: '/platform/hysteria-artlab/workshop', order: 2, parentSlug: 'hysteria-artlab' },
-				{ categorySlug: 'platform', title: 'Having Fun Artlab', slug: 'having-fun-artlab', url: '/platform/hysteria-artlab/workshop/having-fun-artlab', order: 0, parentSlug: 'workshop' },
-				{ categorySlug: 'platform', title: 'Peltoe', slug: 'peltoe', url: '/platform/hysteria-artlab/workshop/peltoe', order: 1, parentSlug: 'workshop' },
-			{ categorySlug: 'platform', title: 'Screening Film', slug: 'screening-film', url: '/platform/hysteria-artlab/screening-film', order: 2, parentSlug: 'hysteria-artlab' },
-				{ categorySlug: 'platform', title: 'Making Artist', slug: 'making-artist', url: '/platform/hysteria-artlab/screening-film/making-artist', order: 0, parentSlug: 'screening-film' },
-				{ categorySlug: 'platform', title: 'Usil', slug: 'usil', url: '/platform/hysteria-artlab/screening-film/usil', order: 1, parentSlug: 'screening-film' },
-			{ categorySlug: 'platform', title: 'Untuk Perhatian', slug: 'untuk-perhatian', url: '/platform/hysteria-artlab/untuk-perhatian', order: 3, parentSlug: 'hysteria-artlab' },
+		{ categorySlug: 'platform', title: 'Hysteria Artlab', slug: 'hysteria-artlab', url: '/platform/hysteria-artlab', order: 0, parentSlug: null, isIndependent: false },
+			{ categorySlug: 'platform', title: 'Merchandise', slug: 'merchandise', url: '/platform/hysteria-artlab/merchandise', order: 0, parentSlug: 'hysteria-artlab', isIndependent: false },
+			{ categorySlug: 'platform', title: 'Podcast Artlab', slug: 'podcast-artlab', url: '/platform/hysteria-artlab/podcast-artlab', order: 1, parentSlug: 'hysteria-artlab', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Stonen 29 Radio Show', slug: 'stonen-29-radio-show', url: '/platform/hysteria-artlab/podcast-artlab/stonen-29-radio-show', order: 0, parentSlug: 'podcast-artlab', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Anitalk', slug: 'anitalk', url: '/platform/hysteria-artlab/podcast-artlab/anitalk', order: 1, parentSlug: 'podcast-artlab', isIndependent: true },
+				{ categorySlug: 'platform', title: 'Artist Radar', slug: 'artist-radar', url: '/platform/hysteria-artlab/podcast-artlab/artist-radar', order: 2, parentSlug: 'podcast-artlab', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Workshop', slug: 'workshop', url: '/platform/hysteria-artlab/workshop', order: 2, parentSlug: 'hysteria-artlab', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Having Fun Artlab', slug: 'having-fun-artlab', url: '/platform/hysteria-artlab/workshop/having-fun-artlab', order: 0, parentSlug: 'workshop', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Peltoe', slug: 'peltoe', url: '/platform/hysteria-artlab/workshop/peltoe', order: 1, parentSlug: 'workshop', isIndependent: false },
+			{ categorySlug: 'platform', title: 'Screening Film', slug: 'screening-film', url: '/platform/hysteria-artlab/screening-film', order: 2, parentSlug: 'hysteria-artlab', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Making Artist', slug: 'making-artist', url: '/platform/hysteria-artlab/screening-film/making-artist', order: 0, parentSlug: 'screening-film', isIndependent: false },
+				{ categorySlug: 'platform', title: 'Usil', slug: 'usil', url: '/platform/hysteria-artlab/screening-film/usil', order: 1, parentSlug: 'screening-film', isIndependent: false },
+			{ categorySlug: 'platform', title: 'Untuk Perhatian', slug: 'untuk-perhatian', url: '/platform/hysteria-artlab/untuk-perhatian', order: 3, parentSlug: 'hysteria-artlab', isIndependent: false },
 
-		{ categorySlug: 'platform', title: 'Ditampart', slug: 'ditampart', url: '/platform/ditampart', order: 1, parentSlug: null },
-			{ categorySlug: 'platform', title: '3D', slug: '3d', url: '/platform/ditampart/3d', order: 0, parentSlug: 'ditampart' },
-			{ categorySlug: 'platform', title: 'Foto Kegiatan', slug: 'foto-kegiatan', url: '/platform/ditampart/foto-kegiatan', order: 1, parentSlug: 'ditampart' },
-			{ categorySlug: 'platform', title: 'Mockup dan Poster', slug: 'mockup-dan-poster', url: '/platform/ditampart/mockup-dan-poster', order: 2, parentSlug: 'ditampart' },
-			{ categorySlug: 'platform', title: 'Short Film Dokumenter', slug: 'short-film-dokumenter', url: '/platform/ditampart/short-film-dokumenter', order: 3, parentSlug: 'ditampart' },
-			{ categorySlug: 'platform', title: 'Event Ditampart', slug: 'event-ditampart', url: '/platform/ditampart/event-ditampart', order: 4, parentSlug: 'ditampart' },
+		{ categorySlug: 'platform', title: 'Ditampart', slug: 'ditampart', url: '/platform/ditampart', order: 1, parentSlug: null, isIndependent: false },
+			{ categorySlug: 'platform', title: '3D', slug: '3d', url: '/platform/ditampart/3d', order: 0, parentSlug: 'ditampart', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Foto Kegiatan', slug: 'foto-kegiatan', url: '/platform/ditampart/foto-kegiatan', order: 1, parentSlug: 'ditampart', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Mockup dan Poster', slug: 'mockup-dan-poster', url: '/platform/ditampart/mockup-dan-poster', order: 2, parentSlug: 'ditampart', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Short Film Dokumenter', slug: 'short-film-dokumenter', url: '/platform/ditampart/short-film-dokumenter', order: 3, parentSlug: 'ditampart', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Event Ditampart', slug: 'event-ditampart', url: '/platform/ditampart/event-ditampart', order: 4, parentSlug: 'ditampart', isIndependent: false },
 
-		{ categorySlug: 'platform', title: 'Laki Masak', slug: 'laki-masak', url: '/platform/laki-masak', order: 2, parentSlug: null },
-			{ categorySlug: 'platform', title: 'Meramu', slug: 'meramu', url: '/platform/laki-masak/meramu', order: 0, parentSlug: 'laki-masak' },
-			{ categorySlug: 'platform', title: 'Homecooked', slug: 'homecooked', url: '/platform/laki-masak/homecooked', order: 1, parentSlug: 'laki-masak' },
-			{ categorySlug: 'platform', title: 'Komik Ramuan', slug: 'komik-ramuan', url: '/platform/laki-masak/komik-ramuan', order: 2, parentSlug: 'laki-masak' },
-			{ categorySlug: 'platform', title: 'Pre-Order', slug: 'pre-order', url: '/platform/laki-masak/pre-order', order: 3, parentSlug: 'laki-masak' },
+		{ categorySlug: 'platform', title: 'Laki Masak', slug: 'laki-masak', url: '/platform/laki-masak', order: 2, parentSlug: null, isIndependent: false },
+			{ categorySlug: 'platform', title: 'Meramu', slug: 'meramu', url: '/platform/laki-masak/meramu', order: 0, parentSlug: 'laki-masak', isIndependent: false },
+			{ categorySlug: 'platform', title: 'Homecooked', slug: 'homecooked', url: '/platform/laki-masak/homecooked', order: 1, parentSlug: 'laki-masak', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Komik Ramuan', slug: 'komik-ramuan', url: '/platform/laki-masak/komik-ramuan', order: 2, parentSlug: 'laki-masak', isIndependent: true },
+			{ categorySlug: 'platform', title: 'Pre-Order', slug: 'pre-order', url: '/platform/laki-masak/pre-order', order: 3, parentSlug: 'laki-masak', isIndependent: false },
 
-		{ categorySlug: 'platform', title: 'Pekakota', slug: 'pekakota', url: '/platform/pekakota', order: 3, parentSlug: null },
-		{ categorySlug: 'platform', title: 'Bukit Buku', slug: 'bukit-buku', url: '/platform/bukit-buku', order: 4, parentSlug: null },
+		{ categorySlug: 'platform', title: 'Pekakota', slug: 'pekakota', url: '/platform/pekakota', order: 3, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'platform', title: 'Bukit Buku', slug: 'bukit-buku', url: '/platform/bukit-buku', order: 4, parentSlug: null, isIndependent: false },
 
 		// Artikel (category: artikel)
-		{ categorySlug: 'artikel', title: 'Esai', slug: 'esai', url: '/artikel/esai', order: 0, parentSlug: null },
-		{ categorySlug: 'artikel', title: 'Bedah Buku', slug: 'bedah-buku', url: '/artikel/bedah-buku', order: 1, parentSlug: null },
-		{ categorySlug: 'artikel', title: 'Zine', slug: 'zine', url: '/artikel/zine', order: 2, parentSlug: null },
-		{ categorySlug: 'artikel', title: 'Media Partner', slug: 'media-partner', url: '/artikel/media-partner', order: 3, parentSlug: null },
-		{ categorySlug: 'artikel', title: 'Rilisan Buku', slug: 'rilisan-buku', url: '/artikel/rilisan-buku', order: 4, parentSlug: null },
-		{ categorySlug: 'artikel', title: 'Rilisan lainnya', slug: 'rilisan-lainnya', url: '/artikel/rilisan-lainnya', order: 5, parentSlug: null },
+		{ categorySlug: 'artikel', title: 'Esai', slug: 'esai', url: '/artikel/esai', order: 0, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'artikel', title: 'Bedah Buku', slug: 'bedah-buku', url: '/artikel/bedah-buku', order: 1, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'artikel', title: 'Zine', slug: 'zine', url: '/artikel/zine', order: 2, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'artikel', title: 'Media Partner', slug: 'media-partner', url: '/artikel/media-partner', order: 3, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'artikel', title: 'Rilisan Buku', slug: 'rilisan-buku', url: '/artikel/rilisan-buku', order: 4, parentSlug: null, isIndependent: false },
+		{ categorySlug: 'artikel', title: 'Rilisan lainnya', slug: 'rilisan-lainnya', url: '/artikel/rilisan-lainnya', order: 5, parentSlug: null, isIndependent: false },
 	]
 
 	try {
@@ -148,7 +144,7 @@ module.exports = async function seed() {
 			const categoryId = categoryMap[it.categorySlug]
 			if (!categoryId) throw new Error(`Category not found: ${it.categorySlug}`)
 
-			// Try find existing
+			// Try find <existing></existing>
 			const found = await client.query(
 				`SELECT id FROM "CategoryItem" WHERE "slug" = $1 AND "categoryId" = $2 LIMIT 1`,
 				[it.slug, categoryId]
@@ -158,18 +154,18 @@ module.exports = async function seed() {
 				// update
 				const upd = await client.query(
 					`UPDATE "CategoryItem"
-					 SET "title" = $1, "url" = $2, "order" = $3, "isActive" = true, "updatedAt" = now()
-					 WHERE id = $4
+					 SET "title" = $1, "url" = $2, "order" = $3, "isActive" = true, "isIndependent" = $4, "updatedAt" = now()
+					 WHERE id = $5
 					 RETURNING id`,
-					[it.title, it.url, it.order, found.rows[0].id]
+					[it.title, it.url, it.order, it.isIndependent ?? false, found.rows[0].id]
 				)
 				itemMap[`${it.categorySlug}|${it.slug}`] = upd.rows[0].id
 			} else {
 				const ins = await client.query(
-					`INSERT INTO "CategoryItem" ("categoryId", "parentId", "title", "slug", "url", "order", "meta", "isActive", "createdAt", "updatedAt")
-					 VALUES ($1, NULL, $2, $3, $4, $5, NULL, true, now(), now())
+					`INSERT INTO "CategoryItem" ("categoryId", "parentId", "title", "slug", "url", "order", "meta", "isActive", "isIndependent", "createdAt", "updatedAt")
+					 VALUES ($1, NULL, $2, $3, $4, $5, NULL, true, $6, now(), now())
 					 RETURNING id`,
-					[categoryId, it.title, it.slug, it.url, it.order]
+					[categoryId, it.title, it.slug, it.url, it.order, it.isIndependent ?? false]
 				)
 				itemMap[`${it.categorySlug}|${it.slug}`] = ins.rows[0].id
 			}
