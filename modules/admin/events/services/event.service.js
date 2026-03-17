@@ -19,13 +19,14 @@ export async function deleteEvent(id) {
 export async function createEvent(body) {
   const baseSlug = slugify(body.title, { lower: true, strict: true });
 
-  const slugCount = await prisma.event.count({
-    where: { slug: { startsWith: baseSlug } },
-  });
+  let slug = baseSlug;
+  let counter = 1;
 
-  const slug =
-    slugCount > 0 ? `${baseSlug}-${slugCount + 1}` : baseSlug;
-
+  while (await prisma.event.findUnique({ where: { slug } })) {
+    counter++;
+    slug = `${baseSlug}-${counter}`;
+  }
+  
   return prisma.$transaction(async (tx) => {
     const event = await tx.event.create({
       data: {
@@ -42,6 +43,9 @@ export async function createEvent(body) {
         youtubeLink: body.youtubeLink,
         instagramLink: body.instagramLink,
         drivebukuLink: body.drivebukuLink,
+        youtubeLiveLink: body.youtubeLiveLink,
+        instagramLiveLink: body.instagramLiveLink,
+        tiktokLiveLink: body.tiktokLiveLink,
         isPublished: Boolean(body.isPublished),
         isFlexibleTime: Boolean(body.isFlexibleTime),
 
@@ -62,30 +66,30 @@ export async function createEvent(body) {
     });
 
     if (Array.isArray(body.tagNames)) {
-      for (const name of body.tagNames) {
-        const slug = slugify(name, { lower: true, strict: true });
+      const tagRecords = await Promise.all(
+        body.tagNames.map(async (name) => {
+          const slug = slugify(name, { lower: true, strict: true });
 
-        const tag = await tx.tag.upsert({
-          where: { slug },
-          update: {},
-          create: { name, slug },
-        });
+          return tx.tag.upsert({
+            where: { slug },
+            update: {},
+            create: { name, slug },
+          });
+        })
+      );
 
-        await tx.eventTag.create({
-          data: {
-            eventId: event.id,
-            tagId: tag.id,
-          },
-        });
-      }
+      await tx.eventTag.createMany({
+        data: tagRecords.map((tag) => ({
+          eventId: event.id,
+          tagId: tag.id,
+        })),
+      });
     }
-
     return event;
   });
 }
 
 /* UPDATE */
-
 export async function updateEvent(id, body) {
   const eventId = Number(id);
 
@@ -100,6 +104,9 @@ export async function updateEvent(id, body) {
     youtubeLink: body.youtubeLink ?? null,
     instagramLink: body.instagramLink ?? null,
     drivebukuLink: body.drivebukuLink ?? null,
+    youtubeLiveLink: body.youtubeLiveLink ?? null,
+    instagramLiveLink: body.instagramLiveLink ?? null,
+    tiktokLiveLink: body.tiktokLiveLink ?? null,
     isPublished:
       typeof body.isPublished === "boolean"
         ? body.isPublished
@@ -116,7 +123,6 @@ export async function updateEvent(id, body) {
   await repo.updateEvent(eventId, data);
 
   /* ORGANIZER */
-
   if (Array.isArray(body.organizerItemIds)) {
     await repo.deleteEventOrganizers(eventId);
 
@@ -129,7 +135,6 @@ export async function updateEvent(id, body) {
   }
 
   /* TAG */
-
   if (Array.isArray(body.tagNames)) {
     await repo.deleteEventTags(eventId);
 
@@ -152,7 +157,6 @@ export async function updateEvent(id, body) {
   }
 
   /* CATEGORY */
-
   if (Array.isArray(body.categoryItemIds)) {
     await repo.deleteEventCategories(eventId);
 
@@ -165,6 +169,5 @@ export async function updateEvent(id, body) {
       }))
     );
   }
-
   return repo.findEventById(eventId);
 }

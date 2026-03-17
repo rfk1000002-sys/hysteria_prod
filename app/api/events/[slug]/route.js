@@ -1,47 +1,24 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import {
+  getEventDetail,
+  getOtherEvents,
+} from "../../../../modules/public/events/services/event.service";
 
 export async function GET(req, { params }) {
-  const { slug } = await params;
+  try {
+    const { slug } = params;
 
-  const event = await prisma.event.findFirst({
-    where: {
-      slug,
-      isPublished: true,
-    },
-    include: {
-      eventCategories: {
-        include: {
-          categoryItem: {
-            include: {
-              category: true,
-            },
-          },
-        },
-      },
-      organizers: {
-        include: {
-          categoryItem: {
-            select: {
-              title: true,
-            },
-          },
-        },
-      },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-    },
-  });
+    const event = await getEventDetail(slug);
+    const otherEvents = await getOtherEvents(slug);
 
-  if (!event) {
+    return NextResponse.json({
+      event,
+      otherEvents,
+    });
+  } catch (err) {
     return NextResponse.json(
-      { message: "Event not found" },
+      { message: err.message },
       { status: 404 }
     );
   }
-
-  return NextResponse.json(event);
 }
