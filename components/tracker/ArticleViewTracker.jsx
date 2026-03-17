@@ -4,17 +4,32 @@ import { useEffect } from "react";
 
 export default function ArticleViewTracker({ slug }) {
   useEffect(() => {
+    const key = `viewed-${slug}`;
+    const stored = localStorage.getItem(key);
 
-    const viewed = localStorage.getItem(`viewed-${slug}`);
+    if (stored) {
+      const { time } = JSON.parse(stored);
 
-    if (viewed) return;
+      const oneDay = 24 * 60 * 60 * 1000;
 
-    fetch(`/api/articles/${slug}`, {
-      method: "POST",
-    });
+      if (Date.now() - time < oneDay) return;
+    }
 
-    localStorage.setItem(`viewed-${slug}`, "true");
+    const timer = setTimeout(() => {
+      fetch(`/api/articles/${slug}/view`, {
+        method: "POST",
+        keepalive: true
+      });
 
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          time: Date.now()
+        })
+      );
+    }, 5000); // user membaca 5 detik
+
+    return () => clearTimeout(timer);
   }, [slug]);
 
   return null;

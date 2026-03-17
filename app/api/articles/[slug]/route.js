@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getPublicArticleDetail } from "@/modules/public/articles/services/article.public.service";
-import { addArticleView  } from "@/modules/public/articles/services/article.public.service";
 
 export async function GET(_, { params }) {
   const article = await getPublicArticleDetail(params.slug);
@@ -16,23 +15,4 @@ export async function GET(_, { params }) {
     success: true,
     data: article,
   });
-}
-
-export async function POST(req, { params }) {
-  const { slug } = await params;
-
-  try {
-    await addArticleView(slug);
-
-    return Response.json({
-      success: true,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return Response.json(
-      { error: "Failed to add view" },
-      { status: 500 }
-    );
-  }
 }
