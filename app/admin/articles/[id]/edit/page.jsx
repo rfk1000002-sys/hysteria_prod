@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import ArticleForm from "@/app/admin/_partial/_components/Article/ArticleForm";
+import ArticleForm from "@/components/ui/Article/ArticleForm";
 
 export default function EditArticlePage() {
   const params = useParams();
   const router = useRouter();
 
-  const id = params?.id; // pastikan ada
+  const id = params?.id; 
 
   const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ArticleForm from "../../_partial/_components/Article/ArticleForm";
+import ArticleForm from "@/components/ui/Article/ArticleForm";
 
 export default function CreateArticlePage({ onNavigate = () => {} }) {
   const [categories, setCategories] = useState([]);
