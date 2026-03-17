@@ -11,12 +11,14 @@ import React, { useState, useEffect } from "react";
 import FormMain from "./_component/form.main.jsx";
 import FormHero from "./_component/form.hero.jsx";
 import PermissionGate from "../../../components/adminUI/PermissionGate.jsx";
+import Toast from "../../../components/ui/Toast.jsx";
 
 /** Slug identifier platform di DB dan URL API. */
 const PLATFORM_SLUG = "laki-masak";
 
 /** Slot cover image Laki Masak. `apiKey` harus cocok dengan kolom `key` di tabel PlatformImage. */
 const COVER_ITEMS = [
+  { id: 1, apiKey: "cover-1", label: "Cover Meramu*" },
   { id: 2, apiKey: "cover-2", label: "Cover Homecooked*" },
   { id: 3, apiKey: "cover-3", label: "Cover Komik Ramuan*" },
   { id: 4, apiKey: "cover-4", label: "Pre-Order*" },
@@ -38,6 +40,9 @@ const INITIAL_MAIN_FORM = {
   youtubeProfile: "",
 };
 
+/** Batas ukuran file upload untuk halaman ini (dalam MB). */
+const MAX_SIZE_MB = 2;
+
 export default function PageLakiMasak() {
   const [active, setActive] = useState("main");  // tab aktif: "main" | "hero"
   const [loading, setLoading] = useState(true);
@@ -52,6 +57,10 @@ export default function PageLakiMasak() {
   const [mainSaving, setMainSaving] = useState(false);
   // true jika user menghapus mainImageUrl — akan kirim null ke API saat save
   const [mainPendingClear, setMainPendingClear] = useState(false);
+
+  const [toast, setToast] = useState({ visible: false, message: "", type: "info" });
+  const showToast = (message, type = "info") => setToast({ visible: true, message, type });
+  const closeToast = () => setToast((t) => ({ ...t, visible: false }));
 
   useEffect(() => {
     fetch(`/api/admin/platform/${PLATFORM_SLUG}`)
@@ -101,14 +110,14 @@ export default function PageLakiMasak() {
   const handleHeroFilesChange = (id, files, clearImage = false) => {
     setHeroItems((prev) => prev.map((item) =>
       item.id === id
-        ? { ...item, files, ...(clearImage ? { imageUrl: null, pendingClear: true } : {}) }
+        ? { ...item, files, dirty: true, ...(clearImage ? { imageUrl: null, pendingClear: true } : {}) }
         : item
     ));
   };
 
   /** Update field teks (title/subtitle) sebuah item hero. */
   const handleHeroItemChange = (id, changes) => {
-    setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+    setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes, dirty: true } : item)));
   };
 
   /** User menghapus gambar utama — tandai pending clear. */
@@ -179,10 +188,10 @@ export default function PageLakiMasak() {
       setMainFiles([]);
       setMainPendingClear(false);
       setMainItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false })));
-      alert("Data halaman utama berhasil disimpan");
+      showToast("Data halaman utama berhasil disimpan", "success");
     } catch (err) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan saat menyimpan");
+      showToast(err.message || "Terjadi kesalahan saat menyimpan", "error");
     } finally {
       setMainSaving(false);
     }
@@ -205,7 +214,7 @@ export default function PageLakiMasak() {
             const payload = await res.json().catch(() => ({}));
             throw new Error(payload.error?.message || `Gagal menyimpan hero: ${item.label}`);
           }
-        } else if (item.pendingClear || item.title !== undefined || item.subtitle !== undefined) {
+        } else if (item.pendingClear || item.dirty) {
           const body = { title: item.title || "", subtitle: item.subtitle || "" };
           if (item.pendingClear) body.imageUrl = null;
           const res = await fetch(`/api/admin/platform/${PLATFORM_SLUG}/images/${item.apiKey}`, {
@@ -220,11 +229,11 @@ export default function PageLakiMasak() {
         }
       }
 
-      setHeroItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false })));
-      alert("Hero berhasil disimpan");
+      setHeroItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false, dirty: false })));
+      showToast("Hero berhasil disimpan", "success");
     } catch (err) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan saat menyimpan");
+      showToast(err.message || "Terjadi kesalahan saat menyimpan", "error");
     } finally {
       setHeroSaving(false);
     }
@@ -232,6 +241,7 @@ export default function PageLakiMasak() {
 
   return (
     <PermissionGate requiredPermissions={["platform.read"]}>
+    <Toast message={toast.message} type={toast.type} visible={toast.visible} onClose={closeToast} />
     <section className="py-5 px-6 bg-white rounded-xl border border-gray-300">
       <div className="flex items-start justify-between gap-4">
         <div className="max-w-[78%]">
@@ -282,6 +292,8 @@ export default function PageLakiMasak() {
               coverItems={mainItems}
               onSubmit={handleSaveMain}
               submitting={mainSaving}
+              maxSizeMB={MAX_SIZE_MB}
+              mainImageLabel="ukuran 500x516 px, - format file .webp"
             />
           </div>
         ) : (
@@ -292,6 +304,7 @@ export default function PageLakiMasak() {
               onItemChange={handleHeroItemChange}
               onSubmit={handleSaveHero}
               submitting={heroSaving}
+              maxSizeMB={MAX_SIZE_MB}
             />
           </div>
         )}

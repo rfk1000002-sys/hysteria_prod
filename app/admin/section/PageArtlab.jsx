@@ -15,9 +15,10 @@ import React, { useState, useEffect } from "react";
 import FormMain from "./_component/form.main.jsx";
 import FormHero from "./_component/form.hero.jsx";
 import PermissionGate from "../../../components/adminUI/PermissionGate.jsx";
+import Toast from "../../../components/ui/Toast.jsx";
 
 /** Slug yang dipakai sebagai identifier platform di DB dan di URL API. */
-const PLATFORM_SLUG = "artlab";
+const PLATFORM_SLUG = "hysteria-artlab";
 
 /**
  * Daftar slot cover image platform Artlab.
@@ -56,6 +57,9 @@ const INITIAL_MAIN_FORM = {
   youtubeProfile: "",
 };
 
+/** Batas ukuran file upload untuk halaman ini (dalam MB). */
+const MAX_SIZE_MB = 2;
+
 export default function PageArtlab() {
   const [active, setActive] = useState("main");  // tab aktif: "main" | "hero"
   const [loading, setLoading] = useState(true);   // true selama data awal belum dimuat
@@ -72,6 +76,10 @@ export default function PageArtlab() {
   const [mainSaving, setMainSaving] = useState(false);
   // true jika user menekan "Hapus" pada mainImageUrl — akan kirim null ke API saat save
   const [mainPendingClear, setMainPendingClear] = useState(false);
+
+  const [toast, setToast] = useState({ visible: false, message: "", type: "info" });
+  const showToast = (message, type = "info") => setToast({ visible: true, message, type });
+  const closeToast = () => setToast((t) => ({ ...t, visible: false }));
 
   // Load existing platform data on mount
   useEffect(() => {
@@ -129,14 +137,14 @@ export default function PageArtlab() {
   const handleHeroFilesChange = (id, files, clearImage = false) => {
     setHeroItems((prev) => prev.map((item) =>
       item.id === id
-        ? { ...item, files, ...(clearImage ? { imageUrl: null, pendingClear: true } : {}) }
+        ? { ...item, files, dirty: true, ...(clearImage ? { imageUrl: null, pendingClear: true } : {}) }
         : item
     ));
   };
 
   /** Dipanggil saat user mengubah title/subtitle sebuah item hero di form. */
   const handleHeroItemChange = (id, changes) => {
-    setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+    setHeroItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes, dirty: true } : item)));
   };
 
   /** User menekan tombol hapus gambar utama — tandai pending clear, UI akan bersih. */
@@ -210,10 +218,10 @@ export default function PageArtlab() {
       setMainFiles([]);
       setMainPendingClear(false);
       setMainItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false })));
-      alert("Data halaman utama berhasil disimpan");
+      showToast("Data halaman utama berhasil disimpan", "success");
     } catch (err) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan saat menyimpan");
+      showToast(err.message || "Terjadi kesalahan saat menyimpan", "error");
     } finally {
       setMainSaving(false);
     }
@@ -236,7 +244,7 @@ export default function PageArtlab() {
             const payload = await res.json().catch(() => ({}));
             throw new Error(payload.error?.message || `Gagal menyimpan hero: ${item.label}`);
           }
-        } else if (item.pendingClear || item.title !== undefined || item.subtitle !== undefined) {
+        } else if (item.pendingClear || item.dirty) {
           // Update text fields and/or clear image
           const body = { title: item.title || "", subtitle: item.subtitle || "" };
           if (item.pendingClear) body.imageUrl = null;
@@ -252,11 +260,11 @@ export default function PageArtlab() {
         }
       }
 
-      setHeroItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false })));
-      alert("Hero berhasil disimpan");
+      setHeroItems((prev) => prev.map((item) => ({ ...item, files: [], pendingClear: false, dirty: false })));
+      showToast("Hero berhasil disimpan", "success");
     } catch (err) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan saat menyimpan");
+      showToast(err.message || "Terjadi kesalahan saat menyimpan", "error");
     } finally {
       setHeroSaving(false);
     }
@@ -264,6 +272,7 @@ export default function PageArtlab() {
 
   return (
     <PermissionGate requiredPermissions={["platform.read"]}>
+    <Toast message={toast.message} type={toast.type} visible={toast.visible} onClose={closeToast} />
     <section className="py-5 px-6 bg-white rounded-xl border border-gray-300">
       <div className="flex items-start justify-between gap-4">
         <div className="max-w-[78%]">
@@ -314,6 +323,8 @@ export default function PageArtlab() {
               coverItems={mainItems}
               onSubmit={handleSaveMain}
               submitting={mainSaving}
+              maxSizeMB={MAX_SIZE_MB}
+              mainImageLabel="ukuran 500x516 px, - format file .webp"
             />
           </div>
         ) : (
@@ -324,6 +335,7 @@ export default function PageArtlab() {
               onItemChange={handleHeroItemChange}
               onSubmit={handleSaveHero}
               submitting={heroSaving}
+              maxSizeMB={MAX_SIZE_MB}
             />
           </div>
         )}

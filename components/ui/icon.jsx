@@ -1,11 +1,23 @@
+"use client";
+
 import { useState, useId, useEffect } from "react";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import Groups3OutlinedIcon from "@mui/icons-material/Groups3Outlined";
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 
 export function IconDiversity({ className = "", size = 20 }) {
   return (
     <Groups3OutlinedIcon
+      className={className}
+      style={{ fontSize: size }}
+    />
+  );
+}
+
+export function IconBusiness({ className = "", size = 20 }) {
+  return (
+    <BusinessOutlinedIcon
       className={className}
       style={{ fontSize: size }}
     />
