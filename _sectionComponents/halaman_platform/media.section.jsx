@@ -38,7 +38,7 @@ export default function MediaSection({ youtubeProfile }) {
 
   const embedUrl = toYouTubeEmbed(youtubeProfile);
   return (
-    <section className=" sm:py-12 md:py-16 lg:py-20 text-black">
+    <section className="py-6 md:py-10 text-black">
       {/* Container: responsive max-width and padding for small/medium/large screens */}
       <div className="mx-auto w-full max-w-[1100px] sm:max-w-[1200px] md:max-w-[1400px] lg:max-w-[1920px] px-4 sm:px-6 md:px-8">
         {/* Center the player and limit its width on large viewports */}
