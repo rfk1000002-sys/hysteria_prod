@@ -21,6 +21,7 @@ import LakiMasakPage from "@/app/admin/platform/laki-masak/page.jsx"
 
 // pages
 import PageHome from "../section/PageHome.jsx";
+import PageProgram from "../section/PageProgram.jsx";
 import PageArtlab from "../section/PageArtlab.jsx";
 import PageDitampart from "../section/PageDitampart.jsx";
 import PageLakiMasak from "../section/PageLakiMasak.jsx";
@@ -35,6 +36,12 @@ import CollaborationSettingsPage from "../collaboration/page.jsx";
 import { usePathname } from "next/navigation";
 import ArticlesPage from "../articles/page.jsx";
 import CreateArticlePage from "../articles/create/page.jsx";
+
+// program
+import ProgramPage from "@/app/admin/programs/page.jsx";
+import CreateProgramPage from "@/app/admin/programs/create/page.jsx";
+import CreateHysteriaPage from "@/app/admin/programs/create-hysteria/page.jsx";
+import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
 
   export default function AdminShell({ children }) {
     const [open, setOpen] = useState(false);
@@ -78,6 +85,8 @@ import CreateArticlePage from "../articles/create/page.jsx";
         return <PageLakiMasak />;
       case "category":
         return <CategoriesPage />;
+      case "page.program":           
+        return <PageProgram />;
 
       case "platform":
       case "platform.hysteria-artlab":
@@ -106,6 +115,16 @@ import CreateArticlePage from "../articles/create/page.jsx";
 
       case "event":
         return <EventPage />;
+
+      case "program_menu":
+      case "program.semua_postingan":
+        return <ProgramPage />;
+      case "program.tambah_postingan":
+        return <CreateProgramPage />;
+        case "program.tambah_hysteria_berkelana":
+        return <CreateHysteriaPage />;
+      case "program.edit_podcast":
+        return <EditPodcastPage />;
         
       case "dashboard":
       default:

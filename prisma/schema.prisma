@@ -223,11 +223,14 @@ model CategoryItem {
   platformCategories PlatformCategory[]
   eventOrganizers    EventOrganizer[]
   platformContents   PlatformContent[]
+  programCategories  ProgramCategory[]
+
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  articles ArticleCategory[]
+  articles          ArticleCategory[]
+  programOrganizers ProgramOrganizer[]
 
   @@index([categoryId])
   @@index([parentId])
@@ -606,8 +609,9 @@ model Tag {
   name String @db.VarChar(100)
   slug String @unique @db.VarChar(100)
 
-  articles ArticleTag[]
-  events   EventTag[]
+  articles    ArticleTag[]
+  events      EventTag[]
+  programTags ProgramTag[]
 }
 
 model ArticleTag {
@@ -650,3 +654,99 @@ enum MediaType {
   FILE
   EMBED
 }
+
+// ==========================================
+// MODUL PROGRAM & PODCAST
+// ==========================================
+
+enum ProgramType {
+  UMUM
+  HYSTERIA_BERKELANA
+}
+
+model Program {
+  id          Int         @id @default(autoincrement())
+  title       String
+  slug        String      @unique
+  description String      @db.Text
+  poster      String?
+  type        ProgramType @default(UMUM)
+  isPublished Boolean     @default(false)
+
+  // Jadwal & Tiket
+  startAt        DateTime?
+  endAt          DateTime?
+  isFlexibleTime Boolean   @default(false) 
+  registerLink   String?
+
+  // Lokasi
+  location     String?
+  mapsEmbedSrc String? @db.Text
+
+  // Arsip & Link Eksternal
+  driveLink     String?
+  youtubeLink   String?
+  instagramLink String?
+  drivebukuLink String? 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi
+  programCategories ProgramCategory[]
+  programTags       ProgramTag[]
+  programOrganizers ProgramOrganizer[]
+}
+
+model Podcast {
+  id               Int      @id @default(autoincrement())
+  astonLink        String?
+  soreDiStonenLink String?
+  updatedAt        DateTime @updatedAt
+}
+
+// --- TABEL RELASI / JEMBATAN ---
+
+model ProgramCategory {
+  id             Int     @id @default(autoincrement())
+  programId      Int
+  categoryItemId Int
+  isPrimary      Boolean @default(false)
+  order          Int     @default(0)
+
+  program      Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  categoryItem CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+}
+
+model ProgramTag {
+  id        Int @id @default(autoincrement())
+  programId Int
+  tagId     Int
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+}
+
+model ProgramOrganizer {
+  id             Int @id @default(autoincrement())
+  programId      Int
+  categoryItemId Int // Mengambil data dari master CategoryItem
+
+  program      Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  categoryItem CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+}
+
+model PageProgram {
+  id        Int      @id @default(autoincrement())
+  pageSlug  String   @unique @default("program") @db.VarChar(100)
+  
+  mainHero  Json?    @db.JsonB
+  covers    Json?    @db.JsonB
+  slugHeros Json?    @db.JsonB
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageSlug])
+}
+ 
