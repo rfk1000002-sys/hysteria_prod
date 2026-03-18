@@ -178,6 +178,21 @@ export default function ArticlesPage({ onNavigate }) {
     },
 
     {
+      field: "views",
+      headerName: "Views",
+      width: 50,
+      align: "center",
+      render: (row) => (
+        <div className="flex items-center justify-center gap-1 text-zinc-700">
+          <span>👁</span>
+          <span className="font-semibold">
+            {row.views?.toLocaleString("id-ID") || 0}
+          </span>
+        </div>
+      ),
+    },
+
+    {
       field: "actions",
       headerName: "Aksi",
       width: 120,
@@ -215,12 +230,14 @@ export default function ArticlesPage({ onNavigate }) {
         <div className="flex items-center justify-between">
           {/* SEARCH + FILTER */}
           <div className="flex gap-6">
+            {/* SEARCH */}
             <input
               type="text"
               placeholder="Cari artikel..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="px-4 py-2 border rounded-xl w-[220px]"
+              className="px-4 py-2 border rounded-xl w-[220px] 
+      text-black placeholder:text-black"
             />
 
             {/* Jenis Artikel */}
@@ -230,7 +247,7 @@ export default function ArticlesPage({ onNavigate }) {
                 setTypeFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-w-[180px] px-4 py-2 border rounded-xl"
+              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
             >
               <option value="">Jenis Artikel</option>
 
@@ -248,7 +265,7 @@ export default function ArticlesPage({ onNavigate }) {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-w-[180px] px-4 py-2 border rounded-xl"
+              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
             >
               <option value="">Semua Status</option>
               <option value="DRAFT">Draft</option>
@@ -257,13 +274,14 @@ export default function ArticlesPage({ onNavigate }) {
             </select>
           </div>
 
+          {/* BUTTON */}
           <button
             onClick={() => onNavigate("article.create")}
             className="px-6 py-3 rounded-xl bg-[#4B3D52] text-white 
-            text-sm font-semibold shadow-md
-            hover:shadow-lg hover:-translate-y-0.5
-            active:translate-y-0 active:shadow-sm
-            transition-all duration-200"
+    text-sm font-semibold shadow-md
+    hover:shadow-lg hover:-translate-y-0.5
+    active:translate-y-0 active:shadow-sm
+    transition-all duration-200"
           >
             Tambah Konten
           </button>

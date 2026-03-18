@@ -4,9 +4,16 @@ import { addArticleView } from "@/modules/public/articles/services/article.publi
 const rateLimit = new Map();
 
 export async function POST(req, { params }) {
-  const { slug } = params;
-
   try {
+    const { slug } = await params;
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: "Slug missing" },
+        { status: 400 }
+      );
+    }
+
     const ip =
       req.headers.get("x-forwarded-for") ||
       req.headers.get("x-real-ip") ||
@@ -14,22 +21,18 @@ export async function POST(req, { params }) {
 
     const userAgent = req.headers.get("user-agent") || "";
 
-    // ================= BOT FILTER =================
-    if (
-      userAgent.includes("bot") ||
-      userAgent.includes("crawl") ||
-      userAgent.includes("spider")
-    ) {
+    // ===== BOT FILTER =====
+    if (/bot|crawl|spider|slurp|facebook|whatsapp|preview/i.test(userAgent)) {
       return NextResponse.json({ success: true });
     }
 
-    // ================= RATE LIMIT =================
+    // ===== RATE LIMIT =====
     const key = `${ip}-${slug}`;
     const now = Date.now();
 
-    const lastRequest = rateLimit.get(key);
+    const last = rateLimit.get(key);
 
-    if (lastRequest && now - lastRequest < 30000) {
+    if (last && now - last < 30000) {
       return NextResponse.json(
         { error: "Too many requests" },
         { status: 429 }
@@ -38,14 +41,13 @@ export async function POST(req, { params }) {
 
     rateLimit.set(key, now);
 
-    // ================= ADD VIEW =================
+    // ===== ADD VIEW =====
     await addArticleView(slug);
 
-    return NextResponse.json({
-      success: true
-    });
+    return NextResponse.json({ success: true });
+
   } catch (error) {
-    console.error(error);
+    console.error("View API error:", error);
 
     return NextResponse.json(
       { error: "Failed to add view" },

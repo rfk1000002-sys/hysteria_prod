@@ -235,8 +235,26 @@ export async function updateArticleService(id, data) {
     throw new AppError("Article not found", 404);
   }
 
+  const now = new Date();
+
+  let publishedAt = data.publishedAt ? new Date(data.publishedAt) : null;
+  let status = data.status;
+
+  // ===== STATUS LOGIC =====
+  if (status === "PUBLISHED") {
+    // jika tanggal kosong → publish sekarang
+    if (!publishedAt) {
+      publishedAt = now;
+    }
+
+    // jika tanggal masa depan → scheduled
+    if (publishedAt > now) {
+      status = "SCHEDULED";
+    }
+  }
+
   return prisma.$transaction(async (tx) => {
-    // 1️⃣ update article utama
+    // 1️⃣ update article
     const article = await tx.article.update({
       where: { id },
       data: {
@@ -246,8 +264,8 @@ export async function updateArticleService(id, data) {
         excerpt: data.excerpt,
         authorName: data.authorName,
         editorName: data.editorName,
-        status: data.status,
-        publishedAt: data.publishedAt,
+        status,
+        publishedAt,
         references: data.references || [],
         featuredImageSource: data.featuredImageSource,
       },
@@ -298,6 +316,7 @@ function formatArticleList(article) {
     title: article.title,
     thumbnail: article.featuredImage,
     status: article.status,
+    views: article.views,
     publishedAt: article.publishedAt,
     categories: article.categories.map((c) => c.category),
   };

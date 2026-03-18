@@ -133,9 +133,10 @@ export async function findRecommendedArticles({
 }
 
 export async function incrementArticleViews(slug) {
+
   return prisma.article.update({
     where: {
-      slug,
+      slug: slug,
     },
     data: {
       views: {
@@ -143,4 +144,5 @@ export async function incrementArticleViews(slug) {
       },
     },
   });
+
 }
