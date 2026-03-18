@@ -5,6 +5,7 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import Groups3OutlinedIcon from "@mui/icons-material/Groups3Outlined";
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 export function IconDiversity({ className = "", size = 20 }) {
   return (
@@ -18,6 +19,15 @@ export function IconDiversity({ className = "", size = 20 }) {
 export function IconBusiness({ className = "", size = 20 }) {
   return (
     <BusinessOutlinedIcon
+      className={className}
+      style={{ fontSize: size }}
+    />
+  );
+}
+
+export function IconInfo({ className = "", size = 20 }) {
+  return (
+    <InfoOutlinedIcon
       className={className}
       style={{ fontSize: size }}
     />
