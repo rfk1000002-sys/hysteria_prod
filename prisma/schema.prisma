@@ -554,6 +554,12 @@ model Article {
   excerpt       String? @db.Text
   featuredImage String? @db.VarChar(500)
 
+  // ================= FEATURED IMAGE SOURCE =================
+  featuredImageSource String? @db.VarChar(255)
+
+  // ================= REFERENCES =================
+  references Json? @db.JsonB
+
   // ================= AUTHOR (MANUAL) =================
   authorName String  @db.VarChar(255)
   editorName String? @db.VarChar(255)
@@ -584,6 +590,7 @@ model Article {
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
+  @@index([status, publishedAt])
 }
 
 model ArticleCategory {
