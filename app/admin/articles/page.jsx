@@ -10,33 +10,87 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function ArticlesPage({ onNavigate }) {
   const router = useRouter();
+
   const [articles, setArticles] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [meta, setMeta] = useState({
+    page: 1,
+    totalPages: 1,
+    total: 0,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  // debounce search
   useEffect(() => {
-    const fetchArticles = async () => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
       try {
-        setLoading(true);
-
-        const res = await fetch("/api/admin/articles");
-
-        if (!res.ok) {
-          throw new Error("Gagal mengambil data artikel");
-        }
-
+        const res = await fetch("/api/categories/artikel");
         const json = await res.json();
-        setArticles(json.data || []);
+
+        if (json.success) {
+          setCategories(json.data.items);
+        }
       } catch (err) {
         console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchArticles();
+    fetchCategories();
   }, []);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams({
+        page,
+        limit,
+        search,
+        category: typeFilter,
+        status: statusFilter,
+      });
+
+      const res = await fetch(`/api/admin/articles?${params}`);
+
+      if (!res.ok) {
+        throw new Error("Gagal mengambil data artikel");
+      }
+
+      const json = await res.json();
+
+      setArticles(json.data.data);
+      setMeta(json.data.meta);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, [page, search, typeFilter, statusFilter]);
 
   const handleDelete = async (id) => {
     if (!confirm("Yakin ingin menghapus artikel ini?")) return;
@@ -45,11 +99,10 @@ export default function ArticlesPage({ onNavigate }) {
       method: "DELETE",
     });
 
-    setArticles((prev) => prev.filter((a) => a.id !== id));
+    fetchArticles();
   };
 
   const columns = [
-    // Thumbnail
     {
       field: "thumbnail",
       headerName: "",
@@ -71,7 +124,6 @@ export default function ArticlesPage({ onNavigate }) {
       ),
     },
 
-    // Judul
     {
       field: "title",
       headerName: "Judul",
@@ -81,7 +133,6 @@ export default function ArticlesPage({ onNavigate }) {
       ),
     },
 
-    // Status
     {
       field: "status",
       headerName: "Status",
@@ -102,7 +153,6 @@ export default function ArticlesPage({ onNavigate }) {
       ),
     },
 
-    // Kategori
     {
       field: "categories",
       headerName: "Kategori",
@@ -127,7 +177,21 @@ export default function ArticlesPage({ onNavigate }) {
       },
     },
 
-    // Aksi pakai icon
+    {
+      field: "views",
+      headerName: "Views",
+      width: 50,
+      align: "center",
+      render: (row) => (
+        <div className="flex items-center justify-center gap-1 text-zinc-700">
+          <span>👁</span>
+          <span className="font-semibold">
+            {row.views?.toLocaleString("id-ID") || 0}
+          </span>
+        </div>
+      ),
+    },
+
     {
       field: "actions",
       headerName: "Aksi",
@@ -155,7 +219,7 @@ export default function ArticlesPage({ onNavigate }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="space-y-4">
         <div>
           <h1 className="text-4xl font-bold text-zinc-900">Artikel</h1>
           <p className="text-sm text-zinc-600 mt-1">
@@ -163,12 +227,65 @@ export default function ArticlesPage({ onNavigate }) {
           </p>
         </div>
 
-        <button
-          onClick={() => onNavigate("article.create")}
-          className="px-5 py-2.5 rounded-lg bg-pink-600 text-white text-sm font-medium hover:bg-pink-700 transition"
-        >
-          Tambah Artikel
-        </button>
+        <div className="flex items-center justify-between">
+          {/* SEARCH + FILTER */}
+          <div className="flex gap-6">
+            {/* SEARCH */}
+            <input
+              type="text"
+              placeholder="Cari artikel..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="px-4 py-2 border rounded-xl w-[220px] 
+      text-black placeholder:text-black"
+            />
+
+            {/* Jenis Artikel */}
+            <select
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setPage(1);
+              }}
+              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
+            >
+              <option value="">Jenis Artikel</option>
+
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.title}>
+                  {cat.title}
+                </option>
+              ))}
+            </select>
+
+            {/* Status */}
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
+            >
+              <option value="">Semua Status</option>
+              <option value="DRAFT">Draft</option>
+              <option value="PUBLISHED">Published</option>
+              <option value="SCHEDULED">Scheduled</option>
+            </select>
+          </div>
+
+          {/* BUTTON */}
+          <button
+            onClick={() => onNavigate("article.create")}
+            className="px-6 py-3 rounded-xl bg-[#4B3D52] text-white 
+    text-sm font-semibold shadow-md
+    hover:shadow-lg hover:-translate-y-0.5
+    active:translate-y-0 active:shadow-sm
+    transition-all duration-200"
+          >
+            Tambah Konten
+          </button>
+        </div>
       </div>
 
       <Card>
@@ -180,6 +297,29 @@ export default function ArticlesPage({ onNavigate }) {
           loading={loading}
           getRowId={(row) => row.id}
         />
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-6">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Prev
+          </button>
+
+          <span className="text-sm text-gray-600">
+            Page {meta.page} of {meta.totalPages}
+          </span>
+
+          <button
+            disabled={page === meta.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
       </Card>
     </div>
   );
