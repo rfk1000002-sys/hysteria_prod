@@ -45,7 +45,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       (c) => Number(c.id) === Number(id)
     )?.title || id;
 
-  const [description, setDescription] = useState(undefined);
+  const [description, setDescription] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -396,13 +396,11 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
           {/* DESCRIPTION */}
           <Card title="Deskripsi *">
-            {description !== undefined && (
-              <EventDescriptionEditor
-                key={eventId || "new"}
-                value={description}
-                onChange={setDescription}
-              />
-            )}
+            <EventDescriptionEditor
+              key={eventId || "new"}
+              value={description}
+              onChange={setDescription}
+            />
             <p className="text-xs text-[var(--muted-foreground)] mt-2">
               Isi deskripsi disarankan lebih dari 300 kata
             </p>
