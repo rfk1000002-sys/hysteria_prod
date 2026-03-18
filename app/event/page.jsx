@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getEventStatus } from "../../lib/event-status";
+import { useDebounce } from "../../hooks/use-debounce";
 import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS_PER_PAGE = 6;
@@ -14,6 +15,7 @@ export default function EventsPage() {
   const searchParams = useSearchParams();
 
   const [q, setQ] = useState(searchParams.get("q") || "");
+  const [qInput, setQInput] = useState(searchParams.get("q") || "");
   const [status, setStatus] = useState(searchParams.get("status") || "all");
   const [sort, setSort] = useState(searchParams.get("sort") || "latest");
   const [events, setEvents] = useState([]);
@@ -24,7 +26,9 @@ export default function EventsPage() {
      SYNC STATE DARI URL
   ========================== */
   useEffect(() => {
-    setQ(searchParams.get("q") || "");
+    const paramQ = searchParams.get("q") || "";
+    setQ(paramQ);
+    setQInput(paramQ);
     setStatus(searchParams.get("status") || "all");
     setSort(searchParams.get("sort") || "latest");
   }, [searchParams]);
@@ -43,6 +47,15 @@ export default function EventsPage() {
 
     setPage(1);
   }, [q, status, sort, router]);
+
+  /* =========================
+     DEBOUNCE INPUT
+  ========================== */
+  const debouncedQ = useDebounce(qInput, 500);
+
+  useEffect(() => {
+    setQ(debouncedQ);
+  }, [debouncedQ]);
 
   /* =========================
      FETCH DATA
@@ -106,8 +119,8 @@ export default function EventsPage() {
           {/* SEARCH */}
           <div className="relative w-full">
             <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              value={qInput}
+              onChange={(e) => setQInput(e.target.value)}
               placeholder="Search"
               className="w-full h-[48px] pl-6 pr-14 rounded-full border border-[var(--Color-1)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--Color-1)]"
             />
@@ -162,6 +175,7 @@ export default function EventsPage() {
                     src={event.poster || "/placeholder-event.jpg"}
                     alt={event.title}
                     fill
+                    loading="lazy"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
 

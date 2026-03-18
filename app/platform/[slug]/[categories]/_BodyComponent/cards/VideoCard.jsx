@@ -69,6 +69,7 @@ export default function VideoCard({ imageUrl, youtube, url, alt, title, tags, pr
           alt={alt || title || "Video"}
           fill
           onError={handleImageError}
+          loading="lazy"
           unoptimized={!isLocal}
           sizes="(max-width:640px) 90vw, (max-width:1024px) 280px, 320px"
           className="object-cover brightness-90 transition-transform duration-300"

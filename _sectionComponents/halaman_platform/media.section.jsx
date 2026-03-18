@@ -52,6 +52,7 @@ export default function MediaSection({ youtubeProfile }) {
                   src={embedUrl}
                   title="YouTube video player"
                   frameBorder="0"
+                  loading="lazy"
                   allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />

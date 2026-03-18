@@ -38,6 +38,7 @@ export default function ArtistCard({
         src={imgSrc}
         alt={alt || title || "Artist image"}
         fill
+        loading="lazy"
         unoptimized={!isLocal}
         sizes="(max-width:640px) 50vw, 260px"
         className="object-cover brightness-75 transition-transform duration-300"

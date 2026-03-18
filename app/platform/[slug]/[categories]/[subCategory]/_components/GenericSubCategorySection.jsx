@@ -265,7 +265,7 @@ function CursorPagination({
           {"<"}
         </button>
         <span className="text-sm font-medium tabular-nums">
-          {currentStart}\u2013{currentEnd} / {total}
+          {currentStart} - {currentEnd} / {total}
         </span>
         <button
           type="button"
