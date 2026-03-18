@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness } from "../../../components/ui/icon";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram, IconInfo } from "../../../components/ui/icon";
 
 export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
@@ -39,6 +39,48 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
     },
 
     {
+      key: "program_menu",
+      label: "Program",
+      view: "program_menu",
+      icon: IconProgram, 
+      enabled: true,
+      children: [
+        { 
+          key: "semua_postingan", 
+          label: "Semua Postingan", 
+          view: "program.semua_postingan", 
+          path: "/admin/programs",           
+          icon: IconPost, 
+          enabled: true 
+        },
+        { 
+          key: "tambah_postingan", 
+          label: "Tambah Postingan", 
+          view: "program.tambah_postingan", 
+          path: "/admin/programs/create",    
+          icon: IconPost, 
+          enabled: true 
+        },
+        { 
+          key: "tambah_hysteria", 
+          label: <span className="block text-left leading-tight">Tambah Hysteria<br/>Berkelana</span>, 
+          view: "program.tambah_hysteria_berkelana", 
+          path: "/admin/programs/create-hysteria", 
+          icon: IconPost, 
+          enabled: true 
+        },
+        { 
+          key: "edit_podcast", 
+          label: "Edit Podcast", 
+          view: "program.edit_podcast", 
+          path: "/admin/programs/podcast",   
+          icon: IconPost, 
+          enabled: true 
+        },
+      ],
+    },
+
+    {
       key: "platform",
       label: "Platform",
       view: "platform",
@@ -62,9 +104,9 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       children: [
         { key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true },
         { key: "tentang", label: "Tentang", view: "tentang", icon: IconBusiness, enabled: true },
+        { key: "website-info", label: "Website Info", view: "website-info", icon: IconInfo, enabled: true },
         { key: "contact", label: "Contact", view: "contact", icon: IconSocial, enabled: true },
         { key: "collaboration", label: "Kolaborasi", view: "collaboration", icon: IconSocial, enabled: true },
-        { key: "metadata", label: "Metadata", view: "metadata", icon: IconSettings, enabled: false },
       ],
     },
   ];

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPublicArticleDetail } from "@/modules/public/articles/services/services/article.public.service";
+import { getPublicArticleDetail } from "@/modules/public/articles/services/article.public.service";
 
 export async function GET(_, { params }) {
   const article = await getPublicArticleDetail(params.slug);
