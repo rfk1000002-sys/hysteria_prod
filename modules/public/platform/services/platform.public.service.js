@@ -5,16 +5,7 @@
  * Memakai repository sebagai sumber data, lalu memetakan ke bentuk
  * yang langsung dimakan oleh komponen halaman.
  */
-import {
-  findActivePlatformsWithCategories,
-  findPublicPlatformBySlug,
-  findGridContents,
-  findCarouselSubCategories,
-  findContentById,
-  findRelatedContents,
-  findPublicEventsByCategorySlug,
-  findPublicEventsByOrganizerSlug,
-} from "../repositories/platform.public.repository.js";
+import { findActivePlatformsWithCategories, findActiveHomepagePlatformCards, findPublicPlatformBySlug, findGridContents, findCarouselSubCategories, findContentById, findRelatedContents, findTopActivePlatforms, findPublicEventsByCategorySlug, findPublicEventsByOrganizerSlug } from "../repositories/platform.public.repository.js";
 import { getEventStatus, EVENT_STATUS_LABEL } from "@/lib/event-status.js";
 // import { getEventStatus, EVENT_STATUS_LABEL } from "../../../lib/event-status.js";
 
@@ -139,12 +130,7 @@ export async function getPublicPlatform(slug) {
       subtitle: img.subtitle || null,
     }));
 
-  const images =
-    mainImages.length > 0
-      ? mainImages
-      : platform.mainImageUrl
-      ? [{ src: platform.mainImageUrl, alt: platform.name || slug }]
-      : [];
+  const images = mainImages.length > 0 ? mainImages : platform.mainImageUrl ? [{ src: platform.mainImageUrl, alt: platform.name || slug }] : [];
 
   return {
     head: {
@@ -157,6 +143,37 @@ export async function getPublicPlatform(slug) {
     },
     mediaURL: platform.youtubeProfile || "",
   };
+}
+
+/**
+ * Kartu Platform Kami untuk homepage.
+ * Menggunakan konfigurasi admin; fallback ke 5 platform aktif pertama bila belum dikonfigurasi.
+ */
+export async function getHomepagePlatformCards() {
+  const cards = await findActiveHomepagePlatformCards();
+
+  if (cards.length > 0) {
+    return cards.map((card) => ({
+      platformId: card.platformId,
+      slug: card.platform?.slug || "",
+      title: card.titleOverride || card.platform?.name || "",
+      src: card.imageUrlOverride || card.platform?.mainImageUrl || "",
+      linkUrl: card.linkUrl || `/platform/${card.platform?.slug || ""}`,
+      slotType: card.slotType === "short" ? "short" : "tall",
+      order: card.order,
+    }));
+  }
+
+  const fallbackPlatforms = await findTopActivePlatforms(5);
+  return fallbackPlatforms.map((platform, index) => ({
+    platformId: platform.id,
+    slug: platform.slug,
+    title: platform.name,
+    src: platform.mainImageUrl || "",
+    linkUrl: `/platform/${platform.slug}`,
+    slotType: index < 3 ? "tall" : "short",
+    order: index,
+  }));
 }
 
 /**
@@ -178,28 +195,19 @@ export async function getPublicCategory(platformSlug, categorySlug) {
   const catSlug = cat.categoryItem?.slug || "";
 
   // Hero image — matched by key, then fallback to cover image by index
-  const heroImages = (platform.images || [])
-    .filter((img) => img.type === "hero")
-    .sort((a, b) => b.order - a.order);
+  const heroImages = (platform.images || []).filter((img) => img.type === "hero").sort((a, b) => b.order - a.order);
 
   // Some hero keys in DB may use slightly different slugs (e.g. 'mockup-poster'
   // vs category slug 'mockup-dan-poster'). Try normalized variants to be
   // tolerant and avoid missing images due to small slug differences.
   const normalizedCat = (catSlug || "").replace(/-dan-/g, "-");
 
-  const heroImage =
-    heroImages.find((img) => img.key === `hero-${catSlug}`) ||
-    heroImages.find((img) => img.key === `hero-${normalizedCat}`) ||
-    heroImages.find((img) => img.key?.includes(catSlug)) ||
-    heroImages.find((img) => img.key?.includes(normalizedCat)) ||
-    null;
+  const heroImage = heroImages.find((img) => img.key === `hero-${catSlug}`) || heroImages.find((img) => img.key === `hero-${normalizedCat}`) || heroImages.find((img) => img.key?.includes(catSlug)) || heroImages.find((img) => img.key?.includes(normalizedCat)) || null;
 
-  const coverImages = (platform.images || [])
-    .filter((img) => img.type === "cover" && img.imageUrl)
-    .sort((a, b) => b.order - a.order);
+  const coverImages = (platform.images || []).filter((img) => img.type === "cover" && img.imageUrl).sort((a, b) => b.order - a.order);
 
   const image = heroImage?.imageUrl || coverImages[catIndex]?.imageUrl || platform.mainImageUrl || null;
-  const imageTitle    = heroImage?.title    || null;
+  const imageTitle = heroImage?.title || null;
   const imageSubtitle = heroImage?.subtitle || null;
 
   const layout = cat.layout || "grid";
@@ -219,9 +227,7 @@ export async function getPublicCategory(platformSlug, categorySlug) {
     const contents = await findGridContents(platform.id, cat.categoryItem.id);
     const items = contents.map(mapToGridItem);
 
-    const filters = Array.isArray(cat.filters) && cat.filters.length > 0
-      ? cat.filters
-      : [...new Set(contents.flatMap((c) => c.tags || []))];
+    const filters = Array.isArray(cat.filters) && cat.filters.length > 0 ? cat.filters : [...new Set(contents.flatMap((c) => c.tags || []))];
 
     return {
       ...base,
@@ -239,9 +245,7 @@ export async function getPublicCategory(platformSlug, categorySlug) {
   if (subs.length === 0) {
     const contents = await findGridContents(platform.id, cat.categoryItem.id);
     const metaCardType = resolveCardType(cat.categoryItem?.meta);
-    const resolvedCardType = metaCardType !== "poster"
-      ? metaCardType
-      : resolveCardTypeFromSlug(catSlug);
+    const resolvedCardType = metaCardType !== "poster" ? metaCardType : resolveCardTypeFromSlug(catSlug);
     const items = contents.map(mapToGridItem);
     const filters = [...new Set(contents.flatMap((c) => c.tags || []))];
     return {
@@ -255,19 +259,12 @@ export async function getPublicCategory(platformSlug, categorySlug) {
   }
 
   // Sub-kategori yang datanya bersumber dari model Event (bukan PlatformContent)
-  const EVENT_DRIVEN_SUBCATEGORY_SLUGS = new Set([
-    "stonen-29-radio-show",
-    "workshop-artlab",
-    "screening-film",
-    "untuk-perhatian",
-  ]);
+  const EVENT_DRIVEN_SUBCATEGORY_SLUGS = new Set(["stonen-29-radio-show", "workshop-artlab", "screening-film", "untuk-perhatian"]);
 
   const subCategories = await Promise.all(
     subs.map(async (sub) => {
       // Ambil cardType dari meta CategoryItem, fallback ke meta PlatformContent pertama
-      const cardType = resolveCardType(sub.meta) !== "poster"
-        ? resolveCardType(sub.meta)
-        : resolveCardType(sub.platformContents?.[0]?.meta);
+      const cardType = resolveCardType(sub.meta) !== "poster" ? resolveCardType(sub.meta) : resolveCardType(sub.platformContents?.[0]?.meta);
 
       let items;
       if (EVENT_DRIVEN_SUBCATEGORY_SLUGS.has(sub.slug)) {
@@ -302,7 +299,7 @@ export async function getPublicCategory(platformSlug, categorySlug) {
         heroTitle: subHeroImage?.title || null,
         heroSubtitle: subHeroImage?.subtitle || null,
       };
-    })
+    }),
   );
 
   return { ...base, filters: [], items: [], subCategories };
@@ -337,9 +334,7 @@ export async function getPublicContentItem(id) {
   const content = await findContentById(id);
   if (!content) return null;
 
-  const related = content.categoryItem?.id && content.platform?.id
-    ? await findRelatedContents(content.platform.id, content.categoryItem.id, content.id)
-    : [];
+  const related = content.categoryItem?.id && content.platform?.id ? await findRelatedContents(content.platform.id, content.categoryItem.id, content.id) : [];
 
   const mapItem = (c) => {
     const img = c.images?.[0];
@@ -376,10 +371,7 @@ export async function getPublicEventItems(categorySlug) {
   return events.map((event) => {
     const status = getEventStatus(event.startAt, event.endAt);
     // Derive sub-category tag: the eventCategories slug that is NOT the parent categorySlug
-    const subCategorySlug =
-      (event.eventCategories || [])
-        .map((ec) => ec.categoryItem?.slug)
-        .find((s) => s && s !== categorySlug) ?? null;
+    const subCategorySlug = (event.eventCategories || []).map((ec) => ec.categoryItem?.slug).find((s) => s && s !== categorySlug) ?? null;
     return {
       id: event.id,
       slug: event.slug,
