@@ -2,50 +2,72 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import ArticleForm from "@/app/admin/_partial/_components/Article/ArticleForm";
+import ArticleForm from "@/components/ui/Article/ArticleForm";
 
 export default function EditArticlePage() {
   const params = useParams();
   const router = useRouter();
 
-  const id = params?.id; // pastikan ada
+  const id = params?.id; 
 
   const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    if (!id) return; 
+    if (!id) return;
 
-    const fetchArticle = async () => {
-      const res = await fetch(`/api/admin/articles/${id}`);
+    const fetchData = async () => {
+      try {
+        const [articleRes, categoryRes] = await Promise.all([
+          fetch(`/api/admin/articles/${id}`),
+          fetch(`/api/categories/artikel`),
+        ]);
 
-      if (!res.ok) {
-        console.error("Failed:", await res.text());
-        return;
-      }
+        const articleJson = await articleRes.json();
+        const categoryJson = await categoryRes.json();
 
-      const json = await res.json();
+        console.log("ARTICLE:", articleJson);
+        console.log("CATEGORIES:", categoryJson);
 
-      console.log("ARTICLE FROM API:", json);
+        if (articleJson.success) {
+          setInitialData(articleJson.data);
+        }
 
-      if (json.success) {
-        setInitialData(json.data);
+        if (categoryJson.success) {
+          setCategories(categoryJson.data.items);
+        }
+      } catch (err) {
+        console.error(err);
       }
 
       setLoading(false);
     };
 
-    fetchArticle();
+    fetchData();
   }, [id]);
 
   const handleUpdate = async (formData) => {
-    await fetch(`/api/admin/articles/${id}`, {
-      method: "PUT",
-      body: formData,
-    });
+    try {
+      const res = await fetch(`/api/admin/articles/${id}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
 
-    alert("Artikel berhasil diperbarui");
-    router.push("/admin/articles");
+      if (!res.ok) {
+        throw new Error("Update gagal");
+      }
+
+      const json = await res.json();
+
+      alert("Artikel berhasil diperbarui");
+
+      router.replace("/admin");
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
   };
 
   if (!id) return <div>Loading ID...</div>;
@@ -54,6 +76,7 @@ export default function EditArticlePage() {
   return (
     <ArticleForm
       initialData={initialData}
+      categories={categories}
       mode="edit"
       onSubmit={handleUpdate}
     />

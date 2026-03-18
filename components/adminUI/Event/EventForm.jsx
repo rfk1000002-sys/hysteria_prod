@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import ImageUpload from "./ImageUpload";
 import EventDescriptionEditor from "./EventDescriptionEditor";
 import TagInput from "./TagInput";
+import { extractMapSrc, getPreviewSrc } from "@/lib/maps";
+import OrganizerSelect from "./OrganizerSelect";
+import CategorySelect from "./CategorySelect";
+import EventDuration from "./EventDuration";
 
 function Card({ title, children }) {
   return (
-    <div className="bg-white rounded-xl border shadow-sm p-5">
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-5">
       {title && (
-        <h3 className="font-medium text-black mb-3">{title}</h3>
+        <h3 className="font-medium text-[var(--foreground)] mb-3">{title}</h3>
       )}
       {children}
     </div>
@@ -41,17 +45,17 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       (c) => Number(c.id) === Number(id)
     )?.title || id;
 
+  const [description, setDescription] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     categoryItemIds: [],
     organizerIds: [],
-    description: "",
     startDate: "",
     startTime: "",
     endDate: "",
     endTime: "",
     location: "",
-    address: "",
     registerLink: "",
     mapsEmbed: "",
     poster: "",
@@ -60,6 +64,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     youtubeLink: "", 
     instagramLink: "",
     drivebukuLink: "",
+    youtubeLiveLink: "",
+    instagramLiveLink: "",
+    tiktokLiveLink: "",
     tags: [],
     isFlexibleTime : false,
   });
@@ -71,6 +78,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     const start = new Date(initialData.startAt);
     const end = initialData.endAt ? new Date(initialData.endAt) : null;
     const isFlexible = Boolean(initialData.isFlexibleTime);
+    setDescription(initialData.description || "");
 
     setForm((prev) => ({
       ...prev,
@@ -87,7 +95,6 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           Number(o.categoryItemId)
         ) || [],
 
-      description: initialData.description || "",
       startDate: start.toISOString().slice(0, 10),
       startTime: isFlexible ? "" : start.toTimeString().slice(0, 5),
       endDate: end ? end.toISOString().slice(0, 10) : "",
@@ -103,16 +110,16 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       youtubeLink: initialData.youtubeLink || "",
       instagramLink: initialData.instagramLink || "",
       drivebukuLink: initialData.drivebukuLink || "",
+      youtubeLiveLink: initialData.youtubeLiveLink || "",
+      instagramLiveLink: initialData.instagramLiveLink || "",
+      tiktokLiveLink: initialData.tiktokLiveLink || "",
 
       tags:
         initialData.tags?.map(t =>
           t.tag?.name
         ).filter(Boolean) || [],
 
-      mapsEmbed: initialData.mapsEmbedSrc
-        ? `<iframe src="${initialData.mapsEmbedSrc}" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>`
-        : "",
-
+      mapsEmbed: initialData.mapsEmbedSrc || "",
       isFlexibleTime: isFlexible,
     }));
   }, [initialData]);
@@ -187,27 +194,29 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     fetchData();
   }, []);
 
+  
   // SUB CATEGORY LOGIC
   const getPlatformSubCategories = () => {
     const subs = [];
 
+    const collectSubs = (children, source) => {
+      for (const child of children || []) {
+        if (child.isIndependent) continue;
+        subs.push({ id: child.id, title: child.title, source });
+        collectSubs(child.children, source);
+      }
+    };
+
     for (const organizer of platformTree) {
       if (!form.organizerIds.includes(Number(organizer.id))) continue;
-
-      for (const child of organizer.children || []) {
-        if (child.isIndependent) continue;
-        subs.push({
-          id: child.id,
-          title: child.title,
-          source: organizer.title,
-        });
-      }
+      collectSubs(organizer.children, organizer.title);
     }
     return subs;
   };
 
   const getHysteriaSubCategories = () => {
-    if (!form.organizerIds.includes(programTree[0]?.id)) return [];
+    if (!programTree.length) return [];
+    if (!form.organizerIds.includes(programTree[0].id)) return [];
 
     const result = [];
 
@@ -244,7 +253,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         )
       ),
     }));
-  }, [form.organizerIds]);
+  }, [form.organizerIds, filteredCategoryItems]);
 
   const normalizeId = (id) => Number(id);
 
@@ -281,43 +290,12 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const extractMapSrc = (input) => {
-    if (!input) return null;
-
-    const value = input.trim();
-
-    // iframe
-    if (value.includes("<iframe")) {
-      const match = value.match(/src="([^"]+)"/);
-      return match ? match[1] : null;
-    }
-
-    // link biasa
-    if (value.startsWith("http")) {
-      return value;
-    }
-
-    return null;
-  };
-
-  const getPreviewSrc = (input) => {
-    if (!input) return null;
-
-    if (input.includes("<iframe")) {
-      const match = input.match(/src="([^"]+)"/);
-      return match ? match[1] : null;
-    }
-
-    return null;
-  };
-
   const mapSrc = getPreviewSrc(form.mapsEmbed);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // Validasi
     const missingFields = [];
 
     if (!form.title) missingFields.push("Judul Event");
@@ -340,14 +318,14 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       title           : form.title,
       categoryItemIds : form.categoryItemIds,
       organizerItemIds: form.organizerIds,
-      description     : form.description,
+      description     : description,
 
       startAt: form.isFlexibleTime
         ? new Date(`${form.startDate}T00:00`).toISOString()
         : new Date(`${form.startDate}T${form.startTime}`).toISOString(),
 
       endAt: form.isFlexibleTime
-        ? null
+        ? (form.endDate ? new Date(`${form.endDate}T23:59:59`).toISOString() : null)
         : form.endDate && form.endTime
           ? new Date(`${form.endDate}T${form.endTime}`).toISOString()
           : null,
@@ -361,6 +339,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       youtubeLink     : form.youtubeLink,
       instagramLink   : form.instagramLink,
       drivebukuLink   : form.drivebukuLink,
+      youtubeLiveLink   : form.youtubeLiveLink,
+      instagramLiveLink : form.instagramLiveLink,
+      tiktokLiveLink    : form.tiktokLiveLink,
       isFlexibleTime: form.isFlexibleTime,
       tagNames: Array.isArray(form.tags)
         ? form.tags.filter(Boolean)
@@ -381,22 +362,23 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       alert(err.message);
       return;
     }
-
+    setLoading(false);
     router.push("/admin/events");
   };
 
-  const inputClass =
-    "w-full border border-gray-300 bg-white text-black placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500";
-
-  const errorClass = "text-red-600 text-sm mt-1";
+  const inputClass = "w-full border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--Color-1)] disabled:bg-[var(--muted)]";
+  const errorClass = "text-[var(--destructive)] text-sm mt-1";
 
   return (
-    <form onSubmit={handleSubmit} className="font-poppins space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* HEADER */}
       <div className="right items-right justify-between">
         {/* ACTION */}
         <div className="flex justify-end">
-          <button type="submit">
+          <button 
+            type="submit"
+            className="bg-[var(--btn-normal)] hover:bg-[var(--btn-normal-hover)] active:bg-[var(--btn-normal-active)] text-white px-6 py-2 rounded-lg transition"
+          >
             {loading ? "Menyimpan..." : "Simpan Event"}
           </button>
         </div>
@@ -409,19 +391,17 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           {/* TITLE */}
           <Card title="Judul Postingan *">
             <input name="title" value={form.title} onChange={handleChange} className={inputClass} required />
-            <p className="text-xs text-gray-500 mt-2">Masukkan judul yang jelas dan deskriptif</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">Masukkan judul yang jelas dan deskriptif</p>
           </Card>
 
           {/* DESCRIPTION */}
           <Card title="Deskripsi *">
             <EventDescriptionEditor
-              key={form.description}
-              value={form.description}
-              onChange={(html) =>
-                setForm((prev) => ({ ...prev, description: html }))
-              }
+              key={eventId || "new"}
+              value={description}
+              onChange={setDescription}
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">
               Isi deskripsi disarankan lebih dari 300 kata
             </p>
           </Card>
@@ -438,7 +418,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           </Card>
 
           <Card title="Lokasi">
-            <p className="text-xs text-gray-500 mt-2">Tulis alamat pelaksanaan acara secara lengkap</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">Tulis alamat pelaksanaan acara secara lengkap</p>
             <input
               name="location"
               value={form.location}
@@ -446,7 +426,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               className={inputClass}
             />
             
-            <p className="text-xs text-gray-500 mt-2">Tambahkan detail lokasi mengguanakan Google Maps</p>
+            <p className="text-xs text-[var(--muted-foreground)] mt-2">Tambahkan detail lokasi mengguanakan Google Maps</p>
             <textarea
               name="mapsEmbed"
               value={form.mapsEmbed}
@@ -467,9 +447,53 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
             )}
           </Card>
 
+          <Card title="Live Streaming">
+            <div className="space-y-3">
+              <p className="text-xs text-[var(--Color-1)]">
+                Isi jika acara memiliki siaran langsung
+              </p>
+
+              <p className="text-xs text-[var(--muted-foreground)]">
+                YouTube Live
+              </p>
+              <input
+                type="url"
+                name="youtubeLiveLink"
+                value={form.youtubeLiveLink}
+                onChange={handleChange}
+                placeholder="https://youtube.com/live/..."
+                className={inputClass}
+              />
+
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Instagram Live
+              </p>
+              <input
+                type="url"
+                name="instagramLiveLink"
+                value={form.instagramLiveLink}
+                onChange={handleChange}
+                placeholder="https://instagram.com/..."
+                className={inputClass}
+              />
+
+              <p className="text-xs text-[var(--muted-foreground)]">
+                TikTok Live
+              </p>
+              <input
+                type="url"
+                name="tiktokLiveLink"
+                value={form.tiktokLiveLink}
+                onChange={handleChange}
+                placeholder="https://tiktok.com/..."
+                className={inputClass}
+              />
+
+            </div>
+          </Card>
           <Card title="Arsip Kegiatan">
             <div className="space-y-3">
-              <p className="text-xs text-gray-500 mt-2">Link Drive Dokumentasi</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Drive Dokumentasi</p>
               <input
                 type="url"
                 name="driveLink"
@@ -479,7 +503,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-gray-500 mt-2">Link Dokumentasi YouTube</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Dokumentasi YouTube</p>
               <input
                 type="url"
                 name="youtubeLink"
@@ -489,7 +513,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-gray-500 mt-2">Link Dokumentasi Instagram</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Dokumentasi Instagram</p>
               <input
                 type="url"
                 name="instagramLink"
@@ -499,7 +523,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-gray-500 mt-2">Link Drive Buku</p>
+              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Drive Buku</p>
               <input
                 type="url"
                 name="drivebukuLink"
@@ -509,7 +533,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-pink-600">
+              <p className="text-xs text-[var(--Color-1)]">
                 Lakukan pengisian link sesuai dengan kebutuhan
               </p>
             </div>
@@ -520,148 +544,42 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
         <div className="space-y-6">
           {/* ORGANIZER MULTI SELECT */}
           <Card title="Penyelenggara *">
-            <div ref={organizerRef} className="relative space-y-2">
-              {/* CHIPS */}
-              {form.organizerIds.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {form.organizerIds.map((id) => (
-                    <span
-                      key={id}
-                      className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                    >
-                      {getOrganizerTitle(id)}
-                      <button
-                        type="button"
-                        onClick={() => toggleOrganizer(id)}
-                        className="hover:text-pink-900"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* BUTTON */}
-              <button
-                type="button"
-                onClick={() => setOrganizerOpen(!organizerOpen)}
-                className={`${inputClass} flex justify-between items-center`}
-              >
-                <span>
-                  {form.organizerIds.length > 0
-                    ? `${form.organizerIds.length} penyelenggara dipilih`
-                    : "Pilih penyelenggara"}
-                </span>
-                <span className="text-gray-500">▾</span>
-              </button>
-
-              {/* DROPDOWN */}
-              {organizerOpen && (
-                <div className="absolute z-20 mt-2 w-full max-h-64 overflow-auto rounded-lg border bg-white shadow">
-                  {organizerItems.map((item) => (
-                    <label
-                      key={item.id}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.organizerIds.includes(item.id)}
-                        onChange={() => toggleOrganizer(item.id)}
-                        className="accent-pink-600"
-                      />
-                      <span className="text-sm text-black">{item.title}</span>
-                    </label>
-                  ))}
-
-                  {organizerItems.length === 0 && (
-                    <p className="px-3 py-2 text-sm text-gray-500">
-                      Tidak ada penyelenggara
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+            <OrganizerSelect
+              organizerItems={organizerItems}
+              organizerIds={form.organizerIds}
+              toggleOrganizer={toggleOrganizer}
+              organizerOpen={organizerOpen}
+              setOrganizerOpen={setOrganizerOpen}
+              organizerRef={organizerRef}
+              inputClass={inputClass}
+              getOrganizerTitle={getOrganizerTitle}
+            />
           </Card>
         
           {/* CATEGORY MULTISELECT */}
           <Card title="Sub Kategori *">
-            <div ref={categoryRef} className="relative space-y-2">
-              {/* CHIPS */}
-              {form.categoryItemIds.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {form.categoryItemIds.map((id) => (
-                    <span
-                      key={id}
-                      className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                    >
-                      {getCategoryTitle(id)}
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(id)}
-                        className="hover:text-gray-900"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* BUTTON */}
-              <button
-                type="button"
-                onClick={() => setCategoryOpen(!categoryOpen)}
-                className={`${inputClass} flex justify-between items-center`}
-              >
-                <span>
-                  {form.categoryItemIds.length > 0
-                    ? `${form.categoryItemIds.length} kategori dipilih`
-                    : "Pilih kategori"}
-                </span>
-                <span className="text-gray-500">▾</span>
-              </button>
-
-              {/* DROPDOWN */}
-              {categoryOpen && (
-                <div className="absolute z-20 mt-2 w-full max-h-64 overflow-auto rounded-lg border bg-white shadow">
-                  {filteredCategoryItems.map((item) => (
-                    <label
-                      key={item.id}
-                      className="flex items-start gap-2 px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.categoryItemIds.includes(item.id)}
-                        onChange={() => toggleCategory(item.id)}
-                        className="mt-1 accent-pink-600"
-                      />
-                      <div>
-                        <p className="text-sm text-black">{item.title}</p>
-                        <p className="text-xs text-gray-500">{item.source}</p>
-                      </div>
-                    </label>
-                  ))}
-
-                  {filteredCategoryItems.length === 0 && (
-                    <p className="px-3 py-2 text-sm text-gray-500">
-                      Tidak ada kategori
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-            
+            <CategorySelect
+              categoryItems={filteredCategoryItems}
+              categoryIds={form.categoryItemIds}
+              toggleCategory={toggleCategory}
+              categoryOpen={categoryOpen}
+              setCategoryOpen={setCategoryOpen}
+              categoryRef={categoryRef}
+              inputClass={inputClass}
+              getCategoryTitle={getCategoryTitle}
+            />
           </Card>
           
           {/* POSTER */}
           <Card title="Foto Utama *">
             <ImageUpload
               value={form.poster}
-              onChange={(url) => setForm({ ...form, poster: url })}
+              onChange={(url) =>
+                setForm((prev) => ({ ...prev, poster: url }))
+              }
             />
 
-            <p className="text-xs text-pink-600 mt-2">
+            <p className="text-xs text-[var(--Color-1)] mt-2">
               Recommended: 800 × 1000px (Ratio 4:5)
               <br />
               Maksimal Size: 3 MB
@@ -669,79 +587,12 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           </Card>
 
           <Card title="Durasi Acara *">
-            <div className="space-y-3">
-              <Card title="Tanggal Mulai">
-                <input
-                  type="date"
-                  name="startDate"
-                  value={form.startDate}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </Card>
-              
-              <Card title="Tanggal Selesai">
-                <input
-                  type="date"
-                  name="endDate"
-                  value={form.endDate}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </Card>
-              
-              <Card title="Waktu Acara">
-                {/* TIME INPUT */}
-                {!form.isFlexibleTime && (
-                  <div className="flex gap-2">
-                    <input
-                      type="time"
-                      name="startTime"
-                      value={form.startTime}
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                    <span className="text-xs text-gray-500 self-center">Hingga</span>
-                    <input
-                      type="time"
-                      name="endTime"
-                      value={form.endTime}
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                )}
-      
-                {/* CHECKBOX */}
-                <label className="flex items-start gap-2 mt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.isFlexibleTime}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        isFlexibleTime: e.target.checked,
-                      }))
-                    }
-                    className="mt-1 accent-pink-600"
-                  />
-                  <div>
-                    <p className="text-sm text-black font-medium">
-                      Menyesuaikan
-                    </p>
-                    <p className="text-xs text-pink-600">
-                      Centang jika waktu pelaksanaan lebih dari 1 waktu dan atau 1 hari
-                    </p>
-                  </div>
-                </label>
-
-                {form.isFlexibleTime && (
-                  <p className="text-xs text-pink-600">
-                    Waktu acara akan ditampilkan sebagai <b>“Menyesuaikan”</b>
-                  </p>
-                )}
-              </Card>
-            </div>
+            <EventDuration
+              form={form}
+              handleChange={handleChange}
+              setForm={setForm}
+              inputClass={inputClass}
+            />
           </Card>
 
           {/* TAGS */}
@@ -764,7 +615,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               <option value="PUBLISHED">Publish</option>
             </select>
 
-            <p className="text-xs text-pink-600 mt-2">
+            <p className="text-xs text-[var(--Color-1)] mt-2">
               Draft tidak akan tampil di halaman publik
             </p>
           </Card>
@@ -773,4 +624,3 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     </form>
   );
 }
-

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ArticleForm from "../../_partial/_components/Article/ArticleForm";
+import ArticleForm from "@/components/ui/Article/ArticleForm";
 
-export default function CreateArticlePage({ onNavigate }) {
+export default function CreateArticlePage({ onNavigate = () => {} }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,14 +22,13 @@ export default function CreateArticlePage({ onNavigate }) {
 
       const res = await fetch("/api/admin/articles", {
         method: "POST",
-        body: formData, 
+        body: formData,
       });
 
       const json = await res.json();
 
       if (!json.success) {
-        alert(json.error || "Gagal menyimpan");
-        return;
+        throw new Error(json.error?.message || "Gagal menyimpan");
       }
 
       onNavigate("article");

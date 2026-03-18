@@ -19,7 +19,8 @@ const seeds = [
   // require("./013-platform-categories-seed.js"),
   // require("./014-event-seed.js"),
   // require("./015-tentang-default-seed.js"),
-  // require("./016-website-info-seed.js"),
+  require("./016-platform-content-seed.js"),
+  // require("./017-platform-events-seed.js"),
 ];
 
 async function main() {

@@ -77,6 +77,8 @@ export default function TiptapRenderer({ content }) {
           </Tag>
         );
 
+      /* ================= IMAGE (OLD) ================= */
+
       case "image":
         return (
           <figure key={index} className="my-10">
@@ -85,6 +87,7 @@ export default function TiptapRenderer({ content }) {
               alt={node.attrs?.alt || ""}
               className="rounded-xl object-cover max-h-[480px] mx-auto"
             />
+
             {node.attrs?.title && (
               <figcaption className="text-sm text-gray-500 mt-2 text-center">
                 {node.attrs.title}
@@ -92,6 +95,39 @@ export default function TiptapRenderer({ content }) {
             )}
           </figure>
         );
+
+      /* ================= CUSTOM IMAGE ================= */
+
+      case "customImage":
+        return (
+          <figure key={index} className="my-10 text-center">
+            <img
+              src={node.attrs?.src}
+              alt={node.attrs?.alt || ""}
+              className="rounded-xl object-cover max-h-[480px] mx-auto"
+            />
+
+            {(node.attrs?.caption || node.attrs?.source) && (
+              <figcaption className="mt-3 space-y-1">
+
+                {node.attrs?.caption && (
+                  <div className="text-gray-700 text-sm italic">
+                    {node.attrs.caption}
+                  </div>
+                )}
+
+                {node.attrs?.source && (
+                  <div className="text-pink-500 text-sm">
+                    Sumber: {node.attrs.source}
+                  </div>
+                )}
+
+              </figcaption>
+            )}
+          </figure>
+        );
+
+      /* ================= LIST ================= */
 
       case "bulletList":
         return (
@@ -109,6 +145,8 @@ export default function TiptapRenderer({ content }) {
 
       case "listItem":
         return <li key={index}>{node.content?.map(renderNode)}</li>;
+
+      /* ================= BLOCKQUOTE ================= */
 
       case "blockquote":
         return (
