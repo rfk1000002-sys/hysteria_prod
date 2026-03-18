@@ -1,7 +1,5 @@
 "use client";
 
-import { Facebook, Twitter, Instagram, Share2 } from "lucide-react";
-
 export default function ShareButtons({ url, title }) {
   const shareNative = async () => {
     if (navigator.share) {
@@ -15,55 +13,44 @@ export default function ShareButtons({ url, title }) {
         // user cancel
       }
     } else {
-      // fallback copy link
       await navigator.clipboard.writeText(url);
-      alert("Link berhasil disalin 👍");
+      alert("Link berhasil disalin");
     }
   };
 
   return (
-    <div>
-      <h3 className="font-semibold mb-3 flex items-center gap-2">
-        <Share2 className="w-4 h-4" />
-        Share
+    <div className="flex flex-wrap items-center gap-2">
+      <h3 className="font-semibold text-[18px] text-[var(--Color-5)] whitespace-nowrap">
+        Share:
       </h3>
 
-      <div className="flex gap-3">
-        {/* Facebook */}
-        <a
-          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-            url
-          )}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Share ke Facebook"
-          className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition"
-        >
-          <Facebook className="w-5 h-5" />
-        </a>
+      {/* Facebook */}
+      <a
+        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Share ke Facebook"
+      >
+        <img src="/icons/facebook.png" alt="Facebook" className="w-10 h-10" />
+      </a>
 
-        {/* X (Twitter) */}
-        <a
-          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            title
-          )}&url=${encodeURIComponent(url)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Share ke X"
-          className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-800 transition"
-        >
-          <Twitter className="w-5 h-5" />
-        </a>
+      {/* X */}
+      <a
+        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Share ke X"
+      >
+        <img src="/icons/x.png" alt="X" className="w-10 h-10" />
+      </a>
 
-        {/* Instagram / Native Share */}
-        <button
-          onClick={shareNative}
-          title="Share"
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 text-white flex items-center justify-center hover:opacity-90 transition"
-        >
-          <Instagram className="w-5 h-5" />
-        </button>
-      </div>
+      {/* Native Share */}
+      <button
+        onClick={shareNative}
+        title="Share"
+      >
+        <img src="/icons/share.png" alt="Share" className="w-10 h-10" />
+      </button>
     </div>
   );
 }

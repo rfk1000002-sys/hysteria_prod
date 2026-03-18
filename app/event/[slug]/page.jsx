@@ -1,70 +1,32 @@
-import { prisma } from "../../../lib/prisma";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getEventStatus, EVENT_STATUS_LABEL } from "../../../lib/event-status";
 import ShareButtons from "../../../components/adminUI/Event/ShareButtons";
 import { ArrowLeft } from "lucide-react";
+import { getEventDetail, getOtherEvents } from "../../../modules/public/events/services/event.service";
+import { getOrganizerDisplay } from "../../../lib/organizer-helper";
+import LiveArchiveLinks from "../../../components/adminUI/Event/LiveArchiveLinks";
 
 export const revalidate = 60;
 
 export default async function EventDetailPage({ params }) {
   const { slug } = await params;
 
-  const event = await prisma.event.findFirst({
-    where: {
-      slug,
-      isPublished: true,
-    },
-    include: {
-      eventCategories: {
-        include: {
-          categoryItem: {
-            include: {
-              category: true,
-            },
-          },
-        },
-      },
-      organizers: {
-        include: {
-          categoryItem: {
-            select: {
-              title: true,
-            },
-          },
-        },
-      },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-    },
-  });
+  const event = await getEventDetail(slug);
 
-  const otherEvents = await prisma.event.findMany({
-    where: {
-      isPublished: true,
-      slug: { not: slug },
-    },
-    include: {
-      eventCategories: {
-        include: {
-          categoryItem: {
-            include: {
-              category: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      startAt: "asc",
-    },
-    take: 5,
-  });
-  
+  console.log("ORGANIZERS:", event.organizers);
+  console.log(
+  event.organizers.map((o) => o.categoryItem)
+);
+console.log(
+  event.organizers.map((o) => ({
+    title: o.categoryItem?.title,
+    type: o.categoryItem?.type,
+  }))
+);
+  const otherEvents = await getOtherEvents(slug);
+
   if (!event) return notFound();
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
@@ -123,36 +85,51 @@ export default async function EventDetailPage({ params }) {
           ? ` – ${endDate.toLocaleTimeString("id-ID", {
               hour: "2-digit",
               minute: "2-digit",
-            })} WIB`
+            })}`
           : ""
-      }`;
+      } WIB`;
+
+  const organizerSlug = event.organizers?.[0]?.categoryItem?.slug;
+  const isEmbedMap = event.mapsEmbedSrc?.includes("/maps/embed");
 
   return (
     <div className="w-full">
       {/* HERO GRADIENT */}
-      <section className="relative w-full h-[360px] bg-gradient-to-r from-pink-600 via-fuchsia-600 to-pink-500">
+      <section
+        className="relative w-full h-[300px]"
+        style={
+          event?.heroImage
+            ? {
+                backgroundImage: `url(${event.heroImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : event?.heroColor
+            ? {
+                background: event.heroColor,
+              }
+            : {
+                background:
+                  "linear-gradient(to right, #db2777, #c026d3, #ec4899)",
+              }
+        }
+      >
         {/* BACK BUTTON */}
         <Link
           href="/event"
-          className="absolute top-6 left-6 z-10
-                    inline-flex items-center justify-center
-                    w-10 h-10 rounded-full
-                    text-white transition
-                    hover:bg-white/10 mt-16"
-          aria-label="Kembali"
-        >
+          className="absolute top-6 left-6 z-10 inline-flex items-center justify-center w-10 h-10 rounded-full text-white transition hover:bg-white/10 mt-16" aria-label="Kembali">
           <ArrowLeft className="w-7 h-7 stroke-[3]" />
         </Link>
       </section>
 
       {/* CONTENT */}
-      <div className="max-w-7xl mx-auto px-6 -mt-32 space-y-16">
+      <div className="mx-auto px-6 -mt-32 space-y-16 bg-[var(--background)]">
 
         {/* HEADER (POSTER + INFO) */}
         <section className="grid md:grid-cols-3 gap-10 items-start">
           {/* POSTER */}
           <div className="md:col-span-1">
-            <div className="relative w-full h-[420px] rounded-2xl overflow-hidden shadow-2xl bg-black">
+            <div className="relative w-full h-[420px] rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src={event.poster || "/placeholder-event.jpg"}
                 alt={event.title}
@@ -164,44 +141,41 @@ export default async function EventDetailPage({ params }) {
           </div>
 
           {/* INFO */}
-          <div className="md:col-span-2 space-y-4 pt-10 mt-28">
+          <div className="md:col-span-2 space-y-4 pt-10 mt-28">            
             <div className="flex flex-wrap gap-2">
               {event.eventCategories.map((cat) => (
-                <span
-                  key={cat.categoryItem.id}
-                  className={`
-                    inline-block px-4 py-1 rounded-full text-sm
-                    ${cat.isPrimary
-                      ? "bg-pink-600 text-white"
-                      : "bg-pink-100 text-pink-700"}
-                  `}
-                >
-                  {cat.categoryItem.title}
-                </span>
-              ))}
+              <Link
+                key={cat.categoryItem.id}
+                href={cat.categoryItem.url ?? "#"}
+                className= "inline-block px-4 py-1 rounded-full bg-[var(--Color-3)] text-[var(--Color-1)] border border-[var(--Color-1)] text-xs hover:bg-[var(--Color-1)] hover:text-[var(--Color-3)] transition"
+              >
+                {cat.categoryItem.title}
+              </Link>
+            ))}
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold leading-tight text-[var(--Color-5)]">
               {event.title}
             </h1>
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--Color-5)]">
               Diselenggarakan oleh:
               <span className="ml-2 inline-flex flex-wrap gap-2">
-                {event.organizers?.map((org) => (
-                  <span
-                    key={org.categoryItemId ?? org.id}
-                    className="inline-block px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs"
+                {getOrganizerDisplay(event.organizers).map((org, index) => (
+                  <Link
+                    key={`${org.key}-${index}`} 
+                    href={org.href}
+                    className="inline-block px-4 py-1 rounded-full bg-[var(--Color-1)] text-[var(--Color-3)] border border-[var(--Color-1)] text-xs hover:bg-[var(--Color-3)] hover:text-[var(--Color-1)] transition"
                   >
-                    {org.categoryItem.title}
-                  </span>
+                    {org.label}
+                  </Link>
                 ))}
               </span>
             </p>
 
-            <p className="text-sm">
+            <p className="text-sm text-[var(--Color-5)]">
               Status Event:{" "}
-              <span className="inline-block px-3 py-1 rounded-full bg-pink-600 text-white text-xs">
+              <span className="inline-block px-3 py-1 rounded-full bg-[var(--Color-3)] text-[var(--Color-1)] border border-[var(--Color-1)] text-xs">
                 {EVENT_STATUS_LABEL[status]}
               </span>
             </p>
@@ -213,40 +187,28 @@ export default async function EventDetailPage({ params }) {
           {/* SIDEBAR */}
           <aside className="space-y-6">
             <div>
-              <h3 className="font-semibold mb-3">Ikuti Keseruan Kami</h3>
+              <h3 className="font-semibold mb-2 text-[var(--Color-5)] text-[18px]">Ikuti Keseruan Kami</h3>
 
               {/* BUTTON DAFTAR EVENT */}
-              {status === "UPCOMING" && event.registerLink && (
-                <form action={event.registerLink} target="_blank">
-                  <button
-                    type="submit"
-                    className="w-full px-6 py-3 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition"
-                  >
-                    Daftar Sekarang
-                  </button>
-                </form>
-              )}
-
-              {status === "ONGOING" && event.registerLink && (
-                <button
-                  className="w-full px-6 py-3 rounded-lg bg-yellow-500 text-white cursor-not-allowed"
+              {event.registerLink && (
+                <a
+                  href={status === "FINISHED" ? undefined : event.registerLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`mt-2 flex items-center justify-center w-full sm:w-[140px] h-[40px] rounded-[8px] text-[12px] font-medium shadow transition
+                    ${
+                      status === "FINISHED"
+                        ? "bg-[var(--Color-4)] text-[var(--Color-3)] cursor-not-allowed pointer-events-none"
+                        : "bg-[var(--Color-1)] text-[var(--Color-3)] hover:opacity-90"
+                    }`}
                 >
-                  Sedang Berlangsung
-                </button>
-              )}
-
-              {status === "FINISHED" && (
-                <button
-                  disabled
-                  className="w-full px-6 py-3 rounded-lg bg-gray-400 text-white cursor-not-allowed"
-                >
-                  Event Telah Selesai
-                </button>
+                  Daftar Sekarang
+                </a>
               )}
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">Jadwal Pelaksanaan</h3>
+              <h3 className="font-semibold mb-2 text-[var(--Color-5)] text-[18px]">Jadwal Pelaksanaan</h3>
               <div className="text-sm text-gray-600 space-y-2">
                 {/* TANGGAL */}
                 <div className="grid grid-cols-[max-content_10px_1fr] gap-x-2">
@@ -270,89 +232,43 @@ export default async function EventDetailPage({ params }) {
             </div>
 
             <div>
-              <h3 className="font-semibold mb-2">Lokasi</h3>
+              <h3 className="font-semibold mb-2 text-[var(--Color-5)] text-[18px]">Lokasi</h3>
               <p className="text-sm text-gray-600 mb-1">
                 {event.location}
               </p>
-              <p className="text-sm text-gray-600 mb-3">
-                {event.address}
-              </p>
 
               {event.mapsEmbedSrc && (
-                <div className="w-full h-[280px] rounded-xl overflow-hidden border">
-                  <iframe
-                    src={event.mapsEmbedSrc}
-                    className="w-full h-full"
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              )}
-              
-              {/* BUTTONS */}
-              <div>
-                {(event.driveLink ||
-                  event.youtubeLink ||
-                  event.instagramLink ||
-                  event.drivebukuLink) && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Arsip Kegiatan</h3>
-
-                    <div className="flex flex-wrap gap-4 mt-4">
-                      {event.driveLink && (
-                        <a
-                          href={event.driveLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 rounded-md bg-pink-600 text-white hover:bg-pink-700 transition"
-                        >
-                          Dokumentasi
-                        </a>
-                      )}
-
-                      {event.youtubeLink && (
-                        <a
-                          href={event.youtubeLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
-                        >
-                          YouTube
-                        </a>
-                      )}
-
-                      {event.instagramLink && (
-                        <a
-                          href={event.instagramLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 rounded-md bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 text-white hover:opacity-90 transition"
-                        >
-                          Instagram
-                        </a>
-                      )}
-
-                      {event.drivebukuLink && (
-                        <a
-                          href={event.drivebukuLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
-                        >
-                          Buku Kegiatan
-                        </a>
-                      )}
-                    </div>
+                isEmbedMap ? (
+                  <div className="w-full h-[280px] rounded-xl overflow-hidden border">
+                    <iframe
+                      src={event.mapsEmbedSrc}
+                      className="w-full h-full"
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
                   </div>
-                )}
-              </div>
+                ) : (
+                  <a
+                    href={event.mapsEmbedSrc}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full h-[40px] rounded-[8px] bg-[var(--Color-1)] text-[var(--Color-3)] text-[13px] font-medium shadow hover:opacity-90 transition"
+                  >
+                    Buka di Google Maps
+                  </a>
+                )
+              )}
+            </div>
+            
+            <div>
+              <LiveArchiveLinks event={event} status={status} />
             </div>
           </aside>
 
           {/* DESKRIPSI */}
           <div className="md:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">Deskripsi</h2>
+            <h2 className="font-semibold mb-4 text-[var(--Color-5)] text-[18px]">Deskripsi</h2>
 
             <div
               className="
@@ -364,27 +280,28 @@ export default async function EventDetailPage({ params }) {
               dangerouslySetInnerHTML={{ __html: event.description }}
             />
 
-            <div className="mt-16">
-              <h2 className="text-xl font-semibold mb-4">Tags</h2>
+            <div className="mt-8 flex flex-wrap items-start gap-2">
+              <h2 className="font-semibold text-[var(--Color-5)] text-[18px] whitespace-nowrap">
+                Tags:
+              </h2>
+
               {event.tags && event.tags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {event.tags.map((et) => (
                     <span
                       key={et.tag.id}
-                      className="px-3 py-1 rounded-full text-xs
-                                bg-gray-100 text-gray-700
-                                hover:bg-pink-100 hover:text-pink-700 transition"
+                      className="text-[16px] text-[var(--Color-1)]"
                     >
                       #{et.tag.name}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Tidak ada tag</p>
+                <p className="text-[14px] text-[var(--Color-1)]">Tidak ada tag</p>
               )}
             </div>
             
-            <div className="mt-16">
+            <div className="mt-8">
               <ShareButtons
                 url={shareUrl}
                 title={event.title}
@@ -395,54 +312,44 @@ export default async function EventDetailPage({ params }) {
 
         {/* EVENT LAINNYA */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">Event Lainnya</h2>
-            <Link href="/event" className="text-pink-600 hover:underline">
-              Lihat semua
-            </Link>
+          <div className="flex items-center justify-between mb-4"> 
+            <h2 className="font-semibold text-[var(--Color-5)] text-[18px]"> Event Lainnya </h2> 
+            <Link href="/event" className="text-pink-600 hover:underline"> Lihat semua </Link> 
           </div>
 
           <div className="flex gap-6 overflow-x-auto pb-4">
-            {otherEvents.map((event) => {
-              const eventStatus = getEventStatus(event.startAt, event.endAt);
+            {otherEvents.map((other) => {
+              const isFinished = other.status === "FINISHED";
 
               return (
                 <Link
-                  key={event.id}
-                  href={`/event/${event.slug}`}
-                  className="group min-w-[260px] relative rounded-xl overflow-hidden shadow-lg"
+                  key={other.id}
+                  href={`/event/${other.slug}`}
+                  className="group relative min-w-[260px] aspect-[4/5] rounded-xl overflow-hidden block"
                 >
-                  {/* POSTER */}
-                  <div className="relative h-[340px]">
-                    <Image
-                      src={event.poster || "/placeholder-event.jpg"}
-                      alt={event.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  </div>
+                  <Image
+                    src={other.poster || "/placeholder-event.jpg"}
+                    alt={other.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
 
-                  {/* OVERLAY – MUNCUL SAAT HOVER */}
-                  <div
-                    className="absolute inset-0 flex flex-col justify-end p-4
-                              bg-gradient-to-t from-black/80 via-black/50 to-transparent
-                              opacity-0 group-hover:opacity-100
-                              transition-all duration-300"
-                  >
+                  {/* OVERLAY */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-4 backdrop-blur-sm bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
+
                     {/* STATUS */}
-                    <span className="inline-block w-fit mb-2 px-3 py-1 rounded-full
-                                    bg-pink-600 text-white text-xs">
-                      {eventStatus}
-                    </span>
+                    <div className="inline-flex gap-2 flex-wrap mb-1">
+                      {other.status === "UPCOMING" && <span className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px]">Akan Berlangsung</span>}
+                      {other.status === "ONGOING" && <span className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px]">Sedang Berlangsung</span>}
+                      {isFinished && <span className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px]">Event Telah Berakhir</span>}
+                    </div>
 
-                    <h3 className="text-white font-semibold text-sm mb-2">
-                      {event.title}
+                    <h3 className="text-[14px] font-bold text-[var(--Color-3)] line-clamp-2">
+                      {other.title}
                     </h3>
 
-                    {/* TANGGAL */}
-                    <p className="text-xs text-gray-200 mb-3">
-                      {new Date(event.startAt).toLocaleDateString("id-ID", {
+                    <p className="text-[12px] text-[var(--Color-3)]">
+                      {new Date(other.startAt).toLocaleDateString("id-ID", {
                         weekday: "long",
                         day: "numeric",
                         month: "long",
@@ -450,39 +357,17 @@ export default async function EventDetailPage({ params }) {
                       })}
                     </p>
 
-                    {/* BUTTON */}
-                    {eventStatus === "UPCOMING" && event.registerLink && (
-                      <form action={event.registerLink} target="_blank">
-                        <button
-                          type="submit"
-                          className="w-full px-4 py-2 rounded-md
-                                    bg-pink-600 text-white text-sm
-                                    hover:bg-pink-700 transition"
-                        >
-                          Daftar Sekarang
-                        </button>
-                      </form>
-                    )}
-
-                    {eventStatus === "ONGOING" && (
-                      <button
-                        disabled
-                        className="w-full px-4 py-2 rounded-md
-                                  bg-yellow-500 text-white text-sm cursor-not-allowed"
-                      >
-                        Sedang Berlangsung
-                      </button>
-                    )}
-
-                    {eventStatus === "FINISHED" && (
-                      <button
-                        disabled
-                        className="w-full px-4 py-2 rounded-md
-                                  bg-gray-400 text-white text-sm cursor-not-allowed"
-                      >
-                        Event Telah Selesai
-                      </button>
-                    )}
+                    {/* BUTTON VISUAL ONLY */}
+                    <div
+                      className={`mt-2 flex items-center justify-center w-full sm:w-[140px] h-[35px] rounded-[8px] text-[12px] font-medium shadow transition
+                      ${
+                        isFinished
+                          ? "bg-[var(--Color-4)] text-[var(--Color-3)]"
+                          : "bg-[var(--Color-1)] text-[var(--Color-3)]"
+                      }`}
+                    >
+                      Lihat Sekarang
+                    </div>
                   </div>
                 </Link>
               );
@@ -491,9 +376,7 @@ export default async function EventDetailPage({ params }) {
             {/* CARD LIHAT SEMUA */}
             <Link
               href="/event"
-              className="min-w-[260px] flex items-center justify-center
-                        rounded-xl border-2 border-dashed border-pink-500
-                        text-pink-600 font-semibold hover:bg-pink-50"
+              className="min-w-[260px] flex items-center justify-center rounded-xl border-2 border-dashed border-pink-500 text-pink-600 font-semibold hover:bg-pink-50"
             >
               Lihat Semua Event →
             </Link>
@@ -502,22 +385,21 @@ export default async function EventDetailPage({ params }) {
       </div>
     </div>
   );
-
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
-  const event = await prisma.event.findFirst({
-    where: {
-      slug,
-      isPublished: true,
-    },
-  });
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/events/${slug}`,
+    { next: { revalidate: 60 } }
+  );
 
-  if (!event) {
-    return {};
-  }
+  if (!res.ok) return {};
+
+  const { event } = await res.json();
+
+  if (!event) return {};
 
   const url = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
 
