@@ -169,6 +169,20 @@ model PageHero {
   @@index([pageSlug])
 }
 
+model WebsiteInfo {
+  id              Int      @id @default(autoincrement())
+  pageKey         String   @unique @default("default") @db.VarChar(50)
+  judul           String?  @db.VarChar(255)
+  deskripsi       String?
+  deskripsiFooter String?
+  logoWebsite     String?
+  faviconWebsite  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pageKey])
+}
+
 // ====================================
 // NAVIGASI & KATEGORI
 // ====================================

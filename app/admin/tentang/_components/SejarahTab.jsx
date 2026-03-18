@@ -84,7 +84,9 @@ export default function SejarahTab() {
   const [items, setItems] = useState([]);
   const [toast, setToast] = useState({ visible: false, message: "", type: "error" });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const [form, setForm] = useState({ title: "", imageUrl: "", imageFile: null });
   const [editForm, setEditForm] = useState({ title: "", imageUrl: "", imageFile: null, clearImage: false });
@@ -227,15 +229,24 @@ export default function SejarahTab() {
     }
   };
 
-  const handleDelete = async (item) => {
+  const askDelete = (item) => {
+    setDeleteTarget(item);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      const res = await apiCall(`/api/admin/tentang/sejarah/${item.id}`, { method: "DELETE" });
+      const res = await apiCall(`/api/admin/tentang/sejarah/${deleteTarget.id}`, { method: "DELETE" });
       const json = await res.json().catch(() => null);
       if (!json?.success) throw new Error(json?.error?.message || "Gagal menghapus item");
       setToast({ visible: true, message: "Item sejarah dihapus", type: "success" });
+      setDeleteTarget(null);
       fetchData();
     } catch (error) {
       setToast({ visible: true, message: error?.message || "Gagal menghapus item", type: "error" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -351,7 +362,6 @@ export default function SejarahTab() {
                     type="button"
                     onClick={() => setEditForm((prev) => ({ ...prev, imageUrl: "", imageFile: null, clearImage: true }))}
                     className="px-2 py-1 text-xs rounded border bg-red-50 text-red-700 border-red-300 hover:bg-red-100">
-
                     Hapus Gambar
                   </button>
                   <button
@@ -393,7 +403,7 @@ export default function SejarahTab() {
                         key={item.id}
                         item={item}
                         onEdit={startEdit}
-                        onDelete={handleDelete}
+                        onDelete={askDelete}
                         onToggleActive={toggleActive}
                       />
                     ))}
@@ -410,6 +420,37 @@ export default function SejarahTab() {
           message={toast.message}
           onClose={() => setToast({ visible: false, message: "", type: "error" })}
         />
+
+        {deleteTarget ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={() => (deleting ? null : setDeleteTarget(null))}
+            />
+            <div className="relative w-full max-w-md rounded-xl bg-white border border-zinc-200 shadow-xl p-5 space-y-4">
+              <h3 className="text-base font-semibold text-zinc-900">Konfirmasi Hapus</h3>
+              <p className="text-sm text-zinc-600">
+                Item <span className="font-medium text-zinc-900">{deleteTarget.title || `#${deleteTarget.id}`}</span> akan dihapus permanen. Lanjutkan?
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="px-3 py-1.5 rounded border border-zinc-300 text-sm hover:bg-zinc-50 disabled:opacity-60">
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-3 py-1.5 rounded bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">
+                  {deleting ? "Menghapus..." : "Ya, Hapus"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </PermissionGate>
   );

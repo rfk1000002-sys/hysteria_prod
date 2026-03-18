@@ -15,9 +15,9 @@ import StatusManagement from "../users/status_management/page.jsx";
 import CategoriesPage from "../categories/page.jsx";
 
 // platform
-import HysteriaArtlabPage from "@/app/admin/platform/hysteria-artlab/page.jsx"
-import DitampartPage from "@/app/admin/platform/ditampart/page.jsx"
-import LakiMasakPage from "@/app/admin/platform/laki-masak/page.jsx"
+import HysteriaArtlabPage from "@/app/admin/platform/hysteria-artlab/page.jsx";
+import DitampartPage from "@/app/admin/platform/ditampart/page.jsx";
+import LakiMasakPage from "@/app/admin/platform/laki-masak/page.jsx";
 
 // pages
 import PageHome from "../section/PageHome.jsx";
@@ -33,6 +33,7 @@ import EventPage from "../events/page.jsx";
 import TentangSettingsPage from "../tentang/page.jsx";
 import ContactSettingsPage from "../contact/page.jsx";
 import CollaborationSettingsPage from "../collaboration/page.jsx";
+import WebsiteInfoSettingsPage from "../website-info/page.jsx";
 import { usePathname } from "next/navigation";
 import ArticlesPage from "../articles/page.jsx";
 import CreateArticlePage from "../articles/create/page.jsx";
@@ -113,6 +114,9 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
       case "collaboration":
         return <CollaborationSettingsPage />;
 
+      case "website-info":
+        return <WebsiteInfoSettingsPage />;
+
       case "event":
         return <EventPage />;
 
@@ -125,7 +129,7 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
         return <CreateHysteriaPage />;
       case "program.edit_podcast":
         return <EditPodcastPage />;
-        
+
       case "dashboard":
       default:
         return children;
@@ -136,9 +140,7 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100 justify-center">
         <div className="lg:flex lg:items-start lg:justify-start">
-          <aside
-            className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
-          >
+          <aside className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}>
             <AdminSidebar
               collapsed={collapsed}
               onClose={() => setOpen(false)}
@@ -154,9 +156,7 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
                 <AdminTopbar onOpenSidebar={() => setOpen(true)} />
               </div>
 
-            <main className="flex-1 w-full px-6 py-8">
-              {isDashboard ? renderContent() : children}
-            </main>
+            <main className="flex-1 w-full px-6 py-8">{isDashboard ? renderContent() : children}</main>
           </div>
 
             {open && (
