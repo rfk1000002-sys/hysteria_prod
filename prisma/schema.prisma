@@ -183,6 +183,24 @@ model WebsiteInfo {
   @@index([pageKey])
 }
 
+model ContactSection {
+  id               Int      @id @default(autoincrement())
+  mapsEmbedUrl     String?  @db.Text
+  locationTitle    String?  @db.VarChar(255)
+  locationAddress  String?  @db.Text
+  operationalHours String?  @db.Text
+  whatsappNumber   String?  @db.VarChar(255)
+  instagramUrl     String?  @db.VarChar(500)
+  twitterUrl       String?  @db.VarChar(500)
+  facebookUrl      String?  @db.VarChar(500)
+  youtubeUrl       String?  @db.VarChar(500)
+  tiktokUrl        String?  @db.VarChar(500)
+  email            String?  @db.VarChar(255)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
 // ====================================
 // NAVIGASI & KATEGORI
 // ====================================
