@@ -226,6 +226,7 @@ function AnitalkEpisodeCard({ episode, index }) {
           src={imgSrc}
           alt={episode.alt || episode.title || "Episode"}
           className="object-contain object-center max-h-full max-w-full"
+          loading="lazy"
           fill
           onError={handleImageError}
           unoptimized={!(typeof imgSrc === "string" && imgSrc.startsWith("/"))}
@@ -289,13 +290,13 @@ function AnitalkEpisodeCard({ episode, index }) {
   );
 }
 
-function LazyItem({ children }) {
+function LazyItem({ children, rootMargin = "200px" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || visible) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -303,18 +304,19 @@ function LazyItem({ children }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin }
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [visible, rootMargin]);
 
   return (
     <div
       ref={ref}
       className={`transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+      style={{ minHeight: 1 }}
     >
-      {children}
+      {visible ? children : null}
     </div>
   );
 }

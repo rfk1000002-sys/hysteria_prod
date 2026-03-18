@@ -348,13 +348,13 @@ function CursorPagination({
   );
 }
 
-function LazyItem({ children }) {
+function LazyItem({ children, rootMargin = "200px" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || visible) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -362,18 +362,19 @@ function LazyItem({ children }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [visible, rootMargin]);
 
   return (
     <div
       ref={ref}
+      style={{ minHeight: 1 }}
       className={`transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
     >
-      {children}
+      {visible ? children : null}
     </div>
   );
 }

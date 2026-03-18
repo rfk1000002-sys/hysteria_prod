@@ -91,7 +91,6 @@ export default function PosterCard({
           alt={alt || title || "Poster"}
           fill
           unoptimized={!isLocal}
-          loading="lazy"
           sizes="(max-width:640px) 50vw, 260px"
           className={`object-cover block transition-all duration-300 ${
             isOpen

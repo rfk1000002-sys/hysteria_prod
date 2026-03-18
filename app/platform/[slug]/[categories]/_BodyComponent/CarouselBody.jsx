@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import PosterCard from "./cards/PosterCard";
 import VideoCard from "./cards/VideoCard";
@@ -105,9 +105,9 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
           }}
         >
           {displayedItems.map((item, i) => (
-            <div key={i} className={`flex-none ${cardWidth} snap-start`}>
+            <LazyItem key={i} className={`flex-none ${cardWidth} snap-start`}>
               <CardSwitch cardType={cardType} item={item} platformSlug={platformSlug} categorySlug={categorySlug} subSlug={subSlug} />
-            </div>
+            </LazyItem>
           ))}
         </div>
 
@@ -196,6 +196,37 @@ function DotIndicator({ count }) {
           className="w-2 h-2 rounded-full bg-pink-300"
         />
       ))}
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div
+      ref={ref}
+      className={`${className} transition-all duration-500`}
+      style={{ minHeight: 1 }}
+    >
+      {visible ? children : null}
     </div>
   );
 }
