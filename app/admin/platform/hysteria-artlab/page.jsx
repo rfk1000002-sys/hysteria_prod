@@ -276,8 +276,9 @@ export default function HysteriaArtlabPage() {
         </div>
       )}
 
-      {/* Bagian bawah */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Bagian bawah (lazy-mount) */}
+      <LazyMount>
+        <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
           <div>
             <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
@@ -337,26 +338,54 @@ export default function HysteriaArtlabPage() {
           
         </div>
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          getRowId={(r) => r.id}
-        />
-        {nextCursor && (
-          <div className="flex justify-center mt-4">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={loading}
-              onClick={handleLoadMore}
-              sx={{ textTransform: 'none' }}
-            >
-              {loading ? 'Memuat...' : 'Muat Lebih Banyak'}
-            </Button>
-          </div>
-        )}
-      </div>
+          <DataTable
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            getRowId={(r) => r.id}
+          />
+          {nextCursor && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={loading}
+                onClick={handleLoadMore}
+                sx={{ textTransform: 'none' }}
+              >
+                {loading ? 'Memuat...' : 'Muat Lebih Banyak'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </LazyMount>
+    </div>
+  );
+}
+
+function LazyMount({ children, rootMargin = "300px", className = "" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={className} style={{ minHeight: visible ? undefined : 120 }}>
+      {visible ? children : null}
     </div>
   );
 }

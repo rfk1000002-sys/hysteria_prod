@@ -250,8 +250,9 @@ export default function LakiMasakPage() {
         </section>
       </div>
 
-      {/* bagian bawah */}
-      <div className="max-w-5xl mx-auto mt-12">
+      {/* bagian bawah (lazy-mount) */}
+      <LazyMount>
+        <div className="max-w-5xl mx-auto mt-12">
         <div className="flex flex-col md:flex-row md:gap-0 justify-between items-start md:items-center mb-6 md:mb-0">
           <div>
             <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
@@ -303,81 +304,109 @@ export default function LakiMasakPage() {
           <PageFilter perPage={perPage} onChange={setPerPage} />
         </div>
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          getRowId={(r) => r.id}
-        />
-        {nextCursor && (
-          <div className="flex justify-center mt-4">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={loading}
-              onClick={handleLoadMore}
-              sx={{ textTransform: "none" }}
-            >
-              {loading ? "Memuat..." : "Muat Lebih Banyak"}
-            </Button>
-          </div>
-        )}
-        {platformModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setPlatformModal((p) => ({ ...p, open: false }))}
-            />
-            <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
-              <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
-                <PlatformIndex
-                  platformSlug="laki-masak"
-                  categoryItemSlug={platformModal.categoryItemSlug}
-                  title={platformModal.title}
-                  subtitle={platformModal.subtitle}
+          <DataTable
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            getRowId={(r) => r.id}
+          />
+          {nextCursor && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={loading}
+                onClick={handleLoadMore}
+                sx={{ textTransform: "none" }}
+              >
+                {loading ? "Memuat..." : "Muat Lebih Banyak"}
+              </Button>
+            </div>
+          )}
+          {platformModal.open && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setPlatformModal((p) => ({ ...p, open: false }))}
+              />
+              <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
+                <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
+                  <PlatformIndex
+                    platformSlug="laki-masak"
+                    categoryItemSlug={platformModal.categoryItemSlug}
+                    title={platformModal.title}
+                    subtitle={platformModal.subtitle}
 
-                  // pass data
-                  // judul, tahun default ada
-                  showURL={platformModal.showURL}
-                  showPrevDescription={platformModal.showPrevDescription}
-                  showImageUpload={platformModal.showImageUpload}
-                  showMeta={platformModal.showMeta}
-                  showHost={platformModal.showHost}
-                  showGuests={platformModal.showGuests}
+                    // pass data
+                    // judul, tahun default ada
+                    showURL={platformModal.showURL}
+                    showPrevDescription={platformModal.showPrevDescription}
+                    showImageUpload={platformModal.showImageUpload}
+                    showMeta={platformModal.showMeta}
+                    showHost={platformModal.showHost}
+                    showGuests={platformModal.showGuests}
 
-                  actionLabel="+add"
-                  searchPlaceholder="Cari konten..."
-                  close={() => setPlatformModal((p) => ({ ...p, open: false }))}
+                    actionLabel="+add"
+                    searchPlaceholder="Cari konten..."
+                    close={() => setPlatformModal((p) => ({ ...p, open: false }))}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {modalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* blur */}
+              <div
+                className="absolute inset-0 bg-black opacity-40"
+                onClick={() => setModalOpen(false)}
+              />
+              {/* modal content */}
+              <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
+                <LinkForm
+                  close={() => setModalOpen(false)}
+                  title={modalTitle}
+                  subtitle={
+                    modalIsPhone ? "edit dengan nomor hp/whatsapp yang aktif" : ""
+                  }
+                  initial={modalInitial}
+                  placeholders={modalPlaceholders}
+                  isPhone={modalIsPhone}
+                  prefix={modalPrefix}
+                  onSave={handleSaveFromForm}
                 />
               </div>
             </div>
-          </div>
-        )}
-        {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* blur */}
-            <div
-              className="absolute inset-0 bg-black opacity-40"
-              onClick={() => setModalOpen(false)}
-            />
-            {/* modal content */}
-            <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
-              <LinkForm
-                close={() => setModalOpen(false)}
-                title={modalTitle}
-                subtitle={
-                  modalIsPhone ? "edit dengan nomor hp/whatsapp yang aktif" : ""
-                }
-                initial={modalInitial}
-                placeholders={modalPlaceholders}
-                isPhone={modalIsPhone}
-                prefix={modalPrefix}
-                onSave={handleSaveFromForm}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </LazyMount>
+    </div>
+  );
+}
+
+function LazyMount({ children, rootMargin = "300px", className = "" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={className} style={{ minHeight: visible ? undefined : 120 }}>
+      {visible ? children : null}
     </div>
   );
 }

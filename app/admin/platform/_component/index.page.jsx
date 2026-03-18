@@ -209,21 +209,23 @@ export default function PlatformIndex({
   const defaultColumns = [
     { field: 'no', headerName: 'No.', width: 60, freeze:true},
     { field: 'title', headerName: 'Judul', width: 250, freeze:true },
-    ...(showImageUpload ? [{
+      ...(showImageUpload ? [{
       field: 'image',
       headerName: 'Gambar',
       width: 120,
       freeze: true,
       render: (row) => (
         row?.images && row.images.length > 0 ? (
-          <Image
-            src={row.images[0].imageUrl}
-            alt={row.images[0].alt || row.title || 'gambar'}
-            width={160}
-            height={120}
-            className="w-20 h-15 object-cover rounded"
-            style={{ objectFit: 'cover' }}
-          />
+          <LazyItem className="w-20 h-15">
+            <Image
+              src={row.images[0].imageUrl}
+              alt={row.images[0].alt || row.title || 'gambar'}
+              width={160}
+              height={120}
+              className="w-20 h-15 object-cover rounded"
+              style={{ objectFit: 'cover' }}
+            />
+          </LazyItem>
         ) : (
           <span className="text-gray-400">—</span>
         )
@@ -480,6 +482,33 @@ export default function PlatformIndex({
         showGuests={showGuests}
         showMeta={showMeta}
       />
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={`${className} transition-all duration-200`} style={{ minHeight: 1 }}>
+      {visible ? children : null}
     </div>
   );
 }
