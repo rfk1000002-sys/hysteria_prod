@@ -6,6 +6,8 @@ import Colaboration from "../_sectionComponents/halaman_utama/colaboration";
 import { getPublicWebsiteInfo } from "../modules/admin/websiteInfo/index.js";
 import { withWebsiteInfoDefaults } from "../lib/defaults/website-info.js";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   const info = withWebsiteInfoDefaults(await getPublicWebsiteInfo());
   return {
@@ -19,7 +21,7 @@ export async function generateMetadata() {
 //   description: "Hysteria adalah ruang kolektif seni, riset, dan budaya yang berbasis di Semarang.",
 // };
 
-export default function Home() {
+export default async function Home() {
   return (
     <div className="flex flex-col bg-white text-zinc-900 font-sans dark:bg-white dark:text-zinc-900">
       <Hero />

@@ -28,10 +28,10 @@ const PLATFORM_SELECT = {
     orderBy: [{ order: "asc" }, { id: "asc" }],
     select: {
       layout: true,
-    //   description: true,
-    //   filters: true,
-    //   order: true,
-    //   isActive: true,
+      //   description: true,
+      //   filters: true,
+      //   order: true,
+      //   isActive: true,
       categoryItem: {
         select: { id: true, title: true, slug: true, url: true, meta: true },
       },
@@ -229,6 +229,25 @@ export async function findCarouselSubCategories(platformId, parentCategoryItemId
         orderBy: [{ order: "asc" }, { id: "asc" }],
         select: CONTENT_SELECT,
       },
+    },
+  });
+}
+
+/**
+ * Mengambil konfigurasi kartu platform untuk homepage.
+ */
+export async function findActiveHomepagePlatformCards() {
+  return prisma.homepagePlatformCard.findMany({
+    where: { isActive: true },
+    orderBy: [{ order: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      linkUrl: true,
+      slotType: true,
+      order: true,
+      isActive: true,
     },
   });
 }
