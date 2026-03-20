@@ -1,16 +1,12 @@
 import { AppError } from "../../../../lib/response.js";
-import { findHomepagePlatformCards, listPlatformOptions, replaceHomepagePlatformCards } from "../repositories/homepagePlatform.repository.js";
+import { findHomepagePlatformCards, replaceHomepagePlatformCards } from "../repositories/homepagePlatform.repository.js";
 import { validateHomepagePlatformPayload } from "../validators/homepagePlatform.validator.js";
 
 function toAdminCard(card) {
   return {
     id: card.id,
-    platformId: card.platformId,
-    platformName: card.platform?.name || "",
-    platformSlug: card.platform?.slug || "",
-    platformImageUrl: card.platform?.mainImageUrl || null,
-    titleOverride: card.titleOverride || "",
-    imageUrlOverride: card.imageUrlOverride || "",
+    title: card.title || "",
+    imageUrl: card.imageUrl || "",
     linkUrl: card.linkUrl || "",
     slotType: card.slotType,
     order: card.order,
@@ -31,9 +27,9 @@ function assertCardConstraints(cards) {
     throw new AppError("Komposisi kartu harus 3 Tall dan 2 Short", 400, "VALIDATION_ERROR");
   }
 
-  const platformIds = activeCards.map((card) => card.platformId);
-  if (new Set(platformIds).size !== platformIds.length) {
-    throw new AppError("Setiap kartu harus memilih platform yang berbeda", 400, "VALIDATION_ERROR");
+  const titles = activeCards.map((card) => String(card.title || "").trim());
+  if (new Set(titles).size !== titles.length) {
+    throw new AppError("Judul kartu tidak boleh duplikat", 400, "VALIDATION_ERROR");
   }
 
   const orders = activeCards.map((card) => card.order);
@@ -43,11 +39,8 @@ function assertCardConstraints(cards) {
 }
 
 export async function getHomepagePlatformSettings() {
-  const [cards, platformOptions] = await Promise.all([findHomepagePlatformCards(), listPlatformOptions()]);
-
   return {
-    cards: cards.map(toAdminCard),
-    platformOptions,
+    cards: (await findHomepagePlatformCards()).map(toAdminCard),
   };
 }
 
@@ -63,9 +56,8 @@ export async function saveHomepagePlatformSettings(payload) {
 
   const saved = await replaceHomepagePlatformCards(
     validated.cards.map((card) => ({
-      platformId: card.platformId,
-      titleOverride: card.titleOverride,
-      imageUrlOverride: card.imageUrlOverride,
+      title: card.title,
+      imageUrl: card.imageUrl,
       linkUrl: card.linkUrl,
       slotType: card.slotType,
       order: card.order,

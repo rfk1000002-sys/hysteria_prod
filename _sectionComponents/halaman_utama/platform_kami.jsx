@@ -1,21 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+const DEFAULT_IMAGE = "/image/tim-hero.png";
 const placeholder = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="24">Image unavailable</text></svg>';
 
-const fallbackItems = [
-  { src: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80", title: "Hysteria Artlab", slotType: "tall", order: 0, linkUrl: "/platform/hysteria-artlab" },
-  { src: "https://images.unsplash.com/photo-1502920917128-1aa500764b0d?auto=format&fit=crop&w=1200&q=80", title: "Peka Kota", slotType: "tall", order: 1, linkUrl: "/platform/peka-kota" },
-  { src: "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80", title: "Laki Masak", slotType: "tall", order: 2, linkUrl: "/platform/laki-masak" },
-  { src: "https://images.unsplash.com/photo-1473186578172-c141e6798cf4?auto=format&fit=crop&w=1200&q=80", title: "Bukit Buku", slotType: "short", order: 3, linkUrl: "/platform/bukit-buku" },
-  { src: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80", title: "Ditam Part", slotType: "short", order: 4, linkUrl: "/platform/ditampart" },
-];
-
 function ItemCard({ item, tall = false }) {
-  const [src, setSrc] = useState(item.src || placeholder);
+  const [src, setSrc] = useState(item.src || DEFAULT_IMAGE || placeholder);
 
   return (
     <article
@@ -42,11 +35,49 @@ function ItemCard({ item, tall = false }) {
 }
 
 export default function PlatformKami({ items = [] }) {
-  const normalizedItems = (Array.isArray(items) && items.length ? items : fallbackItems)
+  const hasInitialItems = Array.isArray(items) && items.length > 0;
+  const [fetchedItems, setFetchedItems] = useState([]);
+
+  useEffect(() => {
+    if (hasInitialItems) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadHomepagePlatformCards() {
+      try {
+        const response = await fetch("/api/homepage/platform-cards", { cache: "no-store" });
+        if (!response.ok) {
+          if (isMounted) setFetchedItems([]);
+          return;
+        }
+
+        const payload = await response.json();
+        if (isMounted) {
+          setFetchedItems(Array.isArray(payload?.data) ? payload.data : []);
+        }
+      } catch {
+        if (isMounted) {
+          setFetchedItems([]);
+        }
+      }
+    }
+
+    loadHomepagePlatformCards();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasInitialItems]);
+
+  const sourceItems = hasInitialItems ? items : fetchedItems;
+
+  const normalizedItems = (Array.isArray(sourceItems) ? sourceItems : [])
     .map((item, index) => ({
       title: item?.title || `Platform ${index + 1}`,
-      src: item?.src || "",
-      linkUrl: item?.linkUrl || null,
+      src: item?.src || DEFAULT_IMAGE,
+      linkUrl: typeof item?.linkUrl === "string" && item.linkUrl.trim() ? item.linkUrl : null,
       slotType: item?.slotType === "short" ? "short" : "tall",
       order: typeof item?.order === "number" ? item.order : index,
     }))

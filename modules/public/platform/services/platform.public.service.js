@@ -5,7 +5,9 @@
  * Memakai repository sebagai sumber data, lalu memetakan ke bentuk
  * yang langsung dimakan oleh komponen halaman.
  */
-import { findActivePlatformsWithCategories, findActiveHomepagePlatformCards, findPublicPlatformBySlug, findGridContents, findCarouselSubCategories, findContentById, findRelatedContents, findTopActivePlatforms, findPublicEventsByCategorySlug, findPublicEventsByOrganizerSlug } from "../repositories/platform.public.repository.js";
+import { findActivePlatformsWithCategories, findActiveHomepagePlatformCards, findPublicPlatformBySlug, findGridContents, findCarouselSubCategories, findContentById, findRelatedContents, findPublicEventsByCategorySlug, findPublicEventsByOrganizerSlug } from "../repositories/platform.public.repository.js";
+
+const DEFAULT_HOME_PLATFORM_IMAGE = "/image/tim-hero.png";
 import { getEventStatus, EVENT_STATUS_LABEL } from "@/lib/event-status.js";
 // import { getEventStatus, EVENT_STATUS_LABEL } from "../../../lib/event-status.js";
 
@@ -147,32 +149,17 @@ export async function getPublicPlatform(slug) {
 
 /**
  * Kartu Platform Kami untuk homepage.
- * Menggunakan konfigurasi admin; fallback ke 5 platform aktif pertama bila belum dikonfigurasi.
+ * Menggunakan konfigurasi admin; fallback ke default statis bila belum dikonfigurasi.
  */
 export async function getHomepagePlatformCards() {
   const cards = await findActiveHomepagePlatformCards();
 
-  if (cards.length > 0) {
-    return cards.map((card) => ({
-      platformId: card.platformId,
-      slug: card.platform?.slug || "",
-      title: card.titleOverride || card.platform?.name || "",
-      src: card.imageUrlOverride || card.platform?.mainImageUrl || "",
-      linkUrl: card.linkUrl || `/platform/${card.platform?.slug || ""}`,
-      slotType: card.slotType === "short" ? "short" : "tall",
-      order: card.order,
-    }));
-  }
-
-  const fallbackPlatforms = await findTopActivePlatforms(5);
-  return fallbackPlatforms.map((platform, index) => ({
-    platformId: platform.id,
-    slug: platform.slug,
-    title: platform.name,
-    src: platform.mainImageUrl || "",
-    linkUrl: `/platform/${platform.slug}`,
-    slotType: index < 3 ? "tall" : "short",
-    order: index,
+  return cards.map((card, index) => ({
+    title: card.title || `Platform ${index + 1}`,
+    src: card.imageUrl || DEFAULT_HOME_PLATFORM_IMAGE,
+    linkUrl: card.linkUrl || null,
+    slotType: card.slotType === "short" ? "short" : "tall",
+    order: typeof card.order === "number" ? card.order : index,
   }));
 }
 

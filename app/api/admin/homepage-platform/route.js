@@ -46,14 +46,14 @@ const putHandler = async (request) => {
           const file = fileMap[key];
           // basic validation: image mime and size
           if (!validateFileMimeType(file, ["image/*"])) {
-            throw new AppError("Tipe file tidak didukung untuk image override", 400, "VALIDATION_ERROR");
+            throw new AppError("Tipe file tidak didukung untuk image card", 400, "VALIDATION_ERROR");
           }
           if (!validateFileSize(file, 10 * 1024 * 1024)) {
             throw new AppError("Ukuran file melebihi batas 10MB", 400, "VALIDATION_ERROR");
           }
 
           const result = await uploads.handleUploadProduct(file);
-          cardsRaw[i].imageUrlOverride = result.url;
+          cardsRaw[i].imageUrl = result.url;
         }
       }
 

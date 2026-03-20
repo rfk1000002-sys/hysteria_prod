@@ -314,25 +314,21 @@ model Platform {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  images        PlatformImage[]
-  categories    PlatformCategory[]
-  contents      PlatformContent[]
-  homepageCards HomepagePlatformCard[]
+  images     PlatformImage[]
+  categories PlatformCategory[]
+  contents   PlatformContent[]
 
   @@index([slug])
 }
 
 model HomepagePlatformCard {
-  id         Int      @id @default(autoincrement())
-  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
-  platformId Int      @unique
-
-  titleOverride    String? @db.VarChar(255)
-  imageUrlOverride String? @db.VarChar(500)
-  linkUrl          String? @db.VarChar(500)
-  slotType         String  @default("tall") @db.VarChar(20)
-  order            Int     @default(0)
-  isActive         Boolean @default(true)
+  id       Int     @id @default(autoincrement())
+  title    String  @db.VarChar(255)
+  imageUrl String? @db.VarChar(500)
+  linkUrl  String? @db.VarChar(500)
+  slotType String  @default("tall") @db.VarChar(20)
+  order    Int     @default(0)
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

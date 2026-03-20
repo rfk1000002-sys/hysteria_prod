@@ -1,57 +1,49 @@
 import { prisma } from "../../../../lib/prisma.js";
 
 export function findHomepagePlatformCards() {
-  return prisma.homepagePlatformCard.findMany({
-    orderBy: [{ order: "asc" }, { id: "asc" }],
-    include: {
-      platform: {
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          mainImageUrl: true,
-          isActive: true,
-        },
-      },
-    },
-  });
-}
-
-export function listPlatformOptions() {
-  return prisma.platform.findMany({
-    where: { isActive: true },
-    orderBy: [{ name: "asc" }],
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      mainImageUrl: true,
-    },
-  });
+  return prisma.$queryRaw`
+    SELECT
+      "id",
+      "title",
+      "imageUrl",
+      "linkUrl",
+      "slotType",
+      "order",
+      "isActive",
+      "createdAt",
+      "updatedAt"
+    FROM "HomepagePlatformCard"
+    ORDER BY "order" ASC, "id" ASC
+  `;
 }
 
 export function replaceHomepagePlatformCards(cards) {
   return prisma.$transaction(async (tx) => {
-    await tx.homepagePlatformCard.deleteMany({});
+    await tx.$executeRaw`DELETE FROM "HomepagePlatformCard"`;
     if (cards.length > 0) {
-      await tx.homepagePlatformCard.createMany({
-        data: cards,
-      });
+      for (const card of cards) {
+        await tx.$executeRaw`
+          INSERT INTO "HomepagePlatformCard"
+            ("title", "imageUrl", "linkUrl", "slotType", "order", "isActive", "createdAt", "updatedAt")
+          VALUES
+            (${card.title}, ${card.imageUrl}, ${card.linkUrl}, ${card.slotType}, ${card.order}, ${card.isActive}, NOW(), NOW())
+        `;
+      }
     }
 
-    return tx.homepagePlatformCard.findMany({
-      orderBy: [{ order: "asc" }, { id: "asc" }],
-      include: {
-        platform: {
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-            mainImageUrl: true,
-            isActive: true,
-          },
-        },
-      },
-    });
+    return tx.$queryRaw`
+      SELECT
+        "id",
+        "title",
+        "imageUrl",
+        "linkUrl",
+        "slotType",
+        "order",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      FROM "HomepagePlatformCard"
+      ORDER BY "order" ASC, "id" ASC
+    `;
   });
 }

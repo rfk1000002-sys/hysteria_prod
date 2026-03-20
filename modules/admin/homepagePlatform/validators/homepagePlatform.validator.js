@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-const optionalText = (max = 500) =>
-  z
-    .union([z.string(), z.null(), z.undefined()])
-    .transform((v) => (typeof v === "string" ? v.trim() : ""))
-    .transform((v) => (v === "" ? null : v))
-    .refine((v) => v === null || v.length <= max, `Maksimal ${max} karakter`);
-
 const optionalUrl = z
   .union([z.string(), z.null(), z.undefined()])
   .transform((v) => (typeof v === "string" ? v.trim() : ""))
@@ -26,9 +19,8 @@ const optionalUrl = z
 const slotTypeSchema = z.enum(["tall", "short"]).or(z.enum(["TALL", "SHORT"]).transform((value) => value.toLowerCase()));
 
 export const homepagePlatformCardSchema = z.object({
-  platformId: z.coerce.number().int().positive(),
-  titleOverride: optionalText(255),
-  imageUrlOverride: optionalUrl,
+  title: z.string().trim().min(1, "Judul wajib diisi").max(255, "Maksimal 255 karakter"),
+  imageUrl: optionalUrl,
   linkUrl: optionalUrl,
   slotType: slotTypeSchema,
   order: z.coerce.number().int().min(0).max(1000),
