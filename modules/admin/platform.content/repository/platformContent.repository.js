@@ -27,6 +27,7 @@ const MINIMAL_SELECT = {
   guests: true,
   year: true,
   tags: true,
+  createdAt: true,
   // order: true,
   // isActive: true,
   // ambil hanya satu gambar preview
@@ -58,13 +59,13 @@ export async function findContentsByPlatformId(
     return prisma.platformContent.findMany({
       where,
       select: MINIMAL_SELECT,
-      orderBy: [{ order: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: "desc" }],
     });
   }
   return prisma.platformContent.findMany({
     where,
     include: CONTENT_INCLUDE,
-    orderBy: [{ order: "desc" }, { id: "desc" }],
+    orderBy: [{ createdAt: "desc" }],
   });
 }
 
@@ -86,13 +87,13 @@ export async function findContentsByPlatformSlug(
     return prisma.platformContent.findMany({
       where,
       select: MINIMAL_SELECT,
-      orderBy: [{ order: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: "desc" }],
     });
   }
   return prisma.platformContent.findMany({
     where,
     include: CONTENT_INCLUDE,
-    orderBy: [{ order: "desc" }, { id: "desc" }],
+    orderBy: [{ createdAt: "desc" }],
   });
 }
 

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import SearchButton from "../ui/SearchButton";
 import { withWebsiteInfoDefaults } from "../../lib/defaults/website-info";
+import { useIsBreakpoint } from "../../hooks/use-is-breakpoint";
 
 // Recursive component untuk render category items dalam mega menu
 function MegaMenuItems({ items, onClose, depth = 0 }) {
@@ -42,9 +43,11 @@ export default function Header({ onMenuToggle, websiteInfo }) {
   const pathname = usePathname() || "";
   const resolvedWebsiteInfo = withWebsiteInfoDefaults(websiteInfo || {});
   const [isAtTop, setIsAtTop] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [categoryCache, setCategoryCache] = useState({});
   const [loading, setLoading] = useState(false);
+  const isMd = useIsBreakpoint("min", 768);
 
   // const isHome = pathname === "/";
 
@@ -72,7 +75,7 @@ export default function Header({ onMenuToggle, websiteInfo }) {
   // Hide header for admin routes
   if (pathname.startsWith("/admin")) return null;
 
-  const showBg = !isAtTop;
+  const showBg = !isAtTop || (isMd && isHovered);
   const headerPositionClass = "fixed top-0 left-0 right-0 z-50";
 
   return (
@@ -81,7 +84,9 @@ export default function Header({ onMenuToggle, websiteInfo }) {
         backgroundColor: showBg ? "#e83c92c8" : "transparent",
         borderBottom: showBg ? "1px solid rgba(250, 1, 225, 0.1)" : "1px solid transparent",
       }}
-      className={`${headerPositionClass} transition-all duration-200`}>
+      className={`${headerPositionClass} transition-all duration-200`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}>
       <div className="mx-auto w-full max-w-[1920px] px-4 md:px-6 h-[72px] md:h-[70px] flex items-center justify-between">
         {/* Left: Logo */}
         <div className="flex items-center">

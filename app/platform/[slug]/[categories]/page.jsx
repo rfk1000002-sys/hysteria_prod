@@ -23,7 +23,7 @@ const EVENT_DRIVEN_CATEGORIES = {
 
 // Filter tag statis per kategori (untuk event-driven category yang tidak punya filters dari DB).
 const CATEGORY_FILTERS = {
-  "workshop":       ["having-fun-artlab", "peltoe"],
+  "workshop":       ["having-fun-artlab", "paltoe"],
   "screening-film": ["making-artist", "usil"],
 };
 
@@ -93,7 +93,7 @@ export default async function Page({ params }) {
   if (!platform || !item) return notFound();
 
   const resolvedItems = (eventDriven && eventItems) ? eventItems : (item.items || []);
-  const resolvedFilters = (eventDriven && (categories === "untuk-perhatian" || categories === "event-ditampart" || categories === "workshop" || categories === "meramu"))
+  const resolvedFilters = (eventDriven && (categories === "untuk-perhatian" || categories === "event-ditampart" || categories === "meramu"))
     ? []
     : (CATEGORY_FILTERS[categories] || item.filters || []);
 
@@ -118,9 +118,10 @@ export default async function Page({ params }) {
             items={resolvedItems}
             filters={resolvedFilters}
             cardType={item.cardType || "poster"}
-            showFilterIcon={categories !== 'event-ditampart' && categories !== 'untuk-perhatian'}
-            itemsPerPageOverride={categories === 'event-ditampart' || categories === 'untuk-perhatian' ? 18 : undefined}
-            gridCols={categories === 'event-ditampart' || categories === 'untuk-perhatian' ? 6 : undefined}
+            showFilterIcon={categories !== 'event-ditampart' && categories !== 'untuk-perhatian' && categories !== 'meramu'}
+            showStatusFilter={['workshop', 'screening-film', 'untuk-perhatian', 'event-ditampart', 'meramu'].includes(categories)}
+            itemsPerPageOverride={categories === 'event-ditampart' || categories === 'untuk-perhatian' || categories === 'meramu' ? 18 : undefined}
+            gridCols={categories === 'event-ditampart' || categories === 'untuk-perhatian' || categories === 'meramu' ? 6 : undefined}
           />
         )}
       </main>

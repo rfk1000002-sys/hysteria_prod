@@ -11,11 +11,19 @@ import SortMenu from "@/components/ui/SortMenu";
 
 const DEFAULT_ITEMS_PER_PAGE = 10; // default: 5 kolom × 2 baris
 
+const STATUS_OPTIONS = [
+  { label: "Semua",               style: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" },
+  { label: "Akan Berlangsung",    style: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
+  { label: "Sedang Berlangsung",  style: "bg-green-50 text-green-600 hover:bg-green-100" },
+  { label: "Telah Berakhir",      style: "bg-zinc-200 text-zinc-500 hover:bg-zinc-300" },
+];
+
 export default function GridBody({
   items = [],
   filters = [],
   cardType = "poster",
   showFilterIcon = true,
+  showStatusFilter = false,
   itemsPerPageOverride = undefined,
   gridCols = undefined,
 }) {
@@ -23,11 +31,14 @@ export default function GridBody({
   const resolvedFilters = filters;
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("Semua");
-  const [showFilters, setShowFilters] = useState(showFilterIcon);
+  const [showFilters, setShowFilters] = useState(false);
   const [sortMode, setSortMode] = useState("terbaru");
+  const [activeStatus, setActiveStatus] = useState("Semua");
+  const [showStatusPanel, setShowStatusPanel] = useState(false);
   const [cursor, setCursor] = useState(0);
 
   const toggleFilters = () => setShowFilters((s) => !s);
+  const toggleStatusPanel = () => setShowStatusPanel((s) => !s);
 
   /* ---------- filtering + search ---------- */
   const parseMetaDate = (meta) => {
@@ -67,12 +78,21 @@ export default function GridBody({
   const filteredItems = useMemo(() => {
     let result = resolvedItems;
 
-    // Filter by tag — check item.tag (sub-category slug) first, then item.tags (Tag names array)
+    // Normalize string to slug format for loose matching (e.g. "Having Fun Artlab" → "having-fun-artlab")
+    const toSlug = (s) => (s || "").toLowerCase().replace(/\s+/g, "-");
+
+    // Filter by tag — check sub-category slug(s) first, then tag names (with slug normalization)
     if (activeFilter !== "Semua") {
       result = result.filter((item) =>
         item.tag === activeFilter ||
-        (Array.isArray(item.tags) && item.tags.includes(activeFilter))
+        (Array.isArray(item.tagSlugs) && item.tagSlugs.includes(activeFilter)) ||
+        (Array.isArray(item.tags) && item.tags.some((t) => t === activeFilter || toSlug(t) === activeFilter))
       );
+    }
+
+    // Filter by event status (badge)
+    if (activeStatus !== "Semua") {
+      result = result.filter((item) => item.badge === activeStatus);
     }
 
     // Filter by search (debounced)
@@ -119,7 +139,7 @@ export default function GridBody({
     }
 
     return sorted;
-  }, [resolvedItems, activeFilter, debouncedSearch, sortMode]);
+  }, [resolvedItems, activeFilter, activeStatus, debouncedSearch, sortMode]);
 
   /* ---------- pagination ---------- */
   const isKomikRamuan = cardType === "komik-ramuan";
@@ -141,6 +161,10 @@ export default function GridBody({
   // Reset cursor when filter/search changes
   const handleFilterChange = (f) => {
     setActiveFilter(f);
+    setCursor(0);
+  };
+  const handleStatusChange = (s) => {
+    setActiveStatus(s);
     setCursor(0);
   };
   const handleSearchChange = (e) => {
@@ -202,6 +226,28 @@ export default function GridBody({
             </button>
           </Tooltip>
         )}
+        {/* Toggle button for status filter */}
+        {showStatusFilter && (
+          <Tooltip title="Filter Status" arrow>
+            <button
+              className="flex-none w-10 h-10 border border-zinc-300 rounded-full bg-white shadow-md flex items-center justify-center text-pink-500 hover:bg-pink-50 transition cursor-pointer"
+              aria-label="Toggle filter status"
+              aria-expanded={showStatusPanel}
+              aria-controls="filter-status"
+              onClick={toggleStatusPanel}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 15m0 0l3.75 3.75M17.25 15l3.75-3.75M17.25 15H9" />
+              </svg>
+            </button>
+          </Tooltip>
+        )}
         {/* shared sort menu component (icon-only control) */}
         <SortMenu
           value={sortMode}
@@ -230,6 +276,28 @@ export default function GridBody({
               }`}
             >
               {f}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Status filter */}
+      {showStatusFilter && (
+        <div
+          id="filter-status"
+          className={`${showStatusPanel ? "flex" : "hidden"} flex-wrap gap-2 justify-center mb-8`}
+        >
+          {STATUS_OPTIONS.map(({ label, style }) => (
+            <button
+              key={label}
+              onClick={() => handleStatusChange(label)}
+              className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                activeStatus === label
+                  ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow"
+                  : style
+              }`}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -348,13 +416,13 @@ function CursorPagination({
   );
 }
 
-function LazyItem({ children }) {
+function LazyItem({ children, rootMargin = "200px" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || visible) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -362,18 +430,19 @@ function LazyItem({ children }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [visible, rootMargin]);
 
   return (
     <div
       ref={ref}
+      style={{ minHeight: 1 }}
       className={`transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
     >
-      {children}
+      {visible ? children : null}
     </div>
   );
 }

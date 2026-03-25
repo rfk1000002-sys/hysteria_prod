@@ -12,6 +12,7 @@ import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
+import PosterPreview from "../_component/preview/poster.preview";
 import {
   statusOptions,
   fetchDitampartEventData,
@@ -45,6 +46,7 @@ export default function DitampartPage() {
     subtitle: "",
     categoryItemSlug: "",
     showImageUpload: false,
+    previewComponent: null,
   });
 
   const debouncedSearch = useDebounce(searchQuery);
@@ -130,6 +132,7 @@ export default function DitampartPage() {
         showPrevDescription: true,
         showDescription: true,
         showMeta: true,
+        previewComponent: PosterPreview,
       });
       return;
     }
@@ -234,131 +237,162 @@ export default function DitampartPage() {
         </section>
       </div>
 
-      {/* ── Bagian Bawah: tabel postingan ────────────────────────────────── */}
-      <div className="max-w-5xl mx-auto mt-12">
-        <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
-          <div>
-            <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
-              Event Ditampart
-            </h2>
-            <p className="text-sm text-gray-600 mb-6 font-poppins">
-              Kelola Event Ditampart
-            </p>
+      {/* ── Bagian Bawah: tabel postingan (lazy-mount) ─────────────────────── */}
+      <LazyMount>
+        <div className="max-w-5xl mx-auto mt-12">
+          <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
+            <div>
+              <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
+                Event Ditampart
+              </h2>
+              <p className="text-sm text-gray-600 mb-6 font-poppins">
+                Kelola Event Ditampart
+              </p>
+            </div>
+            <div>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: "#43334C",
+                  "&:hover": { backgroundColor: "#352837" },
+                  textTransform: "none",
+                }}
+                onClick={() => router.push("/admin/events/create")}
+              >
+                Tambah Event
+              </Button>
+            </div>
           </div>
-          <div>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: "#43334C",
-                "&:hover": { backgroundColor: "#352837" },
-                textTransform: "none",
-              }}
-              onClick={() => router.push("/admin/events/create")}
-            >
-              Tambah Event
-            </Button>
-          </div>
-        </div>
 
-        {/* Filter bar */}
-        <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
-          <div className="w-full md:w-auto">
-            <SearchField
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari judul postingan..."
-              showAdornment={false}
-              endAdornment={
-                <IconButton size="small" aria-label="search">
-                  <SearchIcon fontSize="small" />
-                </IconButton>
-              }
-              className="rounded-md bg-white border border-gray-300 shadow-sm"
+          {/* Filter bar */}
+          <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
+            <div className="w-full md:w-auto">
+              <SearchField
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari judul postingan..."
+                showAdornment={false}
+                endAdornment={
+                  <IconButton size="small" aria-label="search">
+                    <SearchIcon fontSize="small" />
+                  </IconButton>
+                }
+                className="rounded-md bg-white border border-gray-300 shadow-sm"
+              />
+            </div>
+
+            <SelectField
+              className="w-[206px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={statusOptions}
+              emptyOptionLabel="Semua Status"
             />
+            <PageFilter perPage={perPage} onChange={setPerPage} />
           </div>
 
-          <SelectField
-            className="w-[206px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
-            emptyOptionLabel="Semua Status"
+          {/* DataTable */}
+          <DataTable
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            getRowId={(r) => r.id}
           />
-          <PageFilter perPage={perPage} onChange={setPerPage} />
-        </div>
+          {nextCursor && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={loading}
+                onClick={handleLoadMore}
+                sx={{ textTransform: "none" }}
+              >
+                {loading ? "Memuat..." : "Muat Lebih Banyak"}
+              </Button>
+            </div>
+          )}
 
-        {/* DataTable */}
-        <DataTable
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          getRowId={(r) => r.id}
-        />
-        {nextCursor && (
-          <div className="flex justify-center mt-4">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={loading}
-              onClick={handleLoadMore}
-              sx={{ textTransform: "none" }}
-            >
-              {loading ? "Memuat..." : "Muat Lebih Banyak"}
-            </Button>
-          </div>
-        )}
-
-        {/* modals */}
-        {platformModal.open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setPlatformModal((p) => ({ ...p, open: false }))}
-            />
-            <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
-              <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
-                <PlatformIndex
-                  // meta untuk fetch data
-                  platformSlug="ditampart"
-                  categoryItemSlug={platformModal.categoryItemSlug}
-                  title={platformModal.title}
-                  subtitle={platformModal.subtitle}
-                  actionLabel="+add"
-                  searchPlaceholder="Cari konten..."
-                  close={() => setPlatformModal((p) => ({ ...p, open: false }))}
-                  // field and columns to show
-                  showURL={true}
-                  showPrevDescription={platformModal.showPrevDescription}
-                  // showDescription={platformModal.showDescription}
-                  showImageUpload={platformModal.showImageUpload}
-                  showMeta={platformModal.showMeta}
+          {/* modals */}
+          {platformModal.open && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setPlatformModal((p) => ({ ...p, open: false }))}
+              />
+              <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
+                <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
+                  <PlatformIndex
+                    // meta untuk fetch data
+                    platformSlug="ditampart"
+                    categoryItemSlug={platformModal.categoryItemSlug}
+                    title={platformModal.title}
+                    subtitle={platformModal.subtitle}
+                    actionLabel="+add"
+                    searchPlaceholder="Cari konten..."
+                    close={() => setPlatformModal((p) => ({ ...p, open: false }))}
+                    // field and columns to show
+                    showURL={true}
+                    showPrevDescription={platformModal.showPrevDescription}
+                    // showDescription={platformModal.showDescription}
+                    showImageUpload={platformModal.showImageUpload}
+                    showMeta={platformModal.showMeta}
+                    showPreview={!!platformModal.previewComponent}
+                    PreviewComponent={platformModal.previewComponent}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {modalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* blur */}
+              <div
+                className="absolute inset-0 bg-black opacity-40"
+                onClick={() => setModalOpen(false)}
+              />
+              {/* modal content */}
+              <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
+                <LinkForm
+                  close={() => setModalOpen(false)}
+                  title={modalTitle}
+                  subtitle={modalPlaceholders.subtitle || ""}
+                  initial={modalInitial}
+                  placeholders={modalPlaceholders}
+                  onSave={handleSaveFromForm}
                 />
               </div>
             </div>
-          </div>
-        )}
-        {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* blur */}
-            <div
-              className="absolute inset-0 bg-black opacity-40"
-              onClick={() => setModalOpen(false)}
-            />
-            {/* modal content */}
-            <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
-              <LinkForm
-                close={() => setModalOpen(false)}
-                title={modalTitle}
-                subtitle={modalPlaceholders.subtitle || ""}
-                initial={modalInitial}
-                placeholders={modalPlaceholders}
-                onSave={handleSaveFromForm}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </LazyMount>
+    </div>
+  );
+}
+
+function LazyMount({ children, rootMargin = "300px", className = "" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={className} style={{ minHeight: visible ? undefined : 120 }}>
+      {visible ? children : null}
     </div>
   );
 }

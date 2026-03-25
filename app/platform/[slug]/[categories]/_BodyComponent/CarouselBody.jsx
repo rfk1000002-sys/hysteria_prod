@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import PosterCard from "./cards/PosterCard";
 import VideoCard from "./cards/VideoCard";
@@ -86,7 +86,7 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
         {/* Left arrow (desktop) */}
         <button
           onClick={() => scroll("left")}
-          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-90 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
+          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-90 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500 cursor-pointer"
           aria-label="Scroll left"
         >
           <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -105,16 +105,16 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
           }}
         >
           {displayedItems.map((item, i) => (
-            <div key={i} className={`flex-none ${cardWidth} snap-start`}>
+            <LazyItem key={i} className={`flex-none ${cardWidth} snap-start`}>
               <CardSwitch cardType={cardType} item={item} platformSlug={platformSlug} categorySlug={categorySlug} subSlug={subSlug} />
-            </div>
+            </LazyItem>
           ))}
         </div>
 
         {/* Right arrow (desktop) */}
         <button
           onClick={() => scroll("right")}
-          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
+          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500 cursor-pointer"
           aria-label="Scroll right"
         >
           <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -196,6 +196,37 @@ function DotIndicator({ count }) {
           className="w-2 h-2 rounded-full bg-pink-300"
         />
       ))}
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div
+      ref={ref}
+      className={`${className} transition-all duration-500`}
+      style={{ minHeight: 1 }}
+    >
+      {visible ? children : null}
     </div>
   );
 }

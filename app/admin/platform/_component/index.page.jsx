@@ -62,6 +62,8 @@ export default function PlatformIndex({
   showDescription = false,
   showHost = false,
   showGuests = false,
+  showPreview = false,
+  PreviewComponent = null,
 }) {
   const [searchQuery, setSearchQuery]   = useState('');
   const [perPage, setPerPage]           = useState(10);
@@ -101,8 +103,8 @@ export default function PlatformIndex({
 
       if (!res.ok) throw new Error(json?.message ?? 'Gagal mengambil data');
 
-      // normalize: tambahkan field `no` untuk nomor urut
-      const data = (json.data ?? []).map((row, idx) => ({ ...row, no: idx + 1 }));
+      // urutkan dari yang paling baru (id terbesar)
+      const data = json.data ?? [];
       setApiRows(data);
     } catch (err) {
       setApiError(err.message);
@@ -207,23 +209,25 @@ export default function PlatformIndex({
 
   // build default columns inside component so handlers are in scope
   const defaultColumns = [
-    { field: 'no', headerName: 'No.', width: 60, freeze:true},
+    { field: 'id', headerName: 'ID', width: 60, freeze:true},
     { field: 'title', headerName: 'Judul', width: 250, freeze:true },
-    ...(showImageUpload ? [{
+      ...(showImageUpload ? [{
       field: 'image',
       headerName: 'Gambar',
       width: 120,
       freeze: true,
       render: (row) => (
         row?.images && row.images.length > 0 ? (
-          <Image
-            src={row.images[0].imageUrl}
-            alt={row.images[0].alt || row.title || 'gambar'}
-            width={160}
-            height={120}
-            className="w-20 h-15 object-cover rounded"
-            style={{ objectFit: 'cover' }}
-          />
+          <LazyItem className="w-20 h-15">
+            <Image
+              src={row.images[0].imageUrl}
+              alt={row.images[0].alt || row.title || 'gambar'}
+              width={160}
+              height={120}
+              className="w-20 h-15 object-cover rounded"
+              style={{ objectFit: 'cover' }}
+            />
+          </LazyItem>
         ) : (
           <span className="text-gray-400">—</span>
         )
@@ -479,7 +483,36 @@ export default function PlatformIndex({
         showHost={showHost}
         showGuests={showGuests}
         showMeta={showMeta}
+        showPreview={showPreview}
+        PreviewComponent={PreviewComponent}
       />
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={`${className} transition-all duration-200`} style={{ minHeight: 1 }}>
+      {visible ? children : null}
     </div>
   );
 }

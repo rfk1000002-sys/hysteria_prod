@@ -40,6 +40,7 @@ export default function MockUpPosterCard({
           unoptimized={!isLocal}
           sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 300px"
           className="object-cover"
+          
         />
       </div>
 

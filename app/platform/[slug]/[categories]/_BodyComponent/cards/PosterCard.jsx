@@ -46,7 +46,7 @@ export default function PosterCard({
   ) {
     badgeClass = "bg-blue-100/40 text-blue-700 border-blue-100/40";
   } else if (badgeLabelNorm.includes("sedang") || badgeLabelNorm.includes("ongoing")) {
-    badgeClass = "bg-green-100/40 text-green-700 border-green-100/40";
+    badgeClass = "bg-green-100/40 text-green-500 border-green-100/50";
   } else if (
     badgeLabelNorm.includes("telah") ||
     badgeLabelNorm.includes("berakhir") ||
@@ -91,7 +91,6 @@ export default function PosterCard({
           alt={alt || title || "Poster"}
           fill
           unoptimized={!isLocal}
-          priority={true}
           sizes="(max-width:640px) 50vw, 260px"
           className={`object-cover block transition-all duration-300 ${
             isOpen
