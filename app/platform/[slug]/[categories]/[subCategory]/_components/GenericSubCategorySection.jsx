@@ -9,6 +9,18 @@ import ArtistCard from "../../_BodyComponent/cards/ArtistCard";
 
 const PAGE_SIZE = 8;
 const STONEN_RADIO_SLUG = "stonen-29-radio-show";
+const STATUS_OPTIONS = [
+  { label: "Semua",               style: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" },
+  { label: "Akan Berlangsung",    style: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
+  { label: "Sedang Berlangsung",  style: "bg-green-50 text-green-600 hover:bg-green-100" },
+  { label: "Telah Berakhir",      style: "bg-zinc-200 text-zinc-500 hover:bg-zinc-300" },
+];
+const EVENT_DRIVEN_SUBCATEGORY_SLUGS = new Set([
+  "stonen-29-radio-show",
+  "workshop-artlab",
+  "screening-film",
+  "untuk-perhatian",
+]);
 
 function CardByType({ cardType, item, detailBase }) {
 
@@ -90,10 +102,13 @@ export default function GenericSubCategorySection({
       : null;
 
   const isRadioShow = subCategory === STONEN_RADIO_SLUG;
+  const showStatusFilter = EVENT_DRIVEN_SUBCATEGORY_SLUGS.has(subCategory);
   const pageSize = isRadioShow ? 18 : PAGE_SIZE;
 
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
+  const [activeStatus, setActiveStatus] = useState("Semua");
+  const [showStatusPanel, setShowStatusPanel] = useState(false);
   const [cursor, setCursor] = useState(0);
   const [openFilter, setOpenFilter] = useState(false);
 
@@ -106,7 +121,9 @@ export default function GenericSubCategorySection({
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-      return !normalizedQuery || hay.includes(normalizedQuery);
+      const matchQuery = !normalizedQuery || hay.includes(normalizedQuery);
+      const matchStatus = activeStatus === "Semua" || it?.badge === activeStatus;
+      return matchQuery && matchStatus;
     });
 
     const sorted = [...matched];
@@ -133,7 +150,7 @@ export default function GenericSubCategorySection({
     }
 
     return sorted;
-  }, [items, normalizedQuery, sortBy]);
+  }, [items, normalizedQuery, activeStatus, sortBy]);
 
   const pagedItems = filteredItems.slice(cursor, cursor + pageSize);
   const hasPrev = cursor > 0;
@@ -149,6 +166,11 @@ export default function GenericSubCategorySection({
 
   const onSearchChange = (value) => {
     setQuery(value);
+    setCursor(0);
+  };
+
+  const handleStatusChange = (s) => {
+    setActiveStatus(s);
     setCursor(0);
   };
 
@@ -208,8 +230,52 @@ export default function GenericSubCategorySection({
               </div>
             )}
           </div>
+
+          {/* Toggle button for status filter */}
+          {showStatusFilter && (
+            <button
+              className="shrink-0 flex h-12 w-12 items-center justify-center rounded-full border border-[#ec3f94] bg-white text-[#ec3f94] shadow-sm transition hover:scale-105 sm:h-16 sm:w-16 cursor-pointer"
+              aria-label="Toggle filter status"
+              aria-expanded={showStatusPanel}
+              aria-controls="filter-status"
+              type="button"
+              onClick={() => setShowStatusPanel((prev) => !prev)}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 15m0 0l3.75 3.75M17.25 15l3.75-3.75M17.25 15H9" />
+              </svg>
+            </button>
+          )}
         </div>
       </section>
+
+      {/* Status filter */}
+      {showStatusFilter && (
+        <section id="filter-status" className={`${showStatusPanel ? "block" : "hidden"} mx-auto max-w-[1920px] px-4 md:px-24 pb-4`}>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {STATUS_OPTIONS.map(({ label, style }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => handleStatusChange(label)}
+                className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  activeStatus === label
+                    ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow"
+                    : style
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="w-full max-w-480 mx-auto px-3 pb-10 sm:px-5 sm:pb-12 md:px-8 md:pb-14 lg:px-12 lg:pb-16 xl:px-24">
         {!pagedItems.length ? (

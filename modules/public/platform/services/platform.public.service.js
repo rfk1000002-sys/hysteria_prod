@@ -49,7 +49,7 @@ function mapToGridItem(content) {
     guests: content.guests || [],
     tags: content.tags || [],
     year: content.year ? String(content.year) : null,
-    meta: content.meta ?? (content.year ? String(content.year) : null),
+    meta: (content.meta != null ? (typeof content.meta === "object" ? (content.meta.cardType || null) : content.meta) : null) ?? (content.year ? String(content.year) : null),
     badge: content.badge ?? (Array.isArray(content.tags) && content.tags.length ? content.tags[0] : null),
     url: content.url || content.youtube || null,
   };
@@ -77,7 +77,7 @@ function mapToCarouselItem(cardType, content) {
     return { ...base, host: content.host ?? null, guests: content.guests || [] };
   }
   // poster (default)
-  return { ...base, meta: content.meta ?? (content.year ? String(content.year) : null) };
+  return { ...base, meta: (content.meta != null ? (typeof content.meta === "object" ? (content.meta.cardType || null) : content.meta) : null) ?? (content.year ? String(content.year) : null) };
 }
 
 /**
@@ -375,11 +375,15 @@ export async function getPublicEventItems(categorySlug) {
   const events = await findPublicEventsByCategorySlug(categorySlug);
   return events.map((event) => {
     const status = getEventStatus(event.startAt, event.endAt);
-    // Derive sub-category tag: the eventCategories slug that is NOT the parent categorySlug
-    const subCategorySlug =
+    // Collect category-based sub slugs (every eventCategory that is NOT the parent categorySlug)
+    const categorySlugs =
       (event.eventCategories || [])
         .map((ec) => ec.categoryItem?.slug)
-        .find((s) => s && s !== categorySlug) ?? null;
+        .filter((s) => s && s !== categorySlug);
+    // Tag slugs from the Tag model
+    const tagSlugList = (event.tags || []).map((t) => t.tag?.slug).filter(Boolean);
+    // Merge both so filter works regardless of how sub-grouping is stored
+    const tagSlugs = [...new Set([...categorySlugs, ...tagSlugList])];
     return {
       id: event.id,
       slug: event.slug,
@@ -389,7 +393,8 @@ export async function getPublicEventItems(categorySlug) {
       description: event.description ?? null,
       badge: EVENT_STATUS_LABEL[status] ?? null,
       meta: formatIndonesianDate(event.startAt),
-      tag: subCategorySlug,
+      tag: tagSlugs[0] ?? null,
+      tagSlugs,
       tags: (event.tags || []).map((t) => t.tag?.name).filter(Boolean),
     };
   });
