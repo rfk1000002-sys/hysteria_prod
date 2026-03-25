@@ -12,6 +12,8 @@ import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
+import VideoPreview from "../_component/preview/video.preview";
+import PosterPreview from "../_component/preview/poster.preview";
 import {
   statusOptions,
   fetchLakiMasakEventData,
@@ -46,6 +48,7 @@ export default function LakiMasakPage() {
     subtitle: "",
     categoryItemSlug: "",
     showImageUpload: false,
+    previewComponent: null,
   });
 
   const debouncedSearch = useDebounce(searchQuery);
@@ -125,6 +128,7 @@ export default function LakiMasakPage() {
         showHost: true,
         showGuests: true,
         showMeta: true,
+        previewComponent: VideoPreview,
       });
       return;
     }
@@ -140,6 +144,7 @@ export default function LakiMasakPage() {
         showURL: true,
         showPrevDescription: true,
         showMeta: true,
+        previewComponent: PosterPreview,
       });
       return;
     }
@@ -345,6 +350,8 @@ export default function LakiMasakPage() {
                     showMeta={platformModal.showMeta}
                     showHost={platformModal.showHost}
                     showGuests={platformModal.showGuests}
+                    showPreview={!!platformModal.previewComponent}
+                    PreviewComponent={platformModal.previewComponent}
 
                     actionLabel="+add"
                     searchPlaceholder="Cari konten..."

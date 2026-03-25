@@ -51,6 +51,7 @@ const CONTENT_SELECT = {
   year: true,
   meta: true,
   tags: true,
+  createdAt: true,
   images: {
     orderBy: [{ order: "asc" }, { id: "asc" }],
     take: 1,
@@ -105,7 +106,7 @@ export async function findPublicPlatformBySlug(slug) {
 export async function findGridContents(platformId, categoryItemId) {
   return prisma.platformContent.findMany({
     where: { platformId, categoryItemId, isActive: true },
-    orderBy: [{ order: "asc" }, { id: "asc" }],
+    orderBy: [{ createdAt: "desc" }],
     select: CONTENT_SELECT,
   });
 }
@@ -139,7 +140,7 @@ export async function findContentById(id) {
 export async function findRelatedContents(platformId, categoryItemId, excludeId) {
   return prisma.platformContent.findMany({
     where: { platformId, categoryItemId, isActive: true, id: { not: excludeId } },
-    orderBy: [{ order: "asc" }, { id: "asc" }],
+    orderBy: [{ createdAt: "desc" }],
     take: 4,
     select: CONTENT_SELECT,
   });
@@ -158,7 +159,7 @@ export async function findPublicEventsByOrganizerSlug(organizerSlug) {
         some: { categoryItem: { slug: organizerSlug } },
       },
     },
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       title: true,
@@ -188,7 +189,7 @@ export async function findPublicEventsByCategorySlug(categorySlug) {
         some: { categoryItem: { slug: categorySlug } },
       },
     },
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       title: true,
@@ -226,7 +227,7 @@ export async function findCarouselSubCategories(platformId, parentCategoryItemId
       meta: true, // { cardType: 'poster' | 'video' | 'artist' }
       platformContents: {
         where: { platformId, isActive: true },
-        orderBy: [{ order: "asc" }, { id: "asc" }],
+        orderBy: [{ createdAt: "desc" }],
         select: CONTENT_SELECT,
       },
     },

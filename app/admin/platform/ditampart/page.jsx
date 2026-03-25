@@ -12,6 +12,7 @@ import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
+import PosterPreview from "../_component/preview/poster.preview";
 import {
   statusOptions,
   fetchDitampartEventData,
@@ -45,6 +46,7 @@ export default function DitampartPage() {
     subtitle: "",
     categoryItemSlug: "",
     showImageUpload: false,
+    previewComponent: null,
   });
 
   const debouncedSearch = useDebounce(searchQuery);
@@ -130,6 +132,7 @@ export default function DitampartPage() {
         showPrevDescription: true,
         showDescription: true,
         showMeta: true,
+        previewComponent: PosterPreview,
       });
       return;
     }
@@ -334,6 +337,8 @@ export default function DitampartPage() {
                     // showDescription={platformModal.showDescription}
                     showImageUpload={platformModal.showImageUpload}
                     showMeta={platformModal.showMeta}
+                    showPreview={!!platformModal.previewComponent}
+                    PreviewComponent={platformModal.previewComponent}
                   />
                 </div>
               </div>

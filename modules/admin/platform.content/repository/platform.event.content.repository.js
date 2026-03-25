@@ -53,6 +53,7 @@ function formatEvent(event) {
     })),
     tags: (event.tags ?? []).map((t) => t.tag),
     // createdAt: event.createdAt,
+    createdAt: event.createdAt,
     // updatedAt: event.updatedAt,
   };
 }
@@ -101,7 +102,7 @@ export async function findEventsByOrganizer(organizerSlug, filters = {}) {
   const events = await prisma.event.findMany({
     where,
     include: EVENT_INCLUDE,
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
@@ -139,7 +140,7 @@ export async function findEventsByCategory(categorySlug, filters = {}) {
   const events = await prisma.event.findMany({
     where,
     include: EVENT_INCLUDE,
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });

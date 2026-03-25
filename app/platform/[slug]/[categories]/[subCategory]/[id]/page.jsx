@@ -21,12 +21,12 @@ export default async function ArtistDetailPage({ params }) {
   const isLocal = typeof heroImg === "string" && heroImg.startsWith("/");
 
   return (
-    <div className="bg-white min-h-screen font-sans">
+    <div className="bg-zinc-50 min-h-screen font-sans">
 
       {/* ── TWO-COLUMN MAIN ─────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-5 md:px-12 pt-17 pb-12 md:pt-17 md:pb-20">
 
-        <div className="flex flex-col md:flex-row gap-10 md:gap-14 items-start bg-zinc-50 rounded-lg border-1 border-gray-100 p-5 md:p-5 shadow-xl">
+        <div className="bg-white flex flex-col md:flex-row gap-10 md:gap-14 items-start rounded-lg border-1 border-gray-100 p-5 md:p-5 shadow-xl">
 
           {/* ── LEFT: Artist poster (glass + glow edge) ─────────────── */}
           <div className="w-[250px] md:w-[260px] lg:w-[280px] shrink-0 mx-auto md:mx-0">

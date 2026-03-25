@@ -13,6 +13,8 @@ import DataTable from '@/components/ui/DataTable';
 import PageFilter from '@/components/ui/PageFilter';
 import LinkForm from '../_component/link.form';
 import PlatformIndex from '../_component/index.page';
+import ArtistPreview from '../_component/preview/konten.preview';
+import VideoPreview from '../_component/preview/video.preview';
 
 import { useRouter } from "next/navigation";
 import {
@@ -240,6 +242,8 @@ export default function HysteriaArtlabPage() {
                 showGuests={true}
                 showHost={true}
                 showMeta={true}
+                showPreview={true}
+                PreviewComponent={VideoPreview}
                 close={() => setOpenAntalk(false)}
               />
             </div>
@@ -269,6 +273,8 @@ export default function HysteriaArtlabPage() {
                 showHost={true}
                 showGuests={true}
                 showMeta={true}
+                showPreview={true}
+                PreviewComponent={ArtistPreview}
                 close={() => setOpenArtistRadar(false)}
               />
             </div>
