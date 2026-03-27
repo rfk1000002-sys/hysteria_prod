@@ -9,6 +9,7 @@ import { extractMapSrc, getPreviewSrc } from "@/lib/maps";
 import OrganizerSelect from "./OrganizerSelect";
 import CategorySelect from "./CategorySelect";
 import EventDuration from "./EventDuration";
+import { ArrowLeft } from "lucide-react";
 
 function Card({ title, children }) {
   return (
@@ -21,7 +22,7 @@ function Card({ title, children }) {
   );
 }
 
-export default function EventForm({ initialData = null, isEdit = false, eventId = null }) {
+export default function EventForm({ initialData = null, isEdit = false, eventId = null, onClose, ...props }) {
   const router = useRouter();
 
   const [organizerItems, setOrganizerItems] = useState([]);
@@ -282,6 +283,18 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // KHUSUS MAPS
+    if (name === "mapsEmbed") {
+      setForm((prev) => ({
+        ...prev,
+        mapsEmbed: extractMapSrc(value), 
+      }));
+
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+      return;
+    }
+
+    // default
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -363,7 +376,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       return;
     }
     setLoading(false);
-    router.push("/admin/events");
+    onClose?.();
   };
 
   const inputClass = "w-full border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--Color-1)] disabled:bg-[var(--muted)]";
@@ -372,16 +385,24 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* HEADER */}
-      <div className="right items-right justify-between">
+      <div className="flex items-center justify-between mt-2">
+        {/* BACK BUTTON */}
+        <button
+          type="button"
+          onClick={() => onClose?.()}
+          className="flex items-center gap-2 border border-black text-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          <ArrowLeft size={16} />
+          Kembali
+        </button>
+
         {/* ACTION */}
-        <div className="flex justify-end">
-          <button 
-            type="submit"
-            className="bg-[var(--btn-normal)] hover:bg-[var(--btn-normal-hover)] active:bg-[var(--btn-normal-active)] text-white px-6 py-2 rounded-lg transition"
-          >
-            {loading ? "Menyimpan..." : "Simpan Event"}
-          </button>
-        </div>
+        <button 
+          type="submit"
+          className="bg-[var(--btn-normal)] hover:bg-[var(--btn-normal-hover)] active:bg-[var(--btn-normal-active)] text-white px-6 py-2 rounded-lg transition"
+        >
+          {loading ? "Menyimpan..." : "Simpan Event"}
+        </button>
       </div>
 
       {/* GRID */}

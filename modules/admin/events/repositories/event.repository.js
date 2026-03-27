@@ -7,7 +7,19 @@ export function findAllEvents() {
       eventCategories: {
         include: {
           categoryItem: {
-            select: { title: true },
+            select: { id: true, title: true },
+          },
+        },
+      },
+      organizers: {
+        include: {
+          categoryItem: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              categoryId: true,
+            },
           },
         },
       },
@@ -22,7 +34,11 @@ export function findEventById(id) {
       eventCategories: {
         include: { categoryItem: true },
       },
-      organizers: true,
+      organizers: {
+        include: {
+          categoryItem: true,
+        },
+      },
       tags: {
         include: { tag: true },
       },
