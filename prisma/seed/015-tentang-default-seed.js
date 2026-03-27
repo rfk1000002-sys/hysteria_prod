@@ -14,7 +14,7 @@ const DEFAULT_PANDUAN_VISUAL = ["Brand Guideline", "Logo Hysteria", "Video Profi
 module.exports = async function seed() {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    logger.warn("DATABASE_URL not set; skipping 014-tentang-default-seed");
+    logger.warn("DATABASE_URL not set; skipping 015-tentang-default-seed");
     return;
   }
 
@@ -22,7 +22,7 @@ module.exports = async function seed() {
   await client.connect();
 
   try {
-    logger.info("014: Seeding default Tentang content...");
+    logger.info("015: Seeding default Tentang content...");
     await client.query("BEGIN");
 
     await client.query(
@@ -58,10 +58,10 @@ module.exports = async function seed() {
     }
 
     await client.query("COMMIT");
-    logger.info("014: Tentang default seed complete");
+    logger.info("015: Tentang default seed complete");
   } catch (error) {
     await client.query("ROLLBACK");
-    logger.error("014 seeder error:", { error: error.message });
+    logger.error("015 seeder error:", { error: error.message });
     throw error;
   } finally {
     await client.end();

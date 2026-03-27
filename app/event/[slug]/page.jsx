@@ -391,45 +391,45 @@ export default async function EventDetailPage({ params }) {
   );
 }
 
-export async function generateMetadata({ params }) {
-  const { slug } = await params;
+// export async function generateMetadata({ params }) {
+//   const { slug } = await params;
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/events/${slug}`,
-    { next: { revalidate: 60 } }
-  );
+//   const res = await fetch(
+//     `${process.env.NEXT_PUBLIC_SITE_URL}/api/events/${slug}`,
+//     { next: { revalidate: 60 } }
+//   );
 
-  if (!res.ok) return {};
+//   if (!res.ok) return {};
 
-  const { event } = await res.json();
+//   const { event } = await res.json();
 
-  if (!event) return {};
+//   if (!event) return {};
 
-  const url = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
+//   const url = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
 
-  return {
-    title: event.title,
-    description: event.excerpt || "Informasi event terbaru dari Hysteria",
-    openGraph: {
-      title: event.title,
-      description: event.excerpt || event.title,
-      url,
-      siteName: "Hysteria",
-      images: [
-        {
-          url: event.poster || "/placeholder-event.jpg",
-          width: 1200,
-          height: 630,
-          alt: event.title,
-        },
-      ],
-      type: "article",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: event.title,
-      description: event.excerpt || event.title,
-      images: [event.poster || "/placeholder-event.jpg"],
-    },
-  };
-}
+//   return {
+//     title: event.title,
+//     description: event.excerpt || "Informasi event terbaru dari Hysteria",
+//     openGraph: {
+//       title: event.title,
+//       description: event.excerpt || event.title,
+//       url,
+//       siteName: "Hysteria",
+//       images: [
+//         {
+//           url: event.poster || "/placeholder-event.jpg",
+//           width: 1200,
+//           height: 630,
+//           alt: event.title,
+//         },
+//       ],
+//       type: "article",
+//     },
+//     twitter: {
+//       card: "summary_large_image",
+//       title: event.title,
+//       description: event.excerpt || event.title,
+//       images: [event.poster || "/placeholder-event.jpg"],
+//     },
+//   };
+// }

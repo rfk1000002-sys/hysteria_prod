@@ -13,6 +13,8 @@ import DataTable from '@/components/ui/DataTable';
 import PageFilter from '@/components/ui/PageFilter';
 import LinkForm from '../_component/link.form';
 import PlatformIndex from '../_component/index.page';
+import ArtistPreview from '../_component/preview/konten.preview';
+import VideoPreview from '../_component/preview/video.preview';
 
 import { useRouter } from "next/navigation";
 import {
@@ -154,7 +156,7 @@ export default function HysteriaArtlabPage() {
                   <div className="p-5 border border-gray-400 rounded-lg bg-white shadow-xl">
                       <h2 className="py-1 text-pink-500 font-bold mb-3 font-poppins">Workshop Artlab, Screening Film, dan Untuk Perhatian</h2>
                       <div>
-                          <button className="w-full md:w-auto bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer">Tambah Postingan</button>
+                          <button onClick={() => router.push("/admin/events/create")} className="w-full md:w-auto bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer">Tambah Postingan</button>
                       </div>
                   </div>
               </div>
@@ -240,6 +242,8 @@ export default function HysteriaArtlabPage() {
                 showGuests={true}
                 showHost={true}
                 showMeta={true}
+                showPreview={true}
+                PreviewComponent={VideoPreview}
                 close={() => setOpenAntalk(false)}
               />
             </div>
@@ -269,6 +273,8 @@ export default function HysteriaArtlabPage() {
                 showHost={true}
                 showGuests={true}
                 showMeta={true}
+                showPreview={true}
+                PreviewComponent={ArtistPreview}
                 close={() => setOpenArtistRadar(false)}
               />
             </div>
@@ -276,8 +282,9 @@ export default function HysteriaArtlabPage() {
         </div>
       )}
 
-      {/* Bagian bawah */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      {/* Bagian bawah (lazy-mount) */}
+      <LazyMount>
+        <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
           <div>
             <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
@@ -298,7 +305,7 @@ export default function HysteriaArtlabPage() {
               }}
               onClick={() => router.push("/admin/events/create")}
             >
-              Tambah Event
+              Tambah Postingan
             </Button>
           </div>
         </div>
@@ -337,26 +344,54 @@ export default function HysteriaArtlabPage() {
           
         </div>
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          getRowId={(r) => r.id}
-        />
-        {nextCursor && (
-          <div className="flex justify-center mt-4">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={loading}
-              onClick={handleLoadMore}
-              sx={{ textTransform: 'none' }}
-            >
-              {loading ? 'Memuat...' : 'Muat Lebih Banyak'}
-            </Button>
-          </div>
-        )}
-      </div>
+          <DataTable
+            columns={columns}
+            rows={rows}
+            loading={loading}
+            getRowId={(r) => r.id}
+          />
+          {nextCursor && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={loading}
+                onClick={handleLoadMore}
+                sx={{ textTransform: 'none' }}
+              >
+                {loading ? 'Memuat...' : 'Muat Lebih Banyak'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </LazyMount>
+    </div>
+  );
+}
+
+function LazyMount({ children, rootMargin = "300px", className = "" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={className} style={{ minHeight: visible ? undefined : 120 }}>
+      {visible ? children : null}
     </div>
   );
 }

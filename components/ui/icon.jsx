@@ -5,6 +5,8 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import Groups3OutlinedIcon from "@mui/icons-material/Groups3Outlined";
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Instagram, Youtube, Facebook, X as LucideX } from "lucide-react";
 
 export function IconDiversity({ className = "", size = 20 }) {
   return (
@@ -18,6 +20,15 @@ export function IconDiversity({ className = "", size = 20 }) {
 export function IconBusiness({ className = "", size = 20 }) {
   return (
     <BusinessOutlinedIcon
+      className={className}
+      style={{ fontSize: size }}
+    />
+  );
+}
+
+export function IconInfo({ className = "", size = 20 }) {
+  return (
+    <InfoOutlinedIcon
       className={className}
       style={{ fontSize: size }}
     />
@@ -380,31 +391,7 @@ export function IconInstagram({ className = "", size = 20 }) {
 }
 
 export function IconFacebook({ className = "", size = 20 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden>
-      <rect
-        x="2"
-        y="2"
-        width="20"
-        height="20"
-        rx="3"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        fill="none"
-      />
-      <path
-        d="M14.5 8.5h1.9v2.2h-1.9v6H12v-6h-1.3V9.7H12V8.6c0-1.1.6-2.6 2.5-2.6h1.5v1.5h-.5c-.4 0-.9.2-.9.9v.7z"
-        fill="currentColor"
-      />
-    </svg>
-  );
+  return <Facebook className={className} size={size} />;
 }
 
 export function IconTikTok({ className = "", size = 20 }) {
@@ -464,18 +451,7 @@ export function IconThreads({ className = "", size = 20 }) {
 }
 
 export function IconX({ className = "", size = 20 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden>
-      <path d="M18.244 2H21.552L14.325 10.26L22.5 22H15.902L10.742 14.657L4.39 22H1.08L8.815 13.112L1 2H7.764L12.43 8.709L18.244 2ZM17.094 20.13H18.93L6.78 3.78H4.81L17.094 20.13Z" />
-    </svg>
-  );
+  return <LucideX className={className} size={size} />;
 }
 
 export function IconLinkedIn({ className = "", size = 20 }) {
@@ -520,31 +496,7 @@ export function IconLinkedIn({ className = "", size = 20 }) {
 }
 
 export function IconYoutube({ className = "", size = 20 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden>
-      <rect
-        x="3"
-        y="6"
-        width="18"
-        height="12"
-        rx="3"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        fill="none"
-      />
-      <path
-        d="M10 9.5l5 2.5-5 2.5V9.5z"
-        fill="currentColor"
-      />
-    </svg>
-  );
+  return <Youtube className={className} size={size} />;
 }
 
 export function IconSpeaker({ className = "", size = 20, initialMuted = false, muted: mutedProp, onChange }) {

@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 /**
  * ArtistCard — kartu vertikal bergaya "Artist Radar" branded
@@ -28,11 +29,23 @@ export default function ArtistCard({
   tags,
   href,
 }) {
+  const [showInfo, setShowInfo] = useState(false);
+
   const imgSrc = imageUrl || "/image/artist.webp";
   const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
+  const handleClick = (e) => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      e.preventDefault();
+      setShowInfo((prev) => !prev);
+    }
+  };
+
   const inner = (
-    <div className="group relative w-full aspect-[9/16] overflow-hidden rounded-2xl cursor-pointer shadow-xl transform transition-transform duration-300 hover:-translate-y-4 hover:shadow-2xl">
+    <div
+      className="group relative w-full aspect-[9/16] overflow-hidden rounded-2xl cursor-pointer shadow-xl transform transition-transform duration-300 hover:-translate-y-4 hover:shadow-2xl"
+      onClick={handleClick}
+    >
       {/* Background image */}
       <Image
         src={imgSrc}
@@ -43,8 +56,12 @@ export default function ArtistCard({
         className="object-cover brightness-75 transition-transform duration-300"
       />
 
-      {/* Bottom overlay — info artist */}
-      <div className="p-3 absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-3 pt-20">
+      {/* Bottom overlay — info artist: hidden on mobile until clicked, always visible on md+ */}
+      <div
+        className={`p-3 absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-3 pt-20 transition-opacity duration-300 md:opacity-100 ${
+          showInfo ? "opacity-100" : "opacity-0"
+        }`}
+      >
           {title && (
             <h3 className="text-white text-[14px] md:text-sm font-bold leading-tight">{title}</h3>
           )}
@@ -62,6 +79,16 @@ export default function ArtistCard({
               <span style={{ color: "#E83C91" }} className="mr-1 shrink-0">Collabrator:</span>
               <span className="text-white line-clamp-2 md:line-clamp-3 break-words min-w-0 md:flex-1">{Array.isArray(guests) ? guests.join(", ") : guests || "-"}</span>
             </p>
+          )}
+          {href && showInfo && (
+            <a
+              href={href}
+              className="md:hidden mt-2 block w-full text-center text-[11px] font-semibold py-1.5 rounded-lg"
+              style={{ backgroundColor: "#E83C91", color: "#fff" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              Lihat Detail
+            </a>
           )}
       </div>
     </div>

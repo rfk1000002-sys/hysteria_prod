@@ -1,11 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram } from "../../../components/ui/icon";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram, IconInfo } from "../../../components/ui/icon";
 
 export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
+  const [logoSrc, setLogoSrc] = useState("/image/Logo-hysteria.svg");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/website-info");
+        if (!res.ok) return;
+        const json = await res.json();
+        const logo = json && json.websiteInfo && json.websiteInfo.logoWebsite;
+        if (!cancelled && logo) setLogoSrc(logo);
+      } catch (e) {
+        // ignore — keep fallback
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const menus = [
     { key: "dashboard", label: "Dashboard", view: "dashboard", icon: IconDashboard, enabled: true },
@@ -104,9 +123,9 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       children: [
         { key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true },
         { key: "tentang", label: "Tentang", view: "tentang", icon: IconBusiness, enabled: true },
+        { key: "website-info", label: "Website Info", view: "website-info", icon: IconInfo, enabled: true },
         { key: "contact", label: "Contact", view: "contact", icon: IconSocial, enabled: true },
         { key: "collaboration", label: "Kolaborasi", view: "collaboration", icon: IconSocial, enabled: true },
-        { key: "metadata", label: "Metadata", view: "metadata", icon: IconSettings, enabled: false },
       ],
     },
   ];
@@ -156,8 +175,9 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
             const isActive = currentView === item.view || (hasChildren && item.children.some((c) => c.view === currentView));
             const isOpen = !!openKeys[item.key];
             const baseClass = `group relative flex items-center gap-2 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
-            const enabledClass = isActive ? `bg-white/10 text-white` : `text-white hover:bg-white/10`;
+            const enabledClass = isActive ? `bg-white border border-pink-500 text-pink-500` : `text-white hover:bg-white/10`;
             const disabledClass = `text-white/60 cursor-not-allowed`;
+            const iconColor = !enabled ? "text-white/60" : isActive ? "text-pink-500" : "text-white";
 
             const handleClick = () => {
               if (!enabled) return;
@@ -182,7 +202,7 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                     tabIndex={enabled ? 0 : -1}
                     className={`${baseClass} ${enabled ? enabledClass : disabledClass} w-full`}
                     aria-label={item.label}>
-                    <Icon className="h-5 w-5 text-white" />
+                    <Icon className={`h-5 w-5 ${iconColor}`} />
                     {!collapsed && (
                       <>
                         <span>{item.label}</span>
@@ -214,9 +234,9 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                         return (
                           <li key={child.key}>
                             {(() => {
-                              const childClassBase = "flex items-center gap-2 w-full text-sm rounded-md px-3 py-2";
-                              const childEnabledClass = childActive ? "bg-white/10 text-white" : "text-white hover:bg-white/10";
-                              const childDisabledClass = "text-white/60 cursor-not-allowed bg-transparent";
+                              const childClassBase = "flex items-center gap-2 w-full rounded-md px-3 py-2 text-xs";
+                              const childEnabledClass = childActive ? "bg-white text-pink-500" : "text-white hover:bg-white/10";
+                              const childDisabledClass = "text-white/60 cursor-not-allowed";
                               return (
                                 <button
                                   onClick={() => childEnabled && onNavigate(child.view)}
@@ -226,8 +246,12 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                                   aria-current={childActive ? "page" : undefined}
                                   tabIndex={childEnabled ? 0 : -1}
                                   className={`${childClassBase} ${childEnabled ? childEnabledClass : childDisabledClass}`}>
-                                  {ChildIcon && <ChildIcon className="h-4 w-4 text-white" />}
-                                  <span className="text-xs text-white">{child.label}</span>
+                                  {ChildIcon && (
+                                    <ChildIcon
+                                      className={`h-4 w-4 ${!childEnabled ? 'text-white/60' : childActive ? 'text-pink-500' : 'text-white'}`}
+                                    />
+                                  )}
+                                  <span className={`${childActive ? 'text-pink-500' : childEnabled ? 'text-white' : 'text-white/60'}`}>{child.label}</span>
                                   {!childEnabled && <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-white/20 px-1 py-0.5 text-[10px] font-medium text-white">Coming soon</span>}
                                 </button>
                               );
