@@ -7,32 +7,23 @@ import { ArrowLeft } from "lucide-react";
 import { getEventDetail, getOtherEvents } from "../../../modules/public/events/services/event.service";
 import { getOrganizerDisplay } from "../../../lib/organizer-helper";
 import LiveArchiveLinks from "../../../components/adminUI/Event/LiveArchiveLinks";
+import { getProgramPageConfig } from "../../../modules/public/events/services/event.service";
 
 export const revalidate = 60;
 
 export default async function EventDetailPage({ params }) {
   const { slug } = await params;
 
-  const event = await getEventDetail(slug);
-
-  console.log("ORGANIZERS:", event.organizers);
-  console.log(
-  event.organizers.map((o) => o.categoryItem)
-);
-console.log(
-  event.organizers.map((o) => ({
-    title: o.categoryItem?.title,
-    type: o.categoryItem?.type,
-  }))
-);
-  const otherEvents = await getOtherEvents(slug);
+  const [event, otherEvents, pageConfig] = await Promise.all([
+    getEventDetail(slug),
+    getOtherEvents(slug),
+    getProgramPageConfig(),
+  ]);
 
   if (!event) return notFound();
 
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/event/${event.slug}`;
-
   const status = getEventStatus(event.startAt, event.endAt);
-
   const startDate = new Date(event.startAt);
   const endDate = event.endAt ? new Date(event.endAt) : null;
 
@@ -91,29 +82,42 @@ console.log(
 
   const organizerSlug = event.organizers?.[0]?.categoryItem?.slug;
   const isEmbedMap = event.mapsEmbedSrc?.includes("/maps/embed");
+  const detailHero = pageConfig?.detailHero ?? {
+    image: null,
+    isBlur: false,
+  };
+  const bgImage = event?.heroImage || detailHero.image;
+  const isBlur = detailHero.isBlur;
+
+  function getHeroStyle({ bgImage, event }) {
+    if (bgImage) {
+      return {
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      };
+    }
+
+    if (event?.heroColor) {
+      return { background: event.heroColor };
+    }
+
+    return {
+      background:
+        "linear-gradient(to right, #db2777, #c026d3, #ec4899)",
+    };
+  }
 
   return (
     <div className="w-full">
       {/* HERO GRADIENT */}
       <section
         className="relative w-full h-[300px]"
-        style={
-          event?.heroImage
-            ? {
-                backgroundImage: `url(${event.heroImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : event?.heroColor
-            ? {
-                background: event.heroColor,
-              }
-            : {
-                background:
-                  "linear-gradient(to right, #db2777, #c026d3, #ec4899)",
-              }
-        }
+        style={getHeroStyle({ bgImage, event })}
       >
+        {isBlur && (
+          <div className="absolute inset-0 backdrop-blur-md bg-black/30" />
+        )}
         {/* BACK BUTTON */}
         <Link
           href="/event"
