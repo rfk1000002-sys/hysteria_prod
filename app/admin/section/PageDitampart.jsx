@@ -35,7 +35,7 @@ const COVER_ITEMS = [
 
 /** Slot hero image per sub-halaman Ditampart. title/subtitle adalah nilai default sebelum API dimuat. */
 const HERO_ITEMS = [
-  { id: 1, apiKey: "hero-mockup-ditampart",  label: "Hero Page Mock Up dan Poster", title: "", subtitle: "", files: [] },
+  { id: 1, apiKey: "hero-mockup-poster",    label: "Hero Page Mock Up dan Poster", title: "", subtitle: "", files: [] },
   { id: 2, apiKey: "hero-event-ditampart",   label: "Hero Page Event Ditampart",    title: "", subtitle: "", files: [] },
 ];
 
@@ -339,7 +339,7 @@ export default function PageDitampart() {
               onSubmit={handleSaveMain}
               submitting={mainSaving}
               maxSizeMB={MAX_SIZE_MB}
-              mainImageLabel="ukuran 480x600 px, - format file .webp"
+              mainImageLabel="ukuran ratio 3:4, - format file .webp"
             />
           </div>
         ) : (

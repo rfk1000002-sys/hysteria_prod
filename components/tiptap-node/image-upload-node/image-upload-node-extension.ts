@@ -76,7 +76,7 @@ export const ImageUploadNode = Node.create<ImageUploadNodeOptions>({
 
   addOptions() {
     return {
-      type: "image",
+      type: "customImage",
       accept: "image/*",
       limit: 1,
       maxSize: 0,

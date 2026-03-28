@@ -5,6 +5,38 @@ import HeadSection from '../../../_sectionComponents/halaman_platform/head.secti
 import ListCategorySection from '../../../_sectionComponents/halaman_platform/list_category.section'
 import MediaSection from '../../../_sectionComponents/halaman_platform/media.section'
 import { listPlatforms } from '../../../modules/admin/platform/services/platform.service'
+import { getPublicPlatform } from '../../../modules/public/platform/services/platform.public.service.js'
+
+export async function generateMetadata({ params }) {
+  const { slug } = (await params) || {};
+  if (!slug) return {};
+  try {
+    const platform = await getPublicPlatform(slug);
+    if (!platform) return {};
+    const logoPath = '/svg/Logo-hysteria.svg';
+    const ogImage = platform.head?.images?.[0]?.src || logoPath;
+
+    return {
+      title: platform.head?.title || slug,
+      description: platform.head?.description || undefined,
+      icons: {
+        icon: logoPath,
+        shortcut: logoPath,
+        apple: logoPath,
+      },
+      openGraph: {
+        title: platform.head?.title || slug,
+        description: platform.head?.description || undefined,
+        images: [{ url: ogImage, alt: platform.head?.title || 'Hysteria' }],
+      },
+      twitter: {
+        images: [ogImage],
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 const MAINTENNACE = false
 
@@ -66,6 +98,7 @@ export default async function Page({ params }) {
 
   return (
     <main className="bg-white min-h-screen">
+      
       <HeadSection
         headline={headline}
         subHeadline={subHeadline}
@@ -74,8 +107,17 @@ export default async function Page({ params }) {
         images={images}
         multyImages={multyImages}
       />
-      <MediaSection youtubeProfile={youtubeProfile} />
-      <ListCategorySection categories={categories} />
+
+      <div className='max-w-[1800px] mx-auto px-4 mt-10'>
+        <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 text-center uppercase tracking-wider leading-tight drop-shadow-sm">Media Profile</h2>
+        <div className="mt-3 h-1 w-70 md:w-100  bg-zinc-200 rounded mx-auto" aria-hidden="true" />
+        <MediaSection youtubeProfile={youtubeProfile} />
+      </div>
+      <div className='max-w-[1800px] mx-auto px-4 mt-10'>
+        <h2 className="text-2xl md:text-3xl font-semibold text-zinc-900 text-center uppercase tracking-wider leading-tight drop-shadow-sm">Kategori Platform</h2>
+        <div className="mt-3 h-1 w-70 md:w-100 bg-zinc-200 rounded mx-auto" aria-hidden="true" />
+        <ListCategorySection categories={categories} />
+      </div>
     </main>
   )
 }

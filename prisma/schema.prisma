@@ -182,6 +182,36 @@ model CollaborationContent {
   flowSteps       Json?    @db.JsonB
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+model WebsiteInfo {
+  id              Int      @id @default(autoincrement())
+  pageKey         String   @unique @default("default") @db.VarChar(50)
+  judul           String?  @db.VarChar(255)
+  deskripsi       String?
+  deskripsiFooter String?
+  logoWebsite     String?
+  faviconWebsite  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pageKey])
+}
+
+model ContactSection {
+  id               Int      @id @default(autoincrement())
+  mapsEmbedUrl     String?  @db.Text
+  locationTitle    String?  @db.VarChar(255)
+  locationAddress  String?  @db.Text
+  operationalHours String?  @db.Text
+  whatsappNumber   String?  @db.VarChar(255)
+  instagramUrl     String?  @db.VarChar(500)
+  twitterUrl       String?  @db.VarChar(500)
+  facebookUrl      String?  @db.VarChar(500)
+  youtubeUrl       String?  @db.VarChar(500)
+  tiktokUrl        String?  @db.VarChar(500)
+  email            String?  @db.VarChar(255)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 // ====================================
@@ -231,17 +261,20 @@ model CategoryItem {
   // Metadata flexible (JSON)
   meta Json? @db.JsonB
 
-  isActive Boolean @default(true)
+  isActive      Boolean @default(true)
+  isIndependent Boolean @default(false)
 
   eventCategories    EventCategory[]
   platformCategories PlatformCategory[]
   eventOrganizers    EventOrganizer[]
   platformContents   PlatformContent[]
+  programCategories  ProgramCategory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  articles ArticleCategory[]
+  articles          ArticleCategory[]
+  programOrganizers ProgramOrganizer[]
 
   @@index([categoryId])
   @@index([parentId])
@@ -319,6 +352,22 @@ model Platform {
   @@index([slug])
 }
 
+model HomepagePlatformCard {
+  id       Int     @id @default(autoincrement())
+  title    String  @db.VarChar(255)
+  imageUrl String? @db.VarChar(500)
+  linkUrl  String? @db.VarChar(500)
+  slotType String  @default("tall") @db.VarChar(20)
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+}
+
 model PlatformCategory {
   id         Int      @id @default(autoincrement())
   platform   Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
@@ -375,12 +424,19 @@ model PlatformContent {
   categoryItem   CategoryItem? @relation(fields: [categoryItemId], references: [id], onDelete: SetNull)
   categoryItemId Int?
 
-  title    String   @db.VarChar(500)
-  url      String?  @db.VarChar(500)
-  year     Int?
-  tags     String[]             // array tag bebas, disimpan as text[]
-  order    Int      @default(0)
-  isActive Boolean  @default(true)
+  title           String   @db.VarChar(500)
+  url             String?  @db.VarChar(500)
+  instagram       String?  @db.VarChar(500)
+  youtube         String?  @db.VarChar(500)
+  prevdescription String?  @db.Text
+  description     String?  @db.Text
+  host            String?  @db.VarChar(255)
+  guests          String[] // array tamu, disimpan as text[]
+  year            Int?
+  meta            Json? // flexible metadata (JSON)
+  tags            String[] // array tag bebas, disimpan as text[]
+  order           Int      @default(0)
+  isActive        Boolean  @default(true)
 
   images PlatformContentImage[]
 
@@ -483,11 +539,14 @@ model Event {
   mapsEmbedSrc String? @db.Text
 
   // LINK
-  registerLink  String? @db.VarChar(500)
-  driveLink     String? @db.VarChar(500)
-  youtubeLink   String? @db.VarChar(500)
-  instagramLink String? @db.VarChar(500)
-  drivebukuLink String? @db.VarChar(500)
+  registerLink      String? @db.VarChar(500)
+  driveLink         String? @db.VarChar(500)
+  youtubeLink       String? @db.VarChar(500)
+  instagramLink     String? @db.VarChar(500)
+  drivebukuLink     String? @db.VarChar(500)
+  instagramLiveLink String? @db.VarChar(500)
+  tiktokLiveLink    String? @db.VarChar(500)
+  youtubeLiveLink   String? @db.VarChar(500)
 
   // PUBLISH
   isPublished Boolean @default(false)
@@ -555,6 +614,12 @@ model Article {
   excerpt       String? @db.Text
   featuredImage String? @db.VarChar(500)
 
+  // ================= FEATURED IMAGE SOURCE =================
+  featuredImageSource String? @db.VarChar(255)
+
+  // ================= REFERENCES =================
+  references Json? @db.JsonB
+
   // ================= AUTHOR (MANUAL) =================
   authorName String  @db.VarChar(255)
   editorName String? @db.VarChar(255)
@@ -585,6 +650,7 @@ model Article {
   @@index([slug])
   @@index([status])
   @@index([publishedAt])
+  @@index([status, publishedAt])
 }
 
 model ArticleCategory {
@@ -603,8 +669,9 @@ model Tag {
   name String @db.VarChar(100)
   slug String @unique @db.VarChar(100)
 
-  articles ArticleTag[]
-  events   EventTag[]
+  articles    ArticleTag[]
+  events      EventTag[]
+  programTags ProgramTag[]
 }
 
 model ArticleTag {
@@ -646,4 +713,99 @@ enum MediaType {
   IMAGE
   FILE
   EMBED
+}
+
+// ==========================================
+// MODUL PROGRAM & PODCAST
+// ==========================================
+
+enum ProgramType {
+  UMUM
+  HYSTERIA_BERKELANA
+}
+
+model Program {
+  id          Int         @id @default(autoincrement())
+  title       String
+  slug        String      @unique
+  description String      @db.Text
+  poster      String?
+  type        ProgramType @default(UMUM)
+  isPublished Boolean     @default(false)
+
+  // Jadwal & Tiket
+  startAt        DateTime?
+  endAt          DateTime?
+  isFlexibleTime Boolean   @default(false)
+  registerLink   String?
+
+  // Lokasi
+  location     String?
+  mapsEmbedSrc String? @db.Text
+
+  // Arsip & Link Eksternal
+  driveLink     String?
+  youtubeLink   String?
+  instagramLink String?
+  drivebukuLink String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi
+  programCategories ProgramCategory[]
+  programTags       ProgramTag[]
+  programOrganizers ProgramOrganizer[]
+}
+
+model Podcast {
+  id               Int      @id @default(autoincrement())
+  astonLink        String?
+  soreDiStonenLink String?
+  updatedAt        DateTime @updatedAt
+}
+
+// --- TABEL RELASI / JEMBATAN ---
+
+model ProgramCategory {
+  id             Int     @id @default(autoincrement())
+  programId      Int
+  categoryItemId Int
+  isPrimary      Boolean @default(false)
+  order          Int     @default(0)
+
+  program      Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  categoryItem CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+}
+
+model ProgramTag {
+  id        Int @id @default(autoincrement())
+  programId Int
+  tagId     Int
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+}
+
+model ProgramOrganizer {
+  id             Int @id @default(autoincrement())
+  programId      Int
+  categoryItemId Int // Mengambil data dari master CategoryItem
+
+  program      Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  categoryItem CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+}
+
+model PageProgram {
+  id       Int    @id @default(autoincrement())
+  pageSlug String @unique @default("program") @db.VarChar(100)
+
+  mainHero  Json? @db.JsonB
+  covers    Json? @db.JsonB
+  slugHeros Json? @db.JsonB
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageSlug])
 }

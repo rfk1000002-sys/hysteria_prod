@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef } from "react";
 
 const TextEditor = dynamic(
   () =>
@@ -10,11 +11,28 @@ const TextEditor = dynamic(
   { ssr: false }
 );
 
-export default function ArticleTextEditor({ value, onChange }) {
+export default function EventDescriptionEditor({ value, onChange }) {
+  const editorRef = useRef(null);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+
+    if (!editor) return;
+
+    const current = editor.getHTML();
+
+    if (value && value !== current) {
+      editor.commands.setContent(value);
+    }
+  }, [value]);
+
   return (
     <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
       <TextEditor
         content={value}
+        onCreate={({ editor }) => {
+          editorRef.current = editor;
+        }}
         onUpdate={({ editor }) => onChange(editor.getHTML())}
       />
     </div>

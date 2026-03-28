@@ -1,39 +1,14 @@
 import { prisma } from "@/lib/prisma";
 
-export async function findArticles({ status }) {
+/**
+ * Find all articles
+ */
+export async function findAllArticles(where, orderBy, skip = 0, take = 10) {
   return prisma.article.findMany({
-    where: {
-      isDeleted: false,
-      ...(status && { status }),
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      categories: {
-        include: {
-          category: {
-            select: {
-              id: true,
-              title: true,
-            },
-          },
-        },
-      },
-    },
-  });
-}
-
-export async function createArticle(tx, data) {
-  return tx.article.create({
-    data,
-  });
-}
-
-export async function findById(id) {
-  return prisma.article.findFirst({
-    where: {
-      id,
-      isDeleted: false,
-    },
+    where,
+    orderBy,
+    skip,
+    take,
     include: {
       categories: {
         include: {
@@ -49,13 +24,62 @@ export async function findById(id) {
   });
 }
 
-export async function findBySlug(slug) {
+/**
+ * Find by ID
+ */
+export async function findArticleById(id) {
+  return prisma.article.findFirst({
+    where: {
+      id,
+      isDeleted: false,
+    },
+    include: {
+      categories: { include: { category: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+}
+
+/**
+ * Find by slug
+ */
+export async function findArticleBySlug(slug) {
   return prisma.article.findUnique({
     where: { slug },
   });
 }
 
-export async function softDeleteById(id) {
+/**
+ * Create article (transaction)
+ */
+export async function createArticle(tx, data) {
+  return tx.article.create({ data });
+}
+
+/**
+ * Update article
+ */
+export async function updateArticle(id, data) {
+  return prisma.article.update({
+    where: { id },
+    data,
+  });
+}
+
+/**
+ * Update featured image
+ */
+export async function updateFeaturedImage(id, url) {
+  return prisma.article.update({
+    where: { id },
+    data: { featuredImage: url },
+  });
+}
+
+/**
+ * Soft delete
+ */
+export async function softDeleteArticle(id) {
   return prisma.article.update({
     where: { id },
     data: { isDeleted: true },

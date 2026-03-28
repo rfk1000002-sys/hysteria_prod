@@ -1,71 +1,32 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getPublicArticles } from "@/modules/public/articles/services/article.public.service";
 
 export async function GET(req) {
   try {
+
     const { searchParams } = new URL(req.url);
 
-    const search = searchParams.get("search");
-    const category = searchParams.get("category");
-    const sort = searchParams.get("sort");
+    const params = {
+      search: searchParams.get("search") || "",
+      category: searchParams.get("category") || "all",
+      sort: searchParams.get("sort") || "newest",
+      page: Number(searchParams.get("page") || 1),
+      limit: Number(searchParams.get("limit") || 10),
+    };
 
-    // ================= SORTING LOGIC =================
-    let orderBy = { createdAt: "desc" }; // default: terbaru
+    const result = await getPublicArticles(params);
 
-    if (sort === "oldest") {
-      orderBy = { createdAt: "asc" };
-    }
-
-    if (sort === "az") {
-      orderBy = { title: "asc" };
-    }
-
-    if (sort === "za") {
-      orderBy = { title: "desc" };
-    }
-
-    // ================= QUERY =================
-    const articles = await prisma.article.findMany({
-      where: {
-        isDeleted: false,
-        status: "PUBLISHED",
-
-        ...(search && {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { authorName: { contains: search, mode: "insensitive" } },
-          ],
-        }),
-
-        ...(category &&
-          category !== "all" && {
-            categories: {
-              some: {
-                category: {
-                  title: category, // kalau mau lebih stabil bisa pakai slug
-                },
-              },
-            },
-          }),
-      },
-
-      include: {
-        categories: {
-          include: {
-            category: true,
-          },
-        },
-      },
-
-      orderBy,
+    return NextResponse.json({
+      success: true,
+      ...result,
     });
 
-    return NextResponse.json({ data: articles });
   } catch (error) {
-    console.error("API ERROR:", error);
+
+    console.error("ARTICLE API ERROR:", error);
 
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { success: false, error: "Internal Server Error" },
       { status: 500 }
     );
   }

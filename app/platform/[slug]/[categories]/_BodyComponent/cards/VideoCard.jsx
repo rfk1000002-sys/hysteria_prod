@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 /**
@@ -6,8 +9,11 @@ import Image from "next/image";
  * Props:
  *   src   : string  — URL YouTube atau path gambar lokal
  *   alt   : string
- *   title : string
- *   badge : string  — teks badge pojok kiri atas (opsional)
+  *   title : string
+  *   description : string — deskripsi singkat (opsional)
+   *   badge : string  — teks badge pojok kiri atas (opsional)
+   *   host : string — nama host (opsional)
+   *   guests : string[] — daftar nama tamu (opsional)
  */
 
 function extractYouTubeId(url) {
@@ -23,11 +29,28 @@ function extractYouTubeId(url) {
   return null;
 }
 
-export default function VideoCard({ src, alt, title, badge }) {
-  const ytId    = extractYouTubeId(src);
-  const imgSrc  = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : (src || "/image/video.webp");
-  const linkHref = ytId ? `https://www.youtube.com/watch?v=${ytId}` : (typeof src === "string" ? src : null);
-  const isLocal = imgSrc.startsWith("/");
+export default function VideoCard({ imageUrl, youtube, url, alt, title, tags, prevdescription, host, guests, timestamp }) {
+  const sourceForId = youtube || url || imageUrl;
+  const ytId = extractYouTubeId(sourceForId);
+  
+  const bestYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : null;
+  const backupYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
+  const initialImgSrc = ytId ? bestYtImg : (imageUrl || url || "/image/video.webp");
+
+  const [imgSrc, setImgSrc] = useState(initialImgSrc);
+
+  useEffect(() => {
+    setImgSrc(initialImgSrc);
+  }, [initialImgSrc]);
+
+  const handleImageError = () => {
+    if (ytId && imgSrc === bestYtImg) {
+      setImgSrc(backupYtImg);
+    }
+  };
+
+  const linkHref = youtube ? (youtube.includes("watch") ? youtube : (`https://www.youtube.com/watch?v=${ytId}`)) : (url || null);
+  const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
   const Wrapper = linkHref ? "a" : "div";
   const wrapperProps = linkHref
@@ -37,17 +60,18 @@ export default function VideoCard({ src, alt, title, badge }) {
   return (
     <Wrapper
       {...wrapperProps}
-      className="group relative w-full overflow-hidden rounded-xl bg-zinc-100 border border-zinc-300 cursor-pointer block"
+      className="bg-white group relative flex flex-col h-full w-full overflow-hidden rounded-lg border border-zinc-300 cursor-pointer shadow-xl transform transition-transform duration-300 hover:-translate-y-4 hover:shadow-xl hover:border-pink-500"
     >
       {/* Thumbnail 16:9 */}
-      <div className="relative w-full aspect-video">
+      <div className="relative w-full aspect-video flex-shrink-0 bg-zinc-200">
         <Image
           src={imgSrc}
           alt={alt || title || "Video"}
           fill
+          onError={handleImageError}
           unoptimized={!isLocal}
-          sizes="(max-width:640px) 80vw, 300px"
-          className="object-cover brightness-90 transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width:640px) 90vw, (max-width:1024px) 280px, 320px"
+          className="object-cover brightness-90 transition-transform duration-300"
         />
 
         {/* Dark scrim */}
@@ -61,21 +85,50 @@ export default function VideoCard({ src, alt, title, badge }) {
             </svg>
           </div>
         </div>
-
-        {/* Badge */}
-        {badge && (
-          <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">
-            {badge}
-          </span>
-        )}
       </div>
 
-      {/* Judul */}
-      {title && (
-        <div className="px-2 py-2">
-          <p className="text-zinc-800 text-sm font-medium leading-tight line-clamp-2">{title}</p>
+      <div className="px-2.5 md:px-3 py-1.5 md:py-2 pt-2 gap-1 flex flex-col flex-grow">
+        {/* Judul */}
+        {title && (
+          <div className="flex-shrink-0"> 
+            <p className="font-lato text-zinc-800 text-[13px] md:text-[14px] font-semibold leading-tight line-clamp-2">{title}</p>
+          </div>
+        )}
+
+        {/* Deskripsi */}
+        {prevdescription && (
+          <div className="flex-shrink-0">
+            <p className="text-zinc-500 text-[12px] leading-4 line-clamp-4">{prevdescription}</p>
+          </div>
+        )}
+
+        {/* Host & Guests */}
+        <div className="flex-shrink-0">
+          <p className="text-[10px] truncate">
+            <span style={{ color: "#E83C91" }} className="mr-1">Host:</span>
+            <span className="text-zinc-900 font-bold">{host || "-"}</span>
+          </p>
+
+          <p className="text-[10px] pt-1 pb-1 line-clamp-2 md:line-clamp-3">
+              <span style={{ color: "#E83C91" }} className="mr-1">Guests:</span>
+              <span className="text-zinc-900 font-bold break-words">{(guests && guests.length) ? guests.join(", ") : "-"}</span>
+            </p>
         </div>
-      )}
+
+        {/* tags list (render only when tags exist) */}
+        {/* {tags && tags.length > 0 && (
+          <div className="px-3 pb-3 md:px-4 md:pb-4 flex-shrink-0">
+            <div className="flex flex-wrap gap-1">
+              <span style={{ color: "#E83C91" }} className="mr-1 text-xs">Tags:</span>
+              {tags.map((t, idx) => (
+                <span key={idx} className="text-xs text-white bg-gradient-to-r from-pink-500 to-orange-900 rounded-full px-2">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        )} */}
+      </div>
     </Wrapper>
   );
 }

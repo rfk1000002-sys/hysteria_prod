@@ -8,7 +8,9 @@ import Heading from "@tiptap/extension-heading";
 
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit";
-import { Image } from "@tiptap/extension-image";
+// import { Image } from "@tiptap/extension-image";
+import { CustomImage } from "@/components/tiptap-node/custom-image/custom-image-extension";
+import ImageCaptionSource from "@/components/tiptap-ui/image-caption-source/image-caption-source";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Typography } from "@tiptap/extension-typography";
@@ -221,7 +223,8 @@ export function SimpleEditor({ content, onUpdate }: any) {
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      // Image,
+      CustomImage,
       Typography,
       Superscript,
       Subscript,
@@ -229,7 +232,14 @@ export function SimpleEditor({ content, onUpdate }: any) {
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,
         limit: 3,
-        upload: handleImageUpload,
+
+        HTMLAttributes: {},
+
+        upload: async (file) => {
+          const url = await handleImageUpload(file);
+          return url;
+        },
+
         onError: (error) => console.error("Upload failed:", error),
       }),
       DragHandle.configure({
@@ -333,6 +343,7 @@ export function SimpleEditor({ content, onUpdate }: any) {
           role="presentation"
           className="simple-editor-content"
         />
+        {editor && <ImageCaptionSource />}
       </EditorContext.Provider>
     </div>
   );
