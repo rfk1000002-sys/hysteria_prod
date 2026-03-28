@@ -6,6 +6,20 @@ import {
   upsertAdminCollaborationContent,
 } from "../../../../modules/admin/collaboration/index.js";
 
+function mapPrismaRouteError(error) {
+  const code = error?.code;
+
+  if (code === "P2021") {
+    return new AppError("Collaboration content table is not available. Please run Prisma migrations.", 500);
+  }
+
+  if (code === "P2022") {
+    return new AppError("Collaboration content schema is out of sync. Please run Prisma migrations.", 500);
+  }
+
+  return null;
+}
+
 export async function GET(request) {
   try {
     await requireAuthWithPermission(request, ["tentang.read"]);
@@ -13,6 +27,10 @@ export async function GET(request) {
     return respondSuccess({ collaboration }, 200);
   } catch (error) {
     logger.error("Error fetching admin collaboration content", { error: error && (error.stack || error.message || error) });
+
+    const prismaError = mapPrismaRouteError(error);
+    if (prismaError) return respondError(prismaError);
+
     if (error instanceof AppError) return respondError(error);
     return respondError(new AppError("Failed to fetch collaboration content", 500));
   }
@@ -26,6 +44,10 @@ export async function PUT(request) {
     return respondSuccess({ collaboration }, 200);
   } catch (error) {
     logger.error("Error saving admin collaboration content", { error: error && (error.stack || error.message || error) });
+
+    const prismaError = mapPrismaRouteError(error);
+    if (prismaError) return respondError(prismaError);
+
     if (error instanceof AppError) return respondError(error);
     return respondError(new AppError("Failed to save collaboration content", 500));
   }
