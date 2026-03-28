@@ -169,6 +169,21 @@ model PageHero {
   @@index([pageSlug])
 }
 
+model CollaborationContent {
+  id              Int      @id @default(autoincrement())
+  pageKey         String   @unique @db.VarChar(100)
+  googleFormUrl   String   @db.Text
+  whatsappNumber  String   @db.VarChar(30)
+  whatsappMessage String   @db.Text
+  heroSubHeadline String?  @db.Text
+  heroNotes       String?  @db.Text
+  whyBenefits     Json?    @db.JsonB
+  schemes         Json?    @db.JsonB
+  flowSteps       Json?    @db.JsonB
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 // ====================================
 // NAVIGASI & KATEGORI
 // ====================================
