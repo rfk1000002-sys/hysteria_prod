@@ -8,7 +8,7 @@ import { getEventStatus } from "../../lib/event-status";
 import { useDebounce } from "../../hooks/use-debounce";
 import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 30;
 
 export default function EventsPage() {
   const router = useRouter();
@@ -165,7 +165,7 @@ export default function EventsPage() {
       ) : (
         <>
           {/* GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {paginatedEvents.map((event) => {
               const isFinished = event.status === "FINISHED";
 
@@ -239,7 +239,6 @@ export default function EventsPage() {
                         if (isFinished) return;
                         e.preventDefault();
                         e.stopPropagation();
-                        window.open(event.registerLink, "_blank");
                       }}
                       disabled={isFinished}
                       className={`mt-2 flex items-center justify-center w-full sm:w-[140px] h-[35px] rounded-[8px] text-[12px] font-medium shadow transition
@@ -288,14 +287,14 @@ export default function EventsPage() {
                         <button
                           key={1}
                           onClick={() => setPage(1)}
-                          className="hover:scale-110 transition"
+                          className="hover:scale-110 transition text-[var(--Color-3)]"
                         >
                           1
                         </button>
                       );
                       if (start > 2) {
                         pages.push(
-                          <span key="start-ellipsis" className="opacity-70">
+                          <span key="start-ellipsis" className="opacity-70 text-[var(--Color-3)]">
                             ...
                           </span>
                         );
@@ -324,7 +323,7 @@ export default function EventsPage() {
                     if (end < totalPages) {
                       if (end < totalPages - 1) {
                         pages.push(
-                          <span key="end-ellipsis" className="opacity-70">
+                          <span key="end-ellipsis" className="opacity-70 text-[var(--Color-3)]">
                             ...
                           </span>
                         );
@@ -333,7 +332,7 @@ export default function EventsPage() {
                         <button
                           key={totalPages}
                           onClick={() => setPage(totalPages)}
-                          className="hover:scale-110 transition"
+                          className="hover:scale-110 transition text-[var(--Color-3)]"
                         >
                           {totalPages}
                         </button>

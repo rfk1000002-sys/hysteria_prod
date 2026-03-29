@@ -1,10 +1,13 @@
-  "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { AuthProvider } from "../../../lib/context/auth-context.jsx";
+import React from "react";
 
 import AdminTopbar from "./AdminTopbar.jsx";
 import AdminSidebar from "./AdminSidebar.jsx";
+
+import DashboardPage from "../page.jsx";
 
 // users
 import Users from "../users/user_management/page.jsx";
@@ -44,26 +47,26 @@ import CreateProgramPage from "@/app/admin/programs/create/page.jsx";
 import CreateHysteriaPage from "@/app/admin/programs/create-hysteria/page.jsx";
 import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
 
-  export default function AdminShell({ children }) {
-    const [open, setOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(true);
-    const [currentView, setCurrentView] = useState("dashboard");
+export default function AdminShell({ children }) {
+  const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const [currentView, setCurrentView] = useState("dashboard");
 
-    useEffect(() => {
-      function onKey(e) {
-        if (e.key === "Escape") setOpen(false);
-      }
-      window.addEventListener("keydown", onKey);
-      return () => window.removeEventListener("keydown", onKey);
-    }, []);
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-    const handleNavigate = (view) => {
-      setCurrentView(view);
-      setOpen(false); // Close mobile sidebar after navigation
-    };
+  const handleNavigate = (view) => {
+    setCurrentView(view);
+    setOpen(false); // Close mobile sidebar after navigation
+  };
 
-    const pathname = usePathname();
-    const isDashboard = pathname === "/admin";
+  const pathname = usePathname();
+  const isDashboard = pathname === "/admin";
 
   const renderContent = () => {
     switch (currentView) {
@@ -86,7 +89,7 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
         return <PageLakiMasak />;
       case "category":
         return <CategoriesPage />;
-      case "page.program":           
+      case "page.program":
         return <PageProgram />;
 
       case "platform":
@@ -125,14 +128,14 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
         return <ProgramPage />;
       case "program.tambah_postingan":
         return <CreateProgramPage />;
-        case "program.tambah_hysteria_berkelana":
+      case "program.tambah_hysteria_berkelana":
         return <CreateHysteriaPage />;
       case "program.edit_podcast":
         return <EditPodcastPage />;
 
       case "dashboard":
       default:
-        return children;
+        return <DashboardPage onNavigate={handleNavigate} />;
     }
   };
 
@@ -140,7 +143,9 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100 justify-center">
         <div className="lg:flex lg:items-start lg:justify-start">
-          <aside className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}>
+          <aside
+            className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
+          >
             <AdminSidebar
               collapsed={collapsed}
               onClose={() => setOpen(false)}
@@ -151,36 +156,38 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
             />
           </aside>
 
-            <div className="flex flex-1 flex-col min-h-screen">
-              <div className="border-b border-zinc-200 bg-white">
-                <AdminTopbar onOpenSidebar={() => setOpen(true)} />
-              </div>
+          <div className="flex flex-1 flex-col min-h-screen">
+            <div className="border-b border-zinc-200 bg-white">
+              <AdminTopbar onOpenSidebar={() => setOpen(true)} />
+            </div>
 
-            <main className="flex-1 w-full px-6 py-8">{isDashboard ? renderContent() : children}</main>
+            <main className="flex-1 w-full px-6 py-8">
+              {isDashboard ? renderContent() : children}
+            </main>
           </div>
 
-            {open && (
-              <div className="fixed inset-0 z-50 flex">
-                <div
-                  className="fixed inset-0 bg-black/40"
-                  onClick={() => setOpen(false)}
-                />
-                <div className="relative w-80 bg-white shadow-xl h-screen">
-                  <div className="h-screen">
-                    <AdminSidebar
-                      open={open}
-                      onClose={() => setOpen(false)}
-                      collapsed={false}
-                      onToggleCollapse={() => setCollapsed((s) => !s)}
-                      onNavigate={handleNavigate}
-                      currentView={currentView}
-                    />
-                  </div>
+          {open && (
+            <div className="fixed inset-0 z-50 flex">
+              <div
+                className="fixed inset-0 bg-black/40"
+                onClick={() => setOpen(false)}
+              />
+              <div className="relative w-80 bg-white shadow-xl h-screen">
+                <div className="h-screen">
+                  <AdminSidebar
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    collapsed={false}
+                    onToggleCollapse={() => setCollapsed((s) => !s)}
+                    onNavigate={handleNavigate}
+                    currentView={currentView}
+                  />
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      </AuthProvider>
-    );
-  }
+      </div>
+    </AuthProvider>
+  );
+}

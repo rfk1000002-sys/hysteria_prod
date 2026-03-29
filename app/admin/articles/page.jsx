@@ -2,17 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Card from "../../../components/ui/Card";
-import DataTable from "../../../components/ui/DataTable";
-
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import TableAdmin from "@/components/adminUI/Table";
 
 export default function ArticlesPage({ onNavigate }) {
   const router = useRouter();
 
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [view, setView] = useState("list");
+  const [selectedId, setSelectedId] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [meta, setMeta] = useState({
     page: 1,
     totalPages: 1,
@@ -31,7 +31,9 @@ export default function ArticlesPage({ onNavigate }) {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // debounce search
+  //////////////////////////////////////////////////////
+  // SEARCH DEBOUNCE
+  //////////////////////////////////////////////////////
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput);
@@ -41,6 +43,9 @@ export default function ArticlesPage({ onNavigate }) {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  //////////////////////////////////////////////////////
+  // FETCH CATEGORY
+  //////////////////////////////////////////////////////
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -58,6 +63,9 @@ export default function ArticlesPage({ onNavigate }) {
     fetchCategories();
   }, []);
 
+  //////////////////////////////////////////////////////
+  // FETCH ARTICLE
+  //////////////////////////////////////////////////////
   const fetchArticles = async () => {
     try {
       setLoading(true);
@@ -72,9 +80,7 @@ export default function ArticlesPage({ onNavigate }) {
 
       const res = await fetch(`/api/admin/articles?${params}`);
 
-      if (!res.ok) {
-        throw new Error("Gagal mengambil data artikel");
-      }
+      if (!res.ok) throw new Error("Gagal mengambil data artikel");
 
       const json = await res.json();
 
@@ -92,6 +98,9 @@ export default function ArticlesPage({ onNavigate }) {
     fetchArticles();
   }, [page, search, typeFilter, statusFilter]);
 
+  //////////////////////////////////////////////////////
+  // DELETE
+  //////////////////////////////////////////////////////
   const handleDelete = async (id) => {
     if (!confirm("Yakin ingin menghapus artikel ini?")) return;
 
@@ -102,208 +111,219 @@ export default function ArticlesPage({ onNavigate }) {
     fetchArticles();
   };
 
+  const handleEdit = async (id) => {
+  try {
+    setLoadingEdit(true);
+
+    const res = await fetch(`/api/admin/events/${id}`);
+    const data = await res.json();
+
+    setSelectedEventId(id);
+    setEditData(data);
+
+    // pindah view SETELAH data siap
+    setView("edit");
+  } catch (err) {
+    console.error("Gagal ambil data edit", err);
+  } finally {
+    setLoadingEdit(false);
+  }
+};
+
+  //////////////////////////////////////////////////////
+  // TABLE COLUMN (TIDAK DIUBAH)
+  //////////////////////////////////////////////////////
   const columns = [
     {
-      field: "thumbnail",
-      headerName: "",
-      width: 90,
-      render: (row) => (
-        <div className="w-14 h-14 rounded-md overflow-hidden bg-zinc-100">
-          {row.thumbnail ? (
-            <img
-              src={row.thumbnail}
-              alt={row.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-xs text-zinc-400">
-              No Image
-            </div>
-          )}
-        </div>
-      ),
-    },
-
-    {
-      field: "title",
-      headerName: "Judul",
-      width: 320,
-      render: (row) => (
-        <p className="font-semibold text-zinc-800">{row.title}</p>
-      ),
-    },
-
-    {
-      field: "status",
-      headerName: "Status",
-      width: 150,
+      key: "thumbnail",
+      label: "Thumbnail",
       align: "center",
-      render: (row) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            row.status === "PUBLISHED"
-              ? "bg-emerald-100 text-emerald-700"
-              : row.status === "DRAFT"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-blue-100 text-blue-700"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
-    },
-
-    {
-      field: "categories",
-      headerName: "Kategori",
-      width: 250,
       render: (row) => {
-        if (!row.categories || row.categories.length === 0) {
-          return "-";
-        }
+        const image =
+          row.featuredImage ||
+          row.thumbnail ||
+          row.image ||
+          row.media?.[0]?.url;
 
         return (
-          <div className="flex flex-wrap gap-1">
-            {row.categories.map((cat) => (
-              <span
-                key={cat.id}
-                className="px-2 py-1 bg-pink-100 text-pink-700 text-xs rounded-md"
-              >
-                {cat.title}
-              </span>
-            ))}
+          <div className="flex justify-center">
+            {image ? (
+              <img
+                src={
+                  image.startsWith("http")
+                    ? image
+                    : `http://localhost:3000${image}`
+                }
+                className="w-16 h-16 object-cover rounded"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-xs text-gray-400 rounded">
+                No Image
+              </div>
+            )}
           </div>
         );
       },
     },
-
     {
-      field: "views",
-      headerName: "Views",
-      width: 50,
+      key: "title",
+      label: "Judul",
+      render: (row) => (
+        <p className="font-medium text-black line-clamp-2">{row.title}</p>
+      ),
+    },
+    {
+      key: "categories",
+      label: "Kategori",
       align: "center",
       render: (row) => (
-        <div className="flex items-center justify-center gap-1 text-zinc-700">
-          <span>👁</span>
-          <span className="font-semibold">
-            {row.views?.toLocaleString("id-ID") || 0}
-          </span>
+        <div className="flex flex-wrap justify-center gap-1">
+          {row.categories?.map((cat) => (
+            <span
+              key={cat.id}
+              className="px-2 py-1 text-xs rounded bg-pink-100 text-pink-700"
+            >
+              {cat.title}
+            </span>
+          ))}
         </div>
       ),
     },
-
     {
-      field: "actions",
-      headerName: "Aksi",
-      width: 120,
+      key: "views",
+      label: "Views",
+      align: "center",
+      render: (row) => <>👁 {row.views || 0}</>,
+    },
+    {
+      key: "status",
+      label: "Status",
+      align: "center",
+      render: (row) => {
+        const statusStyle = {
+          DRAFT: "bg-yellow-100 text-yellow-700",
+          PUBLISHED: "bg-emerald-100 text-emerald-700",
+          SCHEDULED: "bg-gray-200 text-gray-700",
+        };
+
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              statusStyle[row.status]
+            }`}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      label: "Action",
       align: "center",
       render: (row) => (
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-center gap-2">
           <button
             onClick={() => router.push(`/admin/articles/${row.id}/edit`)}
-            className="text-blue-600 hover:text-blue-800 transition"
+            className="bg-[#413153] hover:bg-[#2d2239] text-white px-3 py-1 rounded text-xs"
           >
-            <EditIcon fontSize="small" />
+            Edit
           </button>
 
           <button
             onClick={() => handleDelete(row.id)}
-            className="text-red-600 hover:text-red-800 transition"
+            className="bg-[#E83C91] hover:bg-[#c22e75] text-white px-3 py-1 rounded text-xs"
           >
-            <DeleteIcon fontSize="small" />
+            Hapus
           </button>
         </div>
       ),
     },
   ];
 
+  //////////////////////////////////////////////////////
+  // UI
+  //////////////////////////////////////////////////////
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-4xl font-bold text-zinc-900">Artikel</h1>
-          <p className="text-sm text-zinc-600 mt-1">
-            Kelola semua artikel dan konten website.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between">
-          {/* SEARCH + FILTER */}
-          <div className="flex gap-6">
-            {/* SEARCH */}
-            <input
-              type="text"
-              placeholder="Cari artikel..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="px-4 py-2 border rounded-xl w-[220px] 
-      text-black placeholder:text-black"
-            />
-
-            {/* Jenis Artikel */}
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setPage(1);
-              }}
-              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
-            >
-              <option value="">Jenis Artikel</option>
-
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.title}>
-                  {cat.title}
-                </option>
-              ))}
-            </select>
-
-            {/* Status */}
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="min-w-[180px] px-4 py-2 border rounded-xl text-black"
-            >
-              <option value="">Semua Status</option>
-              <option value="DRAFT">Draft</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="SCHEDULED">Scheduled</option>
-            </select>
-          </div>
-
-          {/* BUTTON */}
-          <button
-            onClick={() => onNavigate("article.create")}
-            className="px-6 py-3 rounded-xl bg-[#4B3D52] text-white 
-    text-sm font-semibold shadow-md
-    hover:shadow-lg hover:-translate-y-0.5
-    active:translate-y-0 active:shadow-sm
-    transition-all duration-200"
-          >
-            Tambah Konten
-          </button>
-        </div>
+    <div className="p-6 min-h-screen bg-white space-y-6 rounded-lg shadow-sm">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-bold text-black">Artikel</h1>
+        <p className="text-gray-600 mt-1">
+          Kelola semua artikel dan konten website.
+        </p>
       </div>
 
-      <Card>
-        {error && <div className="p-4 text-sm text-red-600">{error}</div>}
+      {/* TOOLBAR */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          <input
+            type="text"
+            placeholder="Cari artikel..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:w-[220px]
+      focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm"
+          />
 
-        <DataTable
-          columns={columns}
-          rows={articles}
-          loading={loading}
-          getRowId={(row) => row.id}
-        />
+          <select
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPage(1);
+            }}
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
+      focus:ring-2 focus:ring-pink-500 bg-white shadow-sm"
+          >
+            <option value="">Jenis Artikel</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.title}>
+                {cat.title}
+              </option>
+            ))}
+          </select>
 
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-6">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
+      focus:ring-2 focus:ring-pink-500 bg-white shadow-sm"
+          >
+            <option value="">Semua Status</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+            <option value="SCHEDULED">Scheduled</option>
+          </select>
+        </div>
+
+        <button
+          onClick={() => onNavigate("article.create")}
+          className="hover:bg-[#2d2239]
+    px-4 py-2 bg-pink-600 text-white rounded-lg
+    transition-colors shadow-sm
+    w-full md:w-auto"
+        >
+          + Tambah Artikel
+        </button>
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white overflow-hidden">
+        {error && <div className="p-4 text-red-600">{error}</div>}
+
+        <TableAdmin columns={columns} data={articles} loading={loading} />
+
+        {/* PAGINATION FIX */}
+        <div className="flex justify-between items-center p-4 border-t border-gray-200">
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700
+            bg-white hover:bg-gray-100 transition
+            disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Prev
           </button>
@@ -315,12 +335,14 @@ export default function ArticlesPage({ onNavigate }) {
           <button
             disabled={page === meta.totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-40"
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700
+            bg-white hover:bg-gray-100 transition
+            disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Next
           </button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
