@@ -44,16 +44,15 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
         (b?.title || "").localeCompare(a?.title || "", "id"),
       );
     } else if (sortBy === "latest" || sortBy === "oldest") {
-      const hasYear = sorted.some((x) => Number.isFinite(Number(x?.year)));
-      if (hasYear) {
-        sorted.sort((a, b) => {
-          const ay = Number(a?.year) || 0;
-          const by = Number(b?.year) || 0;
-          return sortBy === "latest" ? by - ay : ay - by;
-        });
-      } else if (sortBy === "latest") {
-        sorted.reverse();
-      }
+      sorted.sort((a, b) => {
+        const timeA = a?.createdAt
+          ? new Date(a.createdAt).getTime()
+          : Number(a?.year) || 0;
+        const timeB = b?.createdAt
+          ? new Date(b.createdAt).getTime()
+          : Number(b?.year) || 0;
+        return sortBy === "latest" ? timeB - timeA : timeA - timeB;
+      });
     }
 
     return sorted;
@@ -78,7 +77,7 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12 max-w-[1920px]">
+      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex h-12 flex-1 items-center rounded-full border border-[#ec3f94] bg-white px-4 shadow-sm sm:h-16 sm:px-6">
             <input
@@ -110,12 +109,12 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
             {openFilter && (
               <div className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
                 <FilterButton
-                  label="Podcast terbaru"
+                  label="Terbaru"
                   active={sortBy === "latest"}
                   onClick={() => applySort("latest")}
                 />
                 <FilterButton
-                  label="Podcast terlama"
+                  label="Terlama"
                   active={sortBy === "oldest"}
                   onClick={() => applySort("oldest")}
                 />
@@ -143,7 +142,7 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
             {pagedItems.map((episode, idx) => (
-              <LazyItem key={`${selectedSub.slug}-${cursor}-${idx}`}>
+              <LazyItem key={episode.id || `${selectedSub.slug}-${cursor}-${idx}`}>
                 <AnitalkEpisodeCard episode={episode} index={cursor + idx} />
               </LazyItem>
             ))}
@@ -203,9 +202,15 @@ function AnitalkEpisodeCard({ episode, index }) {
 
   const sourceForId = episode.youtube || episode.url || episode.imageUrl;
   const ytId = extractYouTubeId(sourceForId);
-  const bestYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : null;
-  const backupYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
-  const initialImgSrc = ytId ? bestYtImg : (episode.imageUrl || episode.src || "/image/video.webp");
+  const bestYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    : null;
+  const backupYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+    : null;
+  const initialImgSrc = ytId
+    ? bestYtImg
+    : episode.imageUrl || episode.src || "/image/video.webp";
 
   const [imgSrc, setImgSrc] = useState(initialImgSrc);
 
@@ -221,7 +226,7 @@ function AnitalkEpisodeCard({ episode, index }) {
 
   const content = (
     <>
-      <div className="aspect-video relative w-full flex-shrink-0 bg-black flex items-center justify-center">
+      <div className="aspect-video relative w-full shrink-0 bg-black flex items-center justify-center">
         <Image
           src={imgSrc}
           alt={episode.alt || episode.title || "Episode"}
@@ -260,7 +265,7 @@ function AnitalkEpisodeCard({ episode, index }) {
           <div className="flex gap-x-1 items-start min-w-0">
             <span className="font-semibold shrink-0">Podcaster</span>
             <span className="text-gray-400 shrink-0">:</span>
-            <span className="flex-1 line-clamp-2 md:line-clamp-3 break-words min-w-0">
+            <span className="flex-1 line-clamp-2 md:line-clamp-3 wrap-break-words min-w-0">
               {episode.guests?.join(", ") || "-"}
             </span>
           </div>
@@ -304,7 +309,7 @@ function LazyItem({ children, rootMargin = "200px" }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin }
+      { threshold: 0.1, rootMargin },
     );
     obs.observe(el);
     return () => obs.disconnect();

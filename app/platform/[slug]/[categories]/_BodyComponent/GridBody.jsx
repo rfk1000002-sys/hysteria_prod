@@ -12,10 +12,19 @@ import SortMenu from "@/components/ui/SortMenu";
 const DEFAULT_ITEMS_PER_PAGE = 10; // default: 5 kolom × 2 baris
 
 const STATUS_OPTIONS = [
-  { label: "Semua",               style: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" },
-  { label: "Akan Berlangsung",    style: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
-  { label: "Sedang Berlangsung",  style: "bg-green-50 text-green-600 hover:bg-green-100" },
-  { label: "Telah Berakhir",      style: "bg-zinc-200 text-zinc-500 hover:bg-zinc-300" },
+  { label: "Semua", style: "bg-zinc-100 text-zinc-600 hover:bg-zinc-200" },
+  {
+    label: "Akan Berlangsung",
+    style: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+  },
+  {
+    label: "Sedang Berlangsung",
+    style: "bg-green-50 text-green-600 hover:bg-green-100",
+  },
+  {
+    label: "Telah Berakhir",
+    style: "bg-zinc-200 text-zinc-500 hover:bg-zinc-300",
+  },
 ];
 
 export default function GridBody({
@@ -83,10 +92,15 @@ export default function GridBody({
 
     // Filter by tag — check sub-category slug(s) first, then tag names (with slug normalization)
     if (activeFilter !== "Semua") {
-      result = result.filter((item) =>
-        item.tag === activeFilter ||
-        (Array.isArray(item.tagSlugs) && item.tagSlugs.includes(activeFilter)) ||
-        (Array.isArray(item.tags) && item.tags.some((t) => t === activeFilter || toSlug(t) === activeFilter))
+      result = result.filter(
+        (item) =>
+          item.tag === activeFilter ||
+          (Array.isArray(item.tagSlugs) &&
+            item.tagSlugs.includes(activeFilter)) ||
+          (Array.isArray(item.tags) &&
+            item.tags.some(
+              (t) => t === activeFilter || toSlug(t) === activeFilter,
+            )),
       );
     }
 
@@ -102,7 +116,9 @@ export default function GridBody({
         (item) =>
           (item.title || "").toLowerCase().includes(q) ||
           (item.subtitle || "").toLowerCase().includes(q) ||
-          (Array.isArray(item.tags) ? item.tags.join(" ") : (item.tag || "")).toLowerCase().includes(q),
+          (Array.isArray(item.tags) ? item.tags.join(" ") : item.tag || "")
+            .toLowerCase()
+            .includes(q),
       );
     }
 
@@ -243,7 +259,11 @@ export default function GridBody({
                 strokeWidth={1.5}
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 15m0 0l3.75 3.75M17.25 15l3.75-3.75M17.25 15H9" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 15m0 0l3.75 3.75M17.25 15l3.75-3.75M17.25 15H9"
+                />
               </svg>
             </button>
           </Tooltip>
@@ -271,7 +291,7 @@ export default function GridBody({
               onClick={() => handleFilterChange(f)}
               className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
                 activeFilter === f
-                  ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow cursor-pointer"
+                  ? "bg-linear-to-r from-pink-500 to-orange-400 text-white shadow cursor-pointer"
                   : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 cursor-pointer"
               }`}
             >
@@ -293,7 +313,7 @@ export default function GridBody({
               onClick={() => handleStatusChange(label)}
               className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors cursor-pointer ${
                 activeStatus === label
-                  ? "bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow"
+                  ? "bg-linear-to-r from-pink-500 to-orange-400 text-white shadow"
                   : style
               }`}
             >
@@ -312,6 +332,7 @@ export default function GridBody({
             <LazyItem key={i}>
               {isKomikRamuan ? (
                 <KomikRamuanCard
+                  id={item.id}
                   imageUrl={item.imageUrl || item.src || item.thumbnail}
                   alt={item.alt}
                   year={item.year || item.meta || item.date}
@@ -323,6 +344,7 @@ export default function GridBody({
               ) : item.meta === "mockup" ? (
                 // ini untuk mockup view
                 <MockUpPosterCard
+                  id={item.id}
                   imageUrl={item.imageUrl}
                   alt={item.alt}
                   year={item.year}
@@ -334,6 +356,7 @@ export default function GridBody({
               ) : item.meta === "video" ? (
                 // ini untuk homecooked view
                 <VideoCard
+                  id={item.id}
                   imageUrl={item.imageUrl || item.src}
                   youtube={item.youtube}
                   url={item.url}
@@ -345,6 +368,7 @@ export default function GridBody({
                 />
               ) : (
                 <PosterCard
+                  id={item.id}
                   imageUrl={item.imageUrl || item.src}
                   alt={item.alt}
                   title={item.title}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { useViewTracker } from "@/hooks/use-view-tracker";
 
 /**
  * VideoCard — thumbnail landscape 16:9 dengan play button
@@ -9,11 +10,11 @@ import Image from "next/image";
  * Props:
  *   src   : string  — URL YouTube atau path gambar lokal
  *   alt   : string
-  *   title : string
-  *   description : string — deskripsi singkat (opsional)
-   *   badge : string  — teks badge pojok kiri atas (opsional)
-   *   host : string — nama host (opsional)
-   *   guests : string[] — daftar nama tamu (opsional)
+ *   title : string
+ *   description : string — deskripsi singkat (opsional)
+ *   badge : string  — teks badge pojok kiri atas (opsional)
+ *   host : string — nama host (opsional)
+ *   guests : string[] — daftar nama tamu (opsional)
  */
 
 function extractYouTubeId(url) {
@@ -29,13 +30,36 @@ function extractYouTubeId(url) {
   return null;
 }
 
-export default function VideoCard({ imageUrl, youtube, url, alt, title, tags, prevdescription, host, guests, timestamp }) {
+export default function VideoCard({
+  id,
+  imageUrl,
+  youtube,
+  url,
+  alt,
+  title,
+  tags,
+  prevdescription,
+  host,
+  guests,
+  timestamp,
+}) {
+  const { trackView } = useViewTracker();
+
+  const handleTrackClick = useCallback(() => {
+    if (id) trackView(id);
+  }, [id, trackView]);
   const sourceForId = youtube || url || imageUrl;
   const ytId = extractYouTubeId(sourceForId);
-  
-  const bestYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : null;
-  const backupYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
-  const initialImgSrc = ytId ? bestYtImg : (imageUrl || url || "/image/video.webp");
+
+  const bestYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    : null;
+  const backupYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+    : null;
+  const initialImgSrc = ytId
+    ? bestYtImg
+    : imageUrl || url || "/image/video.webp";
 
   const [imgSrc, setImgSrc] = useState(initialImgSrc);
 
@@ -49,21 +73,31 @@ export default function VideoCard({ imageUrl, youtube, url, alt, title, tags, pr
     }
   };
 
-  const linkHref = youtube ? (youtube.includes("watch") ? youtube : (`https://www.youtube.com/watch?v=${ytId}`)) : (url || null);
+  const linkHref = youtube
+    ? youtube.includes("watch")
+      ? youtube
+      : `https://www.youtube.com/watch?v=${ytId}`
+    : url || null;
   const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
   const Wrapper = linkHref ? "a" : "div";
   const wrapperProps = linkHref
-    ? { href: linkHref, target: "_blank", rel: "noopener noreferrer", "aria-label": title || alt || "Buka video" }
+    ? {
+        href: linkHref,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        "aria-label": title || alt || "Buka video",
+      }
     : {};
 
   return (
     <Wrapper
       {...wrapperProps}
+      onClick={handleTrackClick}
       className="bg-white group relative flex flex-col h-full w-full overflow-hidden rounded-lg border border-zinc-300 cursor-pointer shadow-xl transform transition-transform duration-300 hover:-translate-y-4 hover:shadow-xl hover:border-pink-500"
     >
       {/* Thumbnail 16:9 */}
-      <div className="relative w-full aspect-video flex-shrink-0 bg-zinc-200">
+      <div className="relative w-full aspect-video shrink-0 bg-zinc-200">
         <Image
           src={imgSrc}
           alt={alt || title || "Video"}
@@ -80,39 +114,53 @@ export default function VideoCard({ imageUrl, youtube, url, alt, title, tags, pr
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition">
-            <svg className="w-5 h-5 text-white translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg
+              className="w-5 h-5 text-white translate-x-0.5"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
         </div>
       </div>
 
-      <div className="px-2.5 md:px-3 py-1.5 md:py-2 pt-2 gap-1 flex flex-col flex-grow">
+      <div className="px-2.5 md:px-3 py-1.5 md:py-2 pt-2 gap-1 flex flex-col grow">
         {/* Judul */}
         {title && (
-          <div className="flex-shrink-0"> 
-            <p className="font-lato text-zinc-800 text-[13px] md:text-[14px] font-semibold leading-tight line-clamp-2">{title}</p>
+          <div className="shrink-0">
+            <p className="font-lato text-zinc-800 text-[13px] md:text-[14px] font-semibold leading-tight line-clamp-2">
+              {title}
+            </p>
           </div>
         )}
 
         {/* Deskripsi */}
         {prevdescription && (
-          <div className="flex-shrink-0">
-            <p className="text-zinc-500 text-[12px] leading-4 line-clamp-4">{prevdescription}</p>
+          <div className="shrink-0">
+            <p className="text-zinc-500 text-[12px] leading-4 line-clamp-4">
+              {prevdescription}
+            </p>
           </div>
         )}
 
         {/* Host & Guests */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <p className="text-[10px] truncate">
-            <span style={{ color: "#E83C91" }} className="mr-1">Host:</span>
+            <span style={{ color: "#E83C91" }} className="mr-1">
+              Host:
+            </span>
             <span className="text-zinc-900 font-bold">{host || "-"}</span>
           </p>
 
           <p className="text-[10px] pt-1 pb-1 line-clamp-2 md:line-clamp-3">
-              <span style={{ color: "#E83C91" }} className="mr-1">Guests:</span>
-              <span className="text-zinc-900 font-bold break-words">{(guests && guests.length) ? guests.join(", ") : "-"}</span>
-            </p>
+            <span style={{ color: "#E83C91" }} className="mr-1">
+              Guests:
+            </span>
+            <span className="text-zinc-900 font-bold wrap-break-words">
+              {guests && guests.length ? guests.join(", ") : "-"}
+            </span>
+          </p>
         </div>
 
         {/* tags list (render only when tags exist) */}

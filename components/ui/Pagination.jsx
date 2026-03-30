@@ -21,7 +21,8 @@ export default function Pagination({
   ariaLabelPrefix = "Page",
 }) {
   const pages = useMemo(() => {
-    if (totalPages <= maxVisible) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (totalPages <= maxVisible)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
 
     const delta = 1; // siblings around current
     const left = Math.max(2, currentPage - delta);
@@ -37,8 +38,10 @@ export default function Pagination({
 
   const handlePrev = () => onPageChange(Math.max(1, currentPage - 1));
   const handleNext = () => onPageChange(Math.min(totalPages, currentPage + 1));
-  const handleJumpBack = () => onPageChange(Math.max(1, currentPage - jumpStep));
-  const handleJumpForward = () => onPageChange(Math.min(totalPages, currentPage + jumpStep));
+  const handleJumpBack = () =>
+    onPageChange(Math.max(1, currentPage - jumpStep));
+  const handleJumpForward = () =>
+    onPageChange(Math.min(totalPages, currentPage + jumpStep));
 
   if (totalPages <= 1) return null;
 
@@ -50,8 +53,18 @@ export default function Pagination({
         className="w-9 h-9 flex items-center justify-center text-pink-500 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
         aria-label="Previous page"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </button>
 
@@ -80,7 +93,7 @@ export default function Pagination({
             onClick={() => onPageChange(p)}
             className={`w-9 h-9 text-sm font-medium transition-colors ${
               currentPage === p
-                ? "rounded-full bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow cursor-pointer"
+                ? "rounded-full bg-linear-to-r from-pink-500 to-orange-400 text-white shadow cursor-pointer"
                 : "rounded-full text-zinc-600 hover:bg-pink-200 cursor-pointer"
             }`}
             aria-label={`${ariaLabelPrefix} ${p}`}
@@ -106,7 +119,13 @@ export default function Pagination({
         className="w-9 h-9 flex items-center justify-center text-pink-500 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
         aria-label="Next page"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>

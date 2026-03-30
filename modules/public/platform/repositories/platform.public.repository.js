@@ -168,6 +168,7 @@ export async function findPublicEventsByOrganizerSlug(organizerSlug) {
       description: true,
       startAt: true,
       endAt: true,
+      createdAt: true,
       tags: {
         include: { tag: { select: { id: true, name: true } } },
       },
@@ -198,6 +199,7 @@ export async function findPublicEventsByCategorySlug(categorySlug) {
       description: true,
       startAt: true,
       endAt: true,
+      createdAt: true,
       tags: {
         include: { tag: { select: { id: true, name: true } } },
       },
@@ -250,5 +252,17 @@ export async function findActiveHomepagePlatformCards() {
       order: true,
       isActive: true,
     },
+  });
+}
+
+/**
+ * Atomic increment views untuk konten platform.
+ * Digunakan oleh tracker publik.
+ * @param {number} id
+ */
+export async function incrementContentView(id) {
+  return prisma.platformContent.update({
+    where: { id: Number(id) },
+    data: { views: { increment: 1 } },
   });
 }
