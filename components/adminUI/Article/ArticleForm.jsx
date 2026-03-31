@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+import { ArrowLeft } from "lucide-react";
+
 import ArticlePreviewModal from "@/components/adminUI/ArticlePreviewModal";
 import dynamic from "next/dynamic";
 
@@ -27,6 +30,7 @@ export default function ArticleForm({
   onSubmit,
   loading,
   mode = "create",
+  onClose,
 }) {
   const [form, setForm] = useState({
     title: "",
@@ -253,42 +257,46 @@ export default function ArticleForm({
             </p>
           </div>
 
-          <div className="flex justify-end gap-3 flex-wrap">
-            {/* Draft */}
-            <button
-              type="button"
-              onClick={() => handleSubmit("DRAFT")}
-              className="px-4 py-2 rounded-2xl border border-pink-400 text-pink-500
-        transition-all duration-300 ease-out
-        hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
-        active:translate-y-0 active:shadow-md active:scale-95"
-            >
-              Simpan Draft
-            </button>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            {/* LEFT: BACK BUTTON */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onClose?.()}
+                className="flex items-center gap-2 border border-black text-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+              >
+                <ArrowLeft size={16} />
+                Kembali
+              </button>
+            </div>
 
-            {/* Preview */}
-            <button
-              type="button"
-              onClick={() => setShowPreview(true)}
-              className="px-4 py-2 rounded-2xl border border-pink-400 text-pink-500
-        transition-all duration-300 ease-out
-        hover:bg-pink-50 hover:shadow-lg hover:-translate-y-1
-        active:translate-y-0 active:shadow-md active:scale-95"
-            >
-              Preview
-            </button>
+            {/* RIGHT: ACTION BUTTONS */}
+            <div className="flex justify-end gap-3 flex-wrap">
 
-            {/* Publish */}
-            <button
-              type="button"
-              onClick={() => handleSubmit("PUBLISHED")}
-              className="px-5 py-2 rounded-2xl bg-[#4B3D52] text-white
-        transition-all duration-300 ease-out
-        hover:bg-[#5c4a65] hover:shadow-xl hover:-translate-y-1
-        active:translate-y-0 active:shadow-md active:scale-95"
-            >
-              {loading ? "Menyimpan..." : "Publish"}
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className="px-4 py-2 rounded-lg bg-pink-400 border border-white text-white hover:bg-pink-800 transition"
+              >
+                Preview
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSubmit("DRAFT")}
+                className="px-4 py-2 rounded-lg border border-pink-300 text-pink-500 hover:bg-pink-100 transition"
+              >
+                Simpan Draft
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSubmit("PUBLISHED")}
+                className="px-5 py-2 rounded-lg bg-[#4B3D52] text-white hover:bg-[#5c4a65] transition"
+              >
+                {loading ? "Menyimpan..." : "Publish"}
+              </button>
+            </div>
           </div>
         </div>
 
