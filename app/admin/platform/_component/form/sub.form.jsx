@@ -32,6 +32,7 @@ export default function SubForm({
   showDescription = false,
   showHost = false,
   showGuests = false,
+  showViews = false,
   showMeta = false,
   metaOptions = META_OPTIONS,
   categoryItemSlug = null,
@@ -73,6 +74,7 @@ export default function SubForm({
   const [guests, setGuests] = useState(
     Array.isArray(initialData?.guests) ? initialData.guests : [],
   );
+  const [views, setViews] = useState(initialData?.views ?? 0);
   const EMPTY_ERRORS = {
     title: "",
     year: "",
@@ -83,6 +85,7 @@ export default function SubForm({
     description: "",
     host: "",
     guests: "",
+    views: "",
     tags: "",
     meta: "",
     image: "",
@@ -138,6 +141,7 @@ export default function SubForm({
       ...(showMeta ? { meta: meta } : {}),
       ...(showHost ? { host } : {}),
       ...(showGuests ? { guests } : {}),
+      views: Number(views),
       ...(showImageUpload && files.length > 0 ? { files } : {}),
     };
 
@@ -479,6 +483,25 @@ export default function SubForm({
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {showViews && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Views
+            </label>
+            <input
+              type="number"
+              value={views}
+              onChange={(e) => setViews(e.target.value)}
+              className="w-full text-black border border-gray-300 rounded-md px-3 py-2"
+              placeholder="Jumlah views"
+              min="0"
+            />
+            {errors.views ? (
+              <p className="text-sm text-red-600 mt-1">{errors.views}</p>
+            ) : null}
           </div>
         )}
 

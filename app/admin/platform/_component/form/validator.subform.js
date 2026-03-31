@@ -29,6 +29,7 @@ export function validateSubForm(data) {
     meta: '',
     host: '',
     guests: '',
+    views: '',
     image: '',
   };
 
@@ -136,6 +137,16 @@ export function validateSubForm(data) {
       if (longTag) {
         errors.tags = 'Tag terlalu panjang (maks 100 karakter per tag)';
       }
+    }
+  }
+
+  // views — opsional, non-negative integer
+  if (data.views !== undefined && data.views !== null && String(data.views).trim() !== '') {
+    const v = Number(data.views);
+    if (Number.isNaN(v) || !Number.isInteger(v)) {
+      errors.views = 'Views harus berupa angka bulat';
+    } else if (v < 0) {
+      errors.views = 'Views tidak boleh kurang dari 0';
     }
   }
 

@@ -5,7 +5,7 @@
  * Memakai repository sebagai sumber data, lalu memetakan ke bentuk
  * yang langsung dimakan oleh komponen halaman.
  */
-import { findActivePlatformsWithCategories, findActiveHomepagePlatformCards, findPublicPlatformBySlug, findGridContents, findCarouselSubCategories, findContentById, findRelatedContents, findPublicEventsByCategorySlug, findPublicEventsByOrganizerSlug } from "../repositories/platform.public.repository.js";
+import { findActivePlatformsWithCategories, findActiveHomepagePlatformCards, findPublicPlatformBySlug, findGridContents, findCarouselSubCategories, findContentById, findRelatedContents, findPublicEventsByCategorySlug, findPublicEventsByOrganizerSlug, incrementContentView } from "../repositories/platform.public.repository.js";
 
 const DEFAULT_HOME_PLATFORM_IMAGE = "/image/tim-hero.png";
 import { getEventStatus, EVENT_STATUS_LABEL } from "@/lib/event-status.js";
@@ -45,6 +45,7 @@ function mapToGridItem(content) {
     meta: (content.meta != null ? (typeof content.meta === "object" ? (content.meta.cardType || null) : content.meta) : null) ?? (content.year ? String(content.year) : null),
     badge: content.badge ?? (Array.isArray(content.tags) && content.tags.length ? content.tags[0] : null),
     url: content.url || content.youtube || null,
+    createdAt: content.createdAt,
   };
 }
 
@@ -61,6 +62,7 @@ function mapToCarouselItem(cardType, content) {
     tags: content.tags || [],
     badge: content.badge ?? (Array.isArray(content.tags) && content.tags.length ? content.tags[0] : null),
     url: content.url ?? null,
+    createdAt: content.createdAt,
   };
 
   if (cardType === "video") {
@@ -338,6 +340,7 @@ export async function getPublicContentItem(id) {
       youtube: c.youtube ?? null,
       instagram: c.instagram ?? null,
       url: c.url ?? null,
+      createdAt: c.createdAt,
     };
   };
 
@@ -378,6 +381,7 @@ export async function getPublicEventItems(categorySlug) {
       tag: tagSlugs[0] ?? null,
       tagSlugs,
       tags: (event.tags || []).map((t) => t.tag?.name).filter(Boolean),
+      createdAt: event.createdAt,
     };
   });
 }
@@ -402,6 +406,15 @@ export async function getPublicEventItemsByOrganizer(organizerSlug) {
       badge: EVENT_STATUS_LABEL[status] ?? null,
       meta: formatIndonesianDate(event.startAt),
       tags: (event.tags || []).map((t) => t.tag?.name).filter(Boolean),
+      createdAt: event.createdAt,
     };
   });
+}
+
+/**
+ * Logika penambahan views (statistik).
+ */
+export async function trackView(id) {
+  if (!id) return null;
+  return await incrementContentView(id);
 }

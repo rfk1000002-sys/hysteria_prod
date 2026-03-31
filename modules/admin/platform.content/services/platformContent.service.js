@@ -1,4 +1,4 @@
-﻿/**
+/**
  * platformContent.service.js
  *
  * Business logic untuk PlatformContent dan PlatformContentImage.
@@ -7,8 +7,9 @@
 import { AppError } from "../../../../lib/response.js";
 import { logInfo, logWarning, logError } from "../../../../lib/api-logger.js";
 import {
-  findContentsByPlatformId,
   findContentsByPlatformSlug,
+  countContentsByPlatformId,
+  countContentsByPlatformSlug,
   findContentById,
   findPlatformIdBySlug,
   findCategoryItemIdBySlug,
@@ -35,14 +36,24 @@ import {
  * @param {string} platformSlug
  * @param {string|null} [categoryItemSlug]
  */
-export async function listPlatformContentsBySlug(platformSlug, categoryItemSlug = null, minimal = false) {
+export async function listPlatformContentsBySlug(platformSlug, categoryItemSlug = null, minimal = false, limit = null, cursor = null) {
   if (!platformSlug || typeof platformSlug !== "string") {
     throw new AppError("platformSlug tidak valid", 400, "VALIDATION_ERROR");
   }
-  logInfo("[PlatformContent][Service][LIST_BY_SLUG] Start", { platformSlug, categoryItemSlug });
-  const contents = await findContentsByPlatformSlug(platformSlug, categoryItemSlug || null, minimal);
-  logInfo("[PlatformContent][Service][LIST_BY_SLUG] Success", { platformSlug, count: contents.length });
-  return contents;
+  logInfo("[PlatformContent][Service][LIST_BY_SLUG] Start", { platformSlug, categoryItemSlug, limit, cursor });
+  const [contents, total] = await Promise.all([
+    findContentsByPlatformSlug(platformSlug, categoryItemSlug || null, minimal, limit, cursor),
+    countContentsByPlatformSlug(platformSlug, categoryItemSlug || null)
+  ]);
+
+  let nextCursor = null;
+  if (limit && contents.length > limit) {
+    const nextItem = contents.pop();
+    nextCursor = nextItem.id;
+  }
+
+  logInfo("[PlatformContent][Service][LIST_BY_SLUG] Success", { platformSlug, count: contents.length, nextCursor, total });
+  return { data: contents, nextCursor, total };
 }
 
 /**
@@ -50,17 +61,27 @@ export async function listPlatformContentsBySlug(platformSlug, categoryItemSlug 
  * @param {number|string} platformId
  * @param {number|string|null} [categoryItemId]
  */
-export async function listPlatformContents(platformId, categoryItemId = null, minimal = false) {
+export async function listPlatformContents(platformId, categoryItemId = null, minimal = false, limit = null, cursor = null) {
   const id = parseInt(platformId, 10);
   if (!id || isNaN(id)) throw new AppError("platformId tidak valid", 400, "VALIDATION_ERROR");
 
   const catId = categoryItemId ? parseInt(categoryItemId, 10) : null;
   if (categoryItemId && isNaN(catId)) throw new AppError("categoryItemId tidak valid", 400, "VALIDATION_ERROR");
 
-  logInfo("[PlatformContent][Service][LIST] Start", { platformId: id, categoryItemId: catId });
-  const contents = await findContentsByPlatformId(id, catId, minimal);
-  logInfo("[PlatformContent][Service][LIST] Success", { platformId: id, count: contents.length });
-  return contents;
+  logInfo("[PlatformContent][Service][LIST] Start", { platformId: id, categoryItemId: catId, limit, cursor });
+  const [contents, total] = await Promise.all([
+    findContentsByPlatformId(id, catId, minimal, limit, cursor),
+    countContentsByPlatformId(id, catId)
+  ]);
+
+  let nextCursor = null;
+  if (limit && contents.length > limit) {
+    const nextItem = contents.pop();
+    nextCursor = nextItem.id;
+  }
+
+  logInfo("[PlatformContent][Service][LIST] Success", { platformId: id, count: contents.length, nextCursor, total });
+  return { data: contents, nextCursor, total };
 }
 
 // â”€â”€â”€ GET SINGLE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

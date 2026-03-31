@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useViewTracker } from "@/hooks/use-view-tracker";
 
 export default function PosterCard({
+  id,
   imageUrl,
   alt,
   title,
@@ -14,6 +16,11 @@ export default function PosterCard({
   meta,
   slug,
 }) {
+  const { trackView } = useViewTracker();
+
+  const handleTrackClick = useCallback(() => {
+    if (id) trackView(id);
+  }, [id, trackView]);
   const imgSrc = imageUrl || "/image/DummyPoster.webp";
   const isLocal = typeof imgSrc === "string" && imgSrc.startsWith("/");
 
@@ -38,14 +45,18 @@ export default function PosterCard({
   // - fallback (tags/other): pink accent as before
   const badgeLabelNorm = (badgeLabel || "").toLowerCase();
   // More translucent backgrounds + keep readable text colors for glassy effect
-  let badgeClass = "bg-white/40 text-pink-500 border-white/25"; /* fallback (glassy) */
+  let badgeClass =
+    "bg-white/40 text-pink-500 border-white/25"; /* fallback (glassy) */
   if (
     badgeLabelNorm.includes("akan") ||
     badgeLabelNorm.includes("upcoming") ||
     (badgeLabelNorm.includes("berlangsung") && badgeLabelNorm.includes("akan"))
   ) {
     badgeClass = "bg-blue-100/40 text-blue-700 border-blue-100/40";
-  } else if (badgeLabelNorm.includes("sedang") || badgeLabelNorm.includes("ongoing")) {
+  } else if (
+    badgeLabelNorm.includes("sedang") ||
+    badgeLabelNorm.includes("ongoing")
+  ) {
     badgeClass = "bg-green-100/40 text-green-500 border-green-100/50";
   } else if (
     badgeLabelNorm.includes("telah") ||
@@ -60,7 +71,7 @@ export default function PosterCard({
       ref={wrapperRef}
       role="button"
       tabIndex={0}
-      className="group relative w-full aspect-[2/3] overflow-visible rounded-xl cursor-pointer shadow-xl border-1 border-zinc-300"
+      className="group relative w-full aspect-2/3 overflow-visible rounded-xl cursor-pointer shadow-xl border-2 border-zinc-300"
       onClick={(e) => {
         const tgt = e.target;
         if (tgt && tgt.tagName) {
@@ -99,12 +110,13 @@ export default function PosterCard({
           }`}
           style={{ objectPosition: "center center" }}
         />
-        
 
         {/* Badge — left-edge label that slightly overlaps the card */}
         {badgeLabel && (
           <div className="absolute top-1   left-0 z-30 transform -translate-x-3">
-            <span className={`border ${badgeClass} backdrop-blur-sm md:backdrop-blur-md text-[9px] md:text-[11px] font-semibold px-3 py-0.5 rounded-r-full shadow-sm whitespace-nowrap`}>
+            <span
+              className={`border ${badgeClass} backdrop-blur-sm md:backdrop-blur-md text-[9px] md:text-[11px] font-semibold px-3 py-0.5 rounded-r-full shadow-sm whitespace-nowrap`}
+            >
               {badgeLabel}
             </span>
           </div>
@@ -134,13 +146,16 @@ export default function PosterCard({
             {slug ? (
               <Link
                 href={`/event/${slug}`}
-                onClick={(e) => e.stopPropagation()}
-                className="mt-2 w-full block bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer text-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTrackClick();
+                }}
+                className="mt-2 w-full block bg-linear-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer text-center"
               >
                 Lihat Detail
               </Link>
             ) : (
-              <button className="mt-2 w-full bg-gradient-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer">
+              <button className="mt-2 w-full bg-linear-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer">
                 Lihat Detail
               </button>
             )}

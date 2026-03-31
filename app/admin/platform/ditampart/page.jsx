@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/use-debounce";
 import IconButton from "@mui/material/IconButton";
@@ -52,43 +52,77 @@ export default function DitampartPage() {
   const debouncedSearch = useDebounce(searchQuery);
   const router = useRouter();
 
-  // ── fetch event data dari API (cursor-based pagination) ─────────────────────
-  const [nextCursor, setNextCursor] = useState(null);
+  // ── fetch event data dari API (cursor-based pagination dengan Stack) ───────
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const cursorStackRef = useRef([null]); // [null, cursor_p2, cursor_p3, ...]
+
+  const totalPages = Math.ceil(totalCount / perPage) || 1;
+
+  // Untuk melacak perubahan filter dan menghindari double fetch
+  const lastFiltersRef = useRef({ debouncedSearch, statusFilter, perPage });
 
   useEffect(() => {
     let cancelled = false;
-    setRows([]);
-    setNextCursor(null);
+
+    // Cek apakah filter berubah untuk reset ke halaman 1
+    const filtersChanged = (
+      lastFiltersRef.current.debouncedSearch !== debouncedSearch ||
+      lastFiltersRef.current.statusFilter !== statusFilter ||
+      lastFiltersRef.current.perPage !== perPage
+    );
+
+    if (filtersChanged) {
+      lastFiltersRef.current = { debouncedSearch, statusFilter, perPage };
+      cursorStackRef.current = [null]; // Reset stack
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+        return;
+      }
+    }
+
     setLoading(true);
-    fetchDitampartEventData({ query: debouncedSearch, status: statusFilter, limit: perPage })
-      .then(({ data, nextCursor: nc }) => {
+    const currentCursor = cursorStackRef.current[currentPage - 1];
+
+    fetchDitampartEventData({
+      query: debouncedSearch,
+      status: statusFilter,
+      limit: perPage,
+      cursor: currentCursor,
+    })
+      .then(({ data, nextCursor, totalCount: total }) => {
         if (cancelled) return;
         setRows(data);
-        setNextCursor(nc);
-      })
-      .catch((err) => { if (!cancelled) console.error("Gagal memuat event ditampart:", err); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [debouncedSearch, statusFilter, perPage]);
+        setTotalCount(total);
 
-  const handleLoadMore = useCallback(async () => {
-    if (!nextCursor || loading) return;
-    setLoading(true);
-    try {
-      const { data, nextCursor: nc } = await fetchDitampartEventData({
-        query: debouncedSearch,
-        status: statusFilter,
-        limit: perPage,
-        cursor: nextCursor,
+        // Update stack jika ada cursor baru
+        if (nextCursor && cursorStackRef.current.length <= currentPage) {
+          cursorStackRef.current[currentPage] = nextCursor;
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Gagal memuat event ditampart:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-      setRows((prev) => [...prev, ...data]);
-      setNextCursor(nc);
-    } catch (err) {
-      console.error("Gagal memuat lebih banyak event ditampart:", err);
-    } finally {
-      setLoading(false);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, statusFilter, perPage, currentPage]);
+
+  const handleNextPage = useCallback(() => {
+    if (currentPage < totalPages && !loading) {
+      setCurrentPage((prev) => prev + 1);
     }
-  }, [nextCursor, loading, debouncedSearch, statusFilter, perPage]);
+  }, [currentPage, totalPages, loading]);
+
+  const handlePrevPage = useCallback(() => {
+    if (currentPage > 1 && !loading) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  }, [currentPage, loading]);
 
   // ── handlers ──────────────────────────────────────────────────────────────
   const [deletingId, setDeletingId] = useState(null);
@@ -131,6 +165,7 @@ export default function DitampartPage() {
         showImageUpload: true,
         showPrevDescription: true,
         showDescription: true,
+        showViews: true,
         showMeta: true,
         previewComponent: PosterPreview,
       });
@@ -299,19 +334,29 @@ export default function DitampartPage() {
             loading={loading}
             getRowId={(r) => r.id}
           />
-          {nextCursor && (
-            <div className="flex justify-center mt-4">
-              <Button
-                variant="outlined"
-                size="small"
-                disabled={loading}
-                onClick={handleLoadMore}
-                sx={{ textTransform: "none" }}
-              >
-                {loading ? "Memuat..." : "Muat Lebih Banyak"}
-              </Button>
-            </div>
-          )}
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={currentPage <= 1 || loading}
+              onClick={handlePrevPage}
+              sx={{ textTransform: "none" }}
+            >
+              Prev
+            </Button>
+            <span className="text-sm text-gray-600 font-poppins">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={currentPage >= totalPages || loading}
+              onClick={handleNextPage}
+              sx={{ textTransform: "none" }}
+            >
+              Next
+            </Button>
+          </div>
 
           {/* modals */}
           {platformModal.open && (
@@ -336,6 +381,7 @@ export default function DitampartPage() {
                     showPrevDescription={platformModal.showPrevDescription}
                     // showDescription={platformModal.showDescription}
                     showImageUpload={platformModal.showImageUpload}
+                    showViews={platformModal.showViews}
                     showMeta={platformModal.showMeta}
                     showPreview={!!platformModal.previewComponent}
                     PreviewComponent={platformModal.previewComponent}
