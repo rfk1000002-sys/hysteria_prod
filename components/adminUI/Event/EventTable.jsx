@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { getEventStatus, EVENT_STATUS_LABEL } from "@/lib/event-status";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function EventTable({ events = [], onEdit, onDelete }) {
   const [deletingId, setDeletingId] = useState(null);
@@ -11,6 +11,7 @@ export default function EventTable({ events = [], onEdit, onDelete }) {
   const [selectedOrganizers, setSelectedOrganizers] = useState([])
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
@@ -95,7 +96,22 @@ export default function EventTable({ events = [], onEdit, onDelete }) {
       selectedStatuses.length === 0 ||
       selectedStatuses.includes(status);
 
-    return matchOrganizer && matchCategory && matchStatus;
+    // SEARCH
+    const matchSearch =
+      !searchQuery ||
+      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.organizers?.some((o) =>
+        o.categoryItem?.title
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      ) ||
+      event.eventCategories?.some((c) =>
+        c.categoryItem?.title
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      );
+
+    return matchOrganizer && matchCategory && matchStatus && matchSearch;
   });
 
   // ================= PAGINATION =================
@@ -136,7 +152,24 @@ export default function EventTable({ events = [], onEdit, onDelete }) {
   return (
     <div>
       {/* ================= FILTER ================= */}
-      <div className="flex flex-wrap gap-3 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 items-start">
+        {/* SEARCH GLOBAL */}
+        <div className="relative w-full sm:flex-1 min-w-[200px]">
+          <input
+            type="text"
+            placeholder="Cari event..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-[42px] pl-4 pr-10 rounded-xl border border-gray-300 text-sm focus:outline-none bg-white text-[var(--Color-5)] cursor-pointer text-left hover:border-[var(--Color-1)] focus-within:ring-2 focus-within:ring-[var(--Color-1)] transition-all shadow-sm"
+          />
+          
+          <Search
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--Color-5)]"
+            size={18}
+            strokeWidth={2}
+          />
+        </div>
+
         <MultiSelect
           label="Penyelenggara"
           options={organizerOptions}
@@ -450,15 +483,30 @@ function MultiSelect({
   };
 
   return (
-    <div ref={ref} className="relative min-w-[220px]">
+    <div ref={ref} className="relative w-full min-w-[220px]">
       {/* LABEL + CHIP */}
       <div
         onClick={() => setOpen(!open)}
-        className="border border-black px-3 py-2 rounded bg-white cursor-pointer text-left"
+        className="border border-gray-300 px-3 py-2 rounded-xl bg-white cursor-pointer text-left hover:border-[var(--Color-1)] focus-within:ring-2 focus-within:ring-[var(--Color-1)] transition-all shadow-sm"
       >
         {/* LABEL */}
-        <div className="text-md text-black">{label}</div>
+        <div className="flex items-center text-md text-[var(--Color-5)]">
+          {label}
+          <div className="ml-2 text-[var(--Color-5)] absolute right-3">
+            {open ? (
+              <ChevronUp size={18} />
+            ) : (
+              <ChevronDown size={18} />
+            )}
+          </div>
+        </div>
 
+        {selectedValues.length > 0 && (
+          <div className="text-sm text-[var(--Color-5)] mt-1">
+            {selectedValues.length} dipilih
+          </div>
+        )}
+        
         {/* CHIP */}
         {selectedValues.length > 0 && (
           <div
@@ -471,7 +519,7 @@ function MultiSelect({
               return (
                 <span
                   key={val}
-                  className="bg-white border border-[var(--Color-1)] text-[var(--Color-1)] px-2 py-0.5 rounded-md text-xs flex items-center gap-1"
+                  className="bg-[var(--Color-1)]/10 border border-[var(--Color-1)] text-[var(--Color-1)] px-2 py-0.5 rounded-md text-xs flex items-center gap-1"
                 >
                   {item?.label}
 
@@ -490,23 +538,24 @@ function MultiSelect({
           </div>
         )}
       </div>
+      
 
       {/* DROPDOWN */}
       {open && (
-        <div className="absolute z-20 mt-2 w-full bg-white border rounded-xl shadow-lg p-3 space-y-2">
+        <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg p-3 space-y-3 animate-fadeIn">
           {/* SEARCH */}
           <input
             type="text"
             placeholder="Cari..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border px-2 py-1 rounded text-sm text-gray-700 focus:outline-none focus:ring focus:ring-[var(--Color-3)]"
+            className="w-full border px-3 py-2 rounded-md text-sm text-[var(--Color-5)] focus:outline-none"
           />
 
           {/* ACTION */}
           <div className="flex justify-between text-xs text-gray-500">
-            <button onClick={selectAll}>Pilih Semua</button>
-            <button onClick={clearAll}>Clear</button>
+            <button className="text-[var(--Color-1)] hover:underline" onClick={selectAll}>Pilih Semua</button>
+            <button className="text-gray-400 hover:underline" onClick={clearAll}>Clear</button>
           </div>
 
           {/* LIST */}
@@ -514,12 +563,18 @@ function MultiSelect({
             {filteredOptions.map((opt) => (
               <label
                 key={opt.value}
-                className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm text-[var(--Color-5)]"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition
+                ${
+                  selectedValues.includes(opt.value)
+                    ? "bg-[var(--Color-1)]/10 text-[var(--Color-1)]"
+                    : "hover:bg-gray-50 text-[var(--Color-5)]"
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={selectedValues.includes(opt.value)}
                   onChange={() => toggleValue(opt.value)}
+                  className="accent-[var(--Color-1)]"
                 />
                 <span className="text-sm text-[var(--Color-5)]">{opt.label}</span>
               </label>

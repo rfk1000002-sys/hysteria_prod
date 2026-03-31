@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +21,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [openDropdown, setOpenDropdown] = useState(null); 
+  const dropdownRef = useRef(null);
 
   /* =========================
      SYNC STATE DARI URL
@@ -101,6 +103,16 @@ export default function EventsPage() {
       setPage(totalPages || 1);
     }
   }, [totalPages, page]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   return (
     <div className="mx-auto px-4 mt-18 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-4 text-[var(--foreground)] bg-[var(--background)]">
@@ -114,10 +126,10 @@ export default function EventsPage() {
 
       {/* FILTER */}
       <div className="flex justify-center mt-8 mb-10 px-4">
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-3xl">
+        <div className="flex items-center gap-2 w-full max-w-3xl">
           
           {/* SEARCH */}
-          <div className="relative w-full">
+          <div className="relative flex-1">
             <input
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
@@ -128,30 +140,130 @@ export default function EventsPage() {
           </div>
 
           {/* RIGHT ACTIONS */}
-          <div className="flex items-center gap-3">
-            {/* FILTER */}
-            <div className="relative w-[44px] h-[44px] sm:w-[48px] sm:h-[48px]">
-              <Filter className="absolute inset-0 m-auto pointer-events-none" size={18} strokeWidth={2} color="var(--Color-1)" />
+          <div className="flex items-center gap-2 sm:gap-3">          
+            <div ref={dropdownRef} className="flex items-center gap-2 sm:gap-3 relative">
 
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full h-full rounded-full border border-[var(--Color-1)] bg-[var(--background)] text-transparent appearance-none cursor-pointer focus:outline-none"
-              >
-                <option value="all" className="text-[var(--Color-5)]">Semua Event</option>
-                <option value="upcoming" className="text-[var(--Color-5)]">Akan Berlangsung</option>
-                <option value="ongoing" className="text-[var(--Color-5)]">Sedang Berlangsung</option>
-                <option value="finished" className="text-[var(--Color-5)]">Telah Berakhir</option>
-              </select>
-            </div>
+              {/* FILTER */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setOpenDropdown(openDropdown === "filter" ? null : "filter")
+                  }
+                  className="w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] rounded-full border border-[var(--Color-1)] flex items-center justify-center bg-[var(--background)] shadow-sm active:scale-95 transition"
+                >
+                  <Filter size={16} color="var(--Color-1)" />
+                </button>
 
-            {/* SORT */}
-            <div className="relative w-[44px] h-[44px] sm:w-[48px] sm:h-[48px]">
-              <ArrowUpDown className="absolute inset-0 m-auto pointer-events-none" size={18} strokeWidth={2} color="var(--Color-1)" />
-              <select value={sort} onChange={(e) => setSort(e.target.value)} className="w-full h-full rounded-full border border-[var(--Color-1)] bg-transparent text-transparent appearance-none cursor-pointer focus:outline-none">
-                <option value="latest" className="text-[var(--Color-5)]">Terbaru</option>
-                <option value="oldest" className="text-[var(--Color-5)]">Terlama</option>
-              </select>
+                {openDropdown === "filter" && (
+                  <div className="absolute top-12 w-44 bg-white rounded-xl shadow-lg z-50 overflow-hidden animate-fadeIn">
+                    <button
+                      onClick={() => {
+                        setStatus("all");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        status === "all"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Semua Event
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setStatus("upcoming");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        status === "upcoming"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Akan Berlangsung
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setStatus("ongoing");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        status === "ongoing"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Sedang Berlangsung
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setStatus("finished");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        status === "finished"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Telah Berakhir
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* SORT */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setOpenDropdown(openDropdown === "sort" ? null : "sort")
+                  }
+                  className="w-[44px] h-[44px] sm:w-[48px] sm:h-[48px] rounded-full border border-[var(--Color-1)] flex items-center justify-center bg-[var(--background)] shadow-sm active:scale-95 transition"
+                >
+                  <ArrowUpDown size={16} color="var(--Color-1)" />
+                </button>
+
+                {openDropdown === "sort" && (
+                  <div className="absolute top-12 w-44 bg-white rounded-xl shadow-lg z-50 overflow-hidden animate-fadeIn">
+                    <button
+                      onClick={() => {
+                        setSort("latest");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        sort === "latest"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Terbaru
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSort("oldest");
+                        setOpenDropdown(null);
+                      }}
+                      className={`block w-full text-left px-4 py-2 text-sm transition
+                      ${
+                        sort === "oldest"
+                          ? "bg-[var(--Color-1)] text-[var(--Color-3)] font-medium"
+                          : "text-[var(--Color-5)] hover:bg-gray-100"
+                      }`}
+                    >
+                      Terlama
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -165,7 +277,7 @@ export default function EventsPage() {
       ) : (
         <>
           {/* GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6 gap-3">
             {paginatedEvents.map((event) => {
               const isFinished = event.status === "FINISHED";
 
@@ -176,11 +288,11 @@ export default function EventsPage() {
                     alt={event.title}
                     fill
                     loading="lazy"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105 group-hover:brightness-75"
                   />
 
                   {/* OVERLAY */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-4 backdrop-blur-sm bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
+                  <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 active:opacity-100 transition-all duration-300">
                     {/* STATUS */}
                     <div className="inline-flex gap-2 flex-wrap mb-1">
                       {event.status === "UPCOMING" && (
@@ -191,7 +303,7 @@ export default function EventsPage() {
                             if (event.registerLink)
                               window.open(event.registerLink, "_blank");
                           }}
-                          className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%] cursor-pointer"
+                          className="inline-flex items-center justify-center px-3 rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%] cursor-pointer"
                         >
                           Akan Berlangsung
                         </span>
@@ -205,14 +317,14 @@ export default function EventsPage() {
                             if (event.registerLink)
                               window.open(event.registerLink, "_blank");
                           }}
-                          className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%] cursor-pointer"
+                          className="inline-flex items-center justify-center px-3 rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%] cursor-pointer"
                         >
                           Sedang Berlangsung
                         </span>
                       )}
 
                       {isFinished && (
-                        <span className="inline-flex items-center justify-center px-3 h-[26px] rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%]">
+                        <span className="inline-flex items-center justify-center px-3 rounded-[10px] border border-[var(--Color-1)] bg-[var(--Color-3)] text-[var(--Color-1)] text-[12px] leading-[150%]">
                           Event Telah Berakhir
                         </span>
                       )}
