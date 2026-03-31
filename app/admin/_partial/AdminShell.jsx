@@ -39,7 +39,6 @@ import CollaborationSettingsPage from "../collaboration/page.jsx";
 import WebsiteInfoSettingsPage from "../website-info/page.jsx";
 import { usePathname } from "next/navigation";
 import ArticlesPage from "../articles/page.jsx";
-import CreateArticlePage from "../articles/create/page.jsx";
 
 // program
 import ProgramPage from "@/app/admin/programs/page.jsx";
@@ -105,8 +104,6 @@ export default function AdminShell({ children }) {
 
       case "article":
         return <ArticlesPage onNavigate={handleNavigate} />;
-      case "article.create":
-        return <CreateArticlePage onNavigate={handleNavigate} />;
 
       case "tentang":
         return <TentangSettingsPage />;

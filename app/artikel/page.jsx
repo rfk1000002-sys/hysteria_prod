@@ -209,8 +209,8 @@ export default function ArtikelPage() {
         <div className="min-h-screen max-w-7xl mx-auto px-6 py-12">
           {/* Header */}
           <div className="py-7 max-w-4xl">
-            <h1 className="text-5xl font-bold mb-7">Artikel</h1>
-            <p className="text-base">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">Artikel</h1>
+            <p className="text-sm md:text-base lg:text-lg">
               Kumpulan tulisan untuk memperkaya wawasan tentang seni, budaya,
               dan kreativitas. Bacaan yang menginspirasi dan mendidik untuk
               semua kalangan.
@@ -225,9 +225,9 @@ export default function ArtikelPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Cari Judul Artikel/Penulis Artikel"
-                  className="w-full border border-pink-400 rounded-full px-6 py-4 pr-14 
+                  className="w-full border border-pink-400 rounded-full px-4 md:px-6 py-3 md:py-4 pr-12
               focus:outline-none focus:ring-2 focus:ring-pink-400 
-              transition-all duration-300 placeholder:text-pink-400 text-base text-pink-400"
+              transition-all duration-300 placeholder:text-pink-400 text-sm md:text-base text-pink-400"
                 />
 
                 <button

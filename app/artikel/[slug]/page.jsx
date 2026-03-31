@@ -1,4 +1,5 @@
 import { Person, Instagram, Facebook, X as XIcon } from "@mui/icons-material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import TiptapRenderer from "@/components/tiptap/TiptapRenderer";
 import {
   getPublicArticleDetail,
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }) {
     },
   };
 }
+
 import ArticleCard from "@/components/ui/ArticleCard";
 import ArticleViewTracker from "@/components/tracker/ArticleViewTracker";
 
@@ -63,7 +65,16 @@ export default async function ArtikelDetail({ params }) {
   return (
     <div className="bg-[var(--Color-1)] pt-19">
       <div className="bg-[var(--background)] text-[var(--foreground)]">
-        <article className="max-w-6xl mx-auto px-6 py-20">
+        <article className="max-w-6xl mx-auto px-6 py-12">
+          <div className="mb-6">
+            <Link
+              href="/artikel"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-500 transition shadow-sm"
+            >
+              <ArrowBackIcon style={{ fontSize: 20 }} />
+            </Link>
+          </div>
+
           {/* CATEGORY */}
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
@@ -128,7 +139,7 @@ export default async function ArtikelDetail({ params }) {
             {/* VIEW TRACKER */}
             <ArticleViewTracker slug={article.slug} />
 
-            {/* ================= REFERENCES ================= */}
+            {/* REFERENCES */}
             {references.length > 0 && (
               <div className="mt-14 flex flex-wrap items-center text-sm leading-relaxed">
                 <span className="font-semibold mr-2 text-pink-500">
@@ -150,7 +161,7 @@ export default async function ArtikelDetail({ params }) {
               </div>
             )}
 
-            {/* ================= EDITOR ================= */}
+            {/* EDITOR */}
             {article.editorName && (
               <div className="mt-7 bg-gray-200/60 rounded-2xl px-6 py-4">
                 <span className="font-semibold text-gray-700">Editor:</span>{" "}
@@ -158,16 +169,15 @@ export default async function ArtikelDetail({ params }) {
               </div>
             )}
 
-            {/* ================= VIEWS ================= */}
+            {/* VIEWS */}
             <div className="mt-7 flex justify-start">
               <div className="px-6 py-2 rounded-full bg-pink-50 text-pink-500 text-xs font-medium">
                 👁 {article.views} views
               </div>
             </div>
 
-            {/* ================= TAGS + SHARE ================= */}
+            {/* TAGS + SHARE */}
             <div className="mt-10 flex flex-col md:flex-row md:items-start md:justify-between gap-8">
-              {/* TAGS */}
               {tags.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold mb-3">Tags</h3>
@@ -221,7 +231,7 @@ export default async function ArtikelDetail({ params }) {
             </div>
           </div>
 
-          {/* ================= ARTIKEL LAINNYA ================= */}
+          {/* ARTIKEL LAINNYA */}
           {recommendedArticles.length > 0 && (
             <section className="mt-20">
               <div className="flex items-center justify-between mb-8">
