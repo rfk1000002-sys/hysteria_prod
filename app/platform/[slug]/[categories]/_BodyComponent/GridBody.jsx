@@ -8,6 +8,7 @@ import KomikRamuanCard from "./cards/KomikRamuanCard";
 import VideoCard from "./cards/VideoCard";
 import Tooltip from "@mui/material/Tooltip";
 import SortMenu from "@/components/ui/SortMenu";
+import Pagination from "@/components/ui/Pagination";
 
 const DEFAULT_ITEMS_PER_PAGE = 10; // default: 5 kolom × 2 baris
 
@@ -390,52 +391,13 @@ export default function GridBody({
 
       {/* Pagination */}
       {(hasPrev || hasNext) && (
-        <CursorPagination
-          hasPrev={hasPrev}
-          hasNext={hasNext}
-          onPrev={() => setCursor((c) => Math.max(0, c - itemsPerPage))}
-          onNext={() => setCursor((c) => c + itemsPerPage)}
-          currentStart={currentStart}
-          currentEnd={currentEnd}
-          total={filteredItems.length}
+        <Pagination
+          currentPage={Math.floor(cursor / itemsPerPage) + 1}
+          totalPages={Math.ceil(filteredItems.length / itemsPerPage)}
+          onPageChange={(page) => setCursor((page - 1) * itemsPerPage)}
+          className="mt-7"
         />
       )}
-    </div>
-  );
-}
-
-function CursorPagination({
-  hasPrev,
-  hasNext,
-  onPrev,
-  onNext,
-  currentStart,
-  currentEnd,
-  total,
-}) {
-  return (
-    <div className="mt-10 flex justify-center sm:mt-12">
-      <div className="flex items-center gap-3 rounded-full bg-[#ec3f94] px-5 py-2 text-white shadow-md">
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={!hasPrev}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {"<"}
-        </button>
-        <span className="text-sm font-medium tabular-nums">
-          {currentStart}–{currentEnd} / {total}
-        </span>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!hasNext}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {">"}
-        </button>
-      </div>
     </div>
   );
 }

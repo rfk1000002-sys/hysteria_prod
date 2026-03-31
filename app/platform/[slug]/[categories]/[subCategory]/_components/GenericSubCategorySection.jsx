@@ -4,6 +4,7 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useDebounce } from "../../../../../../hooks/use-debounce";
 import { useParams } from "next/navigation";
 import VideoCard from "../../_BodyComponent/cards/VideoCard";
+import Pagination from "@/components/ui/Pagination";
 import PosterCard from "../../_BodyComponent/cards/PosterCard";
 import ArtistCard from "../../_BodyComponent/cards/ArtistCard";
 
@@ -312,14 +313,10 @@ export default function GenericSubCategorySection({
         )}
 
         {(hasPrev || hasNext) && (
-          <CursorPagination
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            onPrev={() => setCursor((c) => Math.max(0, c - pageSize))}
-            onNext={() => setCursor((c) => c + pageSize)}
-            currentStart={currentStart}
-            currentEnd={currentEnd}
-            total={filteredItems.length}
+          <Pagination
+            currentPage={Math.floor(cursor / pageSize) + 1}
+            totalPages={Math.ceil(filteredItems.length / pageSize)}
+            onPageChange={(page) => setCursor((page - 1) * pageSize)}
           />
         )}
       </section>
@@ -327,41 +324,6 @@ export default function GenericSubCategorySection({
   );
 }
 
-function CursorPagination({
-  hasPrev,
-  hasNext,
-  onPrev,
-  onNext,
-  currentStart,
-  currentEnd,
-  total,
-}) {
-  return (
-    <div className="mt-10 flex justify-center sm:mt-12">
-      <div className="flex items-center gap-3 rounded-full bg-[#ec3f94] px-5 py-2 text-white shadow-md">
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={!hasPrev}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {"<"}
-        </button>
-        <span className="text-sm font-medium tabular-nums">
-          {currentStart} - {currentEnd} / {total}
-        </span>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!hasNext}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {">"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function LazyItem({ children, rootMargin = "200px" }) {
   const ref = useRef(null);

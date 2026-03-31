@@ -8,8 +8,10 @@ import { getEventDetail, getOtherEvents } from "../../../modules/public/events/s
 import { getOrganizerDisplay } from "../../../lib/organizer-helper";
 import LiveArchiveLinks from "../../../components/adminUI/Event/LiveArchiveLinks";
 import { getProgramPageConfig } from "../../../modules/public/events/services/event.service";
+import ViewsTracker from "../../../components/tracker/views.tracker";
+import { Eye } from "lucide-react";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export default async function EventDetailPage({ params }) {
   const { slug } = await params;
@@ -110,6 +112,7 @@ export default async function EventDetailPage({ params }) {
 
   return (
     <div className="w-full">
+      <ViewsTracker slug={event.slug} />
       {/* HERO GRADIENT */}
       <section
         className="relative w-full h-[300px]"
@@ -177,12 +180,18 @@ export default async function EventDetailPage({ params }) {
               </span>
             </p>
 
-            <p className="text-sm text-[var(--Color-5)]">
-              Status Event:{" "}
-              <span className="inline-block px-3 py-1 rounded-full bg-[var(--Color-3)] text-[var(--Color-1)] border border-[var(--Color-1)] text-xs">
-                {EVENT_STATUS_LABEL[status]}
+            <div className="flex flex-wrap gap-3 items-center">
+              <p className="text-sm text-[var(--Color-5)]">
+                Status Event:{" "}
+                <span className="inline-block px-3 py-1 rounded-full bg-[var(--Color-3)] text-[var(--Color-1)] border border-[var(--Color-1)] text-xs">
+                  {EVENT_STATUS_LABEL[status]}
+                </span>
+              </p>
+
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-(--Color-3) text-(--Color-1) border border-(--Color-1) text-xs">
+                <Eye className="w-3.5 h-3.5" /> {(event.views || 0).toLocaleString("id-ID")} kali dilihat
               </span>
-            </p>
+            </div>
           </div>
         </section>
 
