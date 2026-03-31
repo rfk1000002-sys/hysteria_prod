@@ -32,6 +32,29 @@ export async function getOtherEvents(slug) {
   return events.map(mapEventStatus);
 }
 
+export async function getLatestEvents(take = 10) {
+  const events = await repository.findLatestEvents(take);
+
+  return events.map(mapEventStatus).map((e) => {
+    // Determine primary category for badge
+    const primaryCat =
+      e.eventCategories.find((ec) => ec.isPrimary) || e.eventCategories[0];
+
+    // Status mapping in Indonesian
+    const statusLabels = {
+      UPCOMING: "Akan Datang",
+      ONGOING: "Sedang Berlangsung",
+      FINISHED: "Telah Berakhir",
+    };
+
+    return {
+      ...e,
+      categoryTitle: primaryCat?.categoryItem?.title || "Event",
+      statusLabel: statusLabels[e.status] || "Event",
+    };
+  });
+}
+
 // helper parsing
 function parsePageProgram(config) {
   const slugHeros = config?.slugHeros ?? {};
@@ -64,4 +87,15 @@ export async function getProgramPageConfig() {
     };
   }
   return parsePageProgram(config);
+}
+
+export async function trackEventView(slug) {
+  try {
+    const result = await repository.incrementEventViews(slug);
+    console.log(`[EVENT VIEW] Updated DB for ${slug}: new views = ${result.views}`);
+    return result;
+  } catch (error) {
+    console.error(`[EVENT VIEW] Error incrementing views for event: ${slug}`, error);
+    throw error;
+  }
 }

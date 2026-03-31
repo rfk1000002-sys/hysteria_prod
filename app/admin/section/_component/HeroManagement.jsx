@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../../../../lib/context/auth-context";
-import { MAX_MEDIA_SIZE, MAX_MEDIA_SIZE_MB } from "../../../../modules/admin/hero/validators/hero.validator";
+import {
+  MAX_MEDIA_SIZE,
+  MAX_MEDIA_SIZE_MB,
+} from "../../../../modules/admin/hero/validators/hero.validator";
 import Card from "../../../../components/ui/Card";
 import DataTable from "../../../../components/ui/DataTable";
 import CrudModals from "../../../../components/adminUI/Crud.Modals";
@@ -25,12 +28,16 @@ export default function HeroManagement() {
   const [modalMode, setModalMode] = useState("create");
   const [editingHero, setEditingHero] = useState(null);
   const [formData, setFormData] = useState({
-    source: "",
     title: "",
     description: "",
     isActive: false,
+    media: null,
   });
-  const [toast, setToast] = useState({ visible: false, message: "", type: "error" });
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "error",
+  });
 
   const upsertHeroInState = useCallback((hero) => {
     if (!hero) return;
@@ -77,7 +84,7 @@ export default function HeroManagement() {
 
   const handleCreate = () => {
     setEditingHero(null);
-    setFormData({ source: "", title: "", description: "", isActive: false });
+    setFormData({ title: "", description: "", isActive: false, media: null });
     setModalMode("create");
     setShowModal(true);
   };
@@ -85,10 +92,10 @@ export default function HeroManagement() {
   const handleEdit = (hero) => {
     setEditingHero(hero);
     setFormData({
-      source: hero.source,
       title: hero.title,
       description: hero.description,
       isActive: hero.isActive,
+      media: null,
     });
     setModalMode("edit");
     setShowModal(true);
@@ -100,11 +107,19 @@ export default function HeroManagement() {
       const json = await res.json().catch(() => null);
       if (json?.success) {
         removeHeroFromState(id);
-        setToast({ visible: true, message: "Hero berhasil dihapus", type: "success" });
+        setToast({
+          visible: true,
+          message: "Hero berhasil dihapus",
+          type: "success",
+        });
       }
     } catch (error) {
       console.error("Error deleting hero:", error);
-      setToast({ visible: true, message: "Gagal menghapus hero", type: "error" });
+      setToast({
+        visible: true,
+        message: "Gagal menghapus hero",
+        type: "error",
+      });
     }
   };
 
@@ -119,13 +134,24 @@ export default function HeroManagement() {
         const returned = json.data || json.hero || null;
         if (returned && (returned.id || returned.heroId || returned.recordId)) {
           const updated = returned.hero || returned;
-          if (!updated.id && (returned.heroId || returned.recordId)) updated.id = returned.heroId || returned.recordId;
+          if (!updated.id && (returned.heroId || returned.recordId))
+            updated.id = returned.heroId || returned.recordId;
           upsertHeroInState(updated);
         } else {
-          setHeroes((prev) => prev.map((item) => (item.id === hero.id ? { ...item, isActive: !item.isActive } : item)));
+          setHeroes((prev) =>
+            prev.map((item) =>
+              item.id === hero.id
+                ? { ...item, isActive: !item.isActive }
+                : item,
+            ),
+          );
         }
       } else {
-        setToast({ visible: true, message: json?.error?.message || "Gagal ubah status", type: "error" });
+        setToast({
+          visible: true,
+          message: json?.error?.message || "Gagal ubah status",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error("Error toggling status:", error);
@@ -143,54 +169,73 @@ export default function HeroManagement() {
     if (mode === "delete") return [];
     const errs = [];
     if (!data) return ["Data is missing"];
-    if (!data.title || String(data.title).trim() === "") errs.push("Judul wajib");
-    else if (String(data.title).trim().length < 3) errs.push("Judul ≥3 karakter");
 
-    if (!data.description || String(data.description).trim() === "") errs.push("Deskripsi wajib");
-    else if (String(data.description).trim().length < 10) errs.push("Deskripsi ≥10 karakter");
+    if (!data.title || String(data.title).trim() === "")
+      errs.push("Judul wajib");
+    else if (String(data.title).trim().length < 3)
+      errs.push("Judul minimal 3 karakter");
 
-    if ((!data.source || String(data.source).trim() === "") && !data.media) errs.push("Masukkan URL atau unggah file");
+    if (!data.description || String(data.description).trim() === "")
+      errs.push("Deskripsi wajib");
+    else if (String(data.description).trim().length < 10)
+      errs.push("Deskripsi minimal 10 karakter");
 
-    if (data.media) return errs;
-
-    if (data.source && String(data.source).trim() !== "") {
-      const src = String(data.source).trim();
-      try {
-        const u = new URL(src);
-        if (!["https:"].includes(u.protocol)) {
-          errs.push("Gunakan https:// atau path lokal");
-        }
-      } catch {
-        const looksLikeLocal = src.startsWith("/") || src.startsWith("uploads/") || !src.includes(":");
-        if (!looksLikeLocal) {
-          errs.push("URL tidak valid. Gunakan https:// atau path lokal");
-        }
-      }
+    // Media file is mandatory for creation, but optional for updates
+    if (mode === "create" && !data.media) {
+      errs.push("Wajib mengunggah file media (gambar/video)");
     }
+
     return errs;
   }
 
   const columns = [
-    { field: "id", headerName: "ID", freeze: true, render: (hero) => <div className="text-sm text-zinc-700">{hero.id}</div> },
-    { field: "title", headerName: "Title", freeze: true, render: (hero) => <div className="font-medium text-zinc-900">{hero.title}</div> },
+    {
+      field: "id",
+      headerName: "ID",
+      freeze: true,
+      render: (hero) => <div className="text-sm text-zinc-700">{hero.id}</div>,
+    },
+    {
+      field: "title",
+      headerName: "Title",
+      freeze: true,
+      render: (hero) => (
+        <div className="font-medium text-zinc-900">{hero.title}</div>
+      ),
+    },
     {
       field: "description",
       headerName: "Description",
-      render: (hero) => <div className="max-w-md truncate text-sm text-zinc-600">{hero.description}</div>,
+      render: (hero) => (
+        <div className="max-w-md truncate text-sm text-zinc-600">
+          {hero.description}
+        </div>
+      ),
     },
     {
       field: "source",
       headerName: "Source",
-      render: (hero) => <div className="max-w-xs truncate text-xs text-zinc-500">{hero.source}</div>,
+      render: (hero) => (
+        <div className="max-w-xs truncate text-xs text-zinc-500">
+          {hero.source}
+        </div>
+      ),
     },
     {
       field: "isActive",
       headerName: "Status",
-      render: (hero) => <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${hero.isActive ? "bg-green-50 text-green-700" : "bg-zinc-100 text-zinc-600"}`}>{hero.isActive ? "Active" : "Inactive"}</span>,
+      render: (hero) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${hero.isActive ? "bg-green-50 text-green-700" : "bg-zinc-100 text-zinc-600"}`}
+        >
+          {hero.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
     },
     {
       field: "actions",
       headerName: "Actions",
+      width: "160px",
       render: (hero) => (
         <div className="flex gap-2">
           <Tooltip title={hero.isActive ? "Set inactive" : "Set active"}>
@@ -200,18 +245,24 @@ export default function HeroManagement() {
               onClick={(e) => {
                 e.stopPropagation();
                 handleToggleStatus(hero);
-              }}>
-              {hero.isActive ? <ToggleOnIcon fontSize="small" /> : <ToggleOffIcon fontSize="small" />}
+              }}
+            >
+              {hero.isActive ? (
+                <ToggleOnIcon fontSize="small" />
+              ) : (
+                <ToggleOffIcon fontSize="small" />
+              )}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Edit">
+          <Tooltip title="Edit Metadata">
             <IconButton
               size="small"
               color="primary"
               onClick={(e) => {
                 e.stopPropagation();
                 handleEdit(hero);
-              }}>
+              }}
+            >
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -222,7 +273,8 @@ export default function HeroManagement() {
               onClick={(e) => {
                 e.stopPropagation();
                 confirmDelete(hero);
-              }}>
+              }}
+            >
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -235,9 +287,15 @@ export default function HeroManagement() {
     <Card>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h2 className="truncate text-xl font-semibold text-zinc-900">Hero Management</h2>
-          <p className="mt-1 truncate text-sm text-zinc-500">Manage heroes for your homepage</p>
-          <p className="mt-2 text-xs text-rose-400">Note: hanya 1 hero yang boleh active.</p>
+          <h2 className="truncate text-xl font-semibold text-zinc-900">
+            Hero Management
+          </h2>
+          <p className="mt-1 truncate text-sm text-zinc-500">
+            Manage heroes for your homepage
+          </p>
+          <p className="mt-2 text-xs text-rose-400">
+            Note: hanya 1 hero yang boleh active.
+          </p>
         </div>
         <div className="w-full sm:w-auto">
           <Button
@@ -246,7 +304,8 @@ export default function HeroManagement() {
             startIcon={<AddIcon />}
             size="small"
             fullWidth
-            onClick={handleCreate}>
+            onClick={handleCreate}
+          >
             Add Hero
           </Button>
         </div>
@@ -263,27 +322,32 @@ export default function HeroManagement() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         mode={modalMode}
-        title={editingHero ? (modalMode === "delete" ? "Delete Hero" : "Edit Hero Section") : "Create Hero Section"}
+        title={
+          editingHero
+            ? modalMode === "delete"
+              ? "Delete Hero"
+              : "Edit Hero Section"
+            : "Create Hero Section"
+        }
         size="lg"
         fields={[
           {
-            name: "source",
-            label: "Source URL",
-            type: "text",
-            placeholder: "https://example.com/(video.mp4/image.jpg)",
-            required: false,
-            validation: "Masukkan video URL publik (https). (hapus URL jika ingin mengupload file)",
-          },
-          {
             name: "media",
-            label: "Upload Media",
+            label: "Upload Media (Gambar/Video)",
             type: "file",
             accept: "image/*,video/*",
             multiple: false,
             placeholder: "",
-            validation: `Maks ${MAX_MEDIA_SIZE_MB} MB. Jika ada URL, tidak perlu upload.`,
+            validation: `Maks ${MAX_MEDIA_SIZE_MB} MB, 5 MB untuk video atau 2 MB untuk gambar`,
           },
-          { name: "title", label: "Title", type: "text", placeholder: "Enter hero title", required: true, validation: "Minimal 3 karakter." },
+          {
+            name: "title",
+            label: "Title",
+            type: "text",
+            placeholder: "Enter hero title",
+            required: true,
+            validation: "Minimal 3 karakter.",
+          },
           {
             name: "description",
             label: "Short Description",
@@ -292,25 +356,42 @@ export default function HeroManagement() {
             required: true,
             validation: "Minimal 10 karakter.",
           },
-          { name: "isActive", label: "Active", type: "checkbox", placeholder: "Set as active hero section" },
+          {
+            name: "isActive",
+            label: "Active",
+            type: "checkbox",
+            placeholder: "Set as active hero section",
+          },
         ]}
         initialData={formData}
         onSubmit={async (data) => {
           const errors = validateForm(data, modalMode);
           if (errors.length) {
-            setToast({ visible: true, message: errors.join(" - "), type: "error" });
+            setToast({
+              visible: true,
+              message: errors.join(" - "),
+              type: "error",
+            });
             return false;
           }
 
           try {
-            const url = editingHero ? `/api/admin/hero/${editingHero.id}` : "/api/admin/hero";
+            const url = editingHero
+              ? `/api/admin/hero/${editingHero.id}`
+              : "/api/admin/hero";
             const method = editingHero ? "PUT" : "POST";
 
             let res;
-            const mediaFile = data.media && (data.media instanceof File ? data.media : data.media[0] || null);
+            const mediaFile =
+              data.media &&
+              (data.media instanceof File ? data.media : data.media[0] || null);
             if (mediaFile) {
               if (mediaFile.size && mediaFile.size > MAX_MEDIA_SIZE) {
-                setToast({ visible: true, message: `Maks ${MAX_MEDIA_SIZE_MB} MB`, type: "error" });
+                setToast({
+                  visible: true,
+                  message: `Maks ${MAX_MEDIA_SIZE_MB} MB`,
+                  type: "error",
+                });
                 return false;
               }
 
@@ -319,7 +400,10 @@ export default function HeroManagement() {
               Object.entries(data).forEach(([key, value]) => {
                 if (key === "media") return;
                 if (value === undefined || value === null) return;
-                fd.append(key, typeof value === "boolean" ? String(value) : value);
+                fd.append(
+                  key,
+                  typeof value === "boolean" ? String(value) : value,
+                );
               });
 
               res = await fetch(url, {
@@ -339,7 +423,8 @@ export default function HeroManagement() {
               const returned = json.data || json.hero || null;
               if (returned) {
                 const heroObj = returned.hero || returned;
-                if (!heroObj.id && (returned.recordId || returned.heroId)) heroObj.id = returned.recordId || returned.heroId;
+                if (!heroObj.id && (returned.recordId || returned.heroId))
+                  heroObj.id = returned.recordId || returned.heroId;
                 upsertHeroInState(heroObj);
                 return true;
               }
@@ -347,15 +432,28 @@ export default function HeroManagement() {
               return true;
             }
 
-            const serverMsg = json?.error?.message || json?.message || (json?.error && typeof json.error === "string" ? json.error : null);
+            const serverMsg =
+              json?.error?.message ||
+              json?.message ||
+              (json?.error && typeof json.error === "string"
+                ? json.error
+                : null);
             if (json && !json.success) {
-              setToast({ visible: true, message: serverMsg || "Server menolak input", type: "error" });
+              setToast({
+                visible: true,
+                message: serverMsg || "Server menolak input",
+                type: "error",
+              });
               return false;
             }
             return true;
           } catch (error) {
             console.error("Error saving hero:", error);
-            setToast({ visible: true, message: "Gagal menyimpan. Periksa input.", type: "error" });
+            setToast({
+              visible: true,
+              message: "Gagal menyimpan. Periksa input.",
+              type: "error",
+            });
             return false;
           }
         }}

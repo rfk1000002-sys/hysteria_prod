@@ -17,7 +17,7 @@ export default function EventDuration({
           onChange={handleChange}
           className={`${inputClass} pr-9`}
         />
-        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--Color-5)] pointer-events-none"/>
+        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--Color-5) pointer-events-none"/>
       </div>
 
       <div className="relative">
@@ -28,7 +28,7 @@ export default function EventDuration({
           onChange={handleChange}
           className={`${inputClass} pr-9`}
         />
-        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--Color-5)] pointer-events-none"/>
+        <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--Color-5) pointer-events-none"/>
       </div>
       
 
@@ -42,7 +42,7 @@ export default function EventDuration({
               onChange={handleChange}
               className={`${inputClass} pr-9`}
             />
-            <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--Color-5)] pointer-events-none"/>
+            <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--Color-5) pointer-events-none"/>
           </div>
 
           <div className="relative w-full">
@@ -53,7 +53,7 @@ export default function EventDuration({
               onChange={handleChange}
               className={`${inputClass} pr-9`}
             />
-            <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--Color-5)] pointer-events-none"/>
+            <Clock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--Color-5) pointer-events-none"/>
           </div>
         </div>
       )}
@@ -62,22 +62,24 @@ export default function EventDuration({
         <input
           type="checkbox"
           checked={form.isFlexibleTime}
-          onChange={(e) =>
+          onChange={(e) => {
+            const checked = e.target.checked;
             setForm((prev) => ({
               ...prev,
-              isFlexibleTime: e.target.checked,
-            }))
-          }
-          className="w-4 h-4 appearance-auto accent-[var(--Color-1)] bg-white !bg-white border border-[var(--Color-3)] rounded cursor-pointer"
+              isFlexibleTime: checked,
+              ...(checked ? { startTime: "", endTime: "" } : {}),
+            }));
+          }}
+          className="w-4 h-4 appearance-auto accent-(--Color-1) bg-white! border border-(--Color-3) rounded cursor-pointer"
         />
         Menyesuaikan  
       </label>
       {!form.isFlexibleTime ? (
-        <p className="text-xs text-[var(--Color-1)]">
+        <p className="text-xs text-(--Color-1)">
           Centang jika acara berlangsung lebih dari satu sesi atau waktunya tidak pasti.
         </p>
       ) : (
-        <p className="text-xs text-[var(--Color-1)] italic">
+        <p className="text-xs text-(--Color-1) italic">
           Waktu acara akan ditampilkan sebagai fleksibel kepada peserta.
         </p>
       )}

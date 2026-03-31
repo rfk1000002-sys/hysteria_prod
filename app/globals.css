@@ -268,3 +268,18 @@ select:-webkit-autofill {
   border-color: var(--border) !important;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}

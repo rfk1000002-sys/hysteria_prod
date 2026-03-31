@@ -152,6 +152,7 @@ export const createContentSchema = z.object({
   year: optionalYear,
   tags: optionalTagsArray,
   order: optionalInt(0),
+  views: optionalInt(0),
   isActive: optionalBool,
 });
 
@@ -176,6 +177,7 @@ export const updateContentSchema = z
     year: optionalYear,
     tags: optionalTagsArray,
     order: optionalInt(0),
+    views: optionalInt(0),
     isActive: optionalBool,
     host: clearableText(255, "Host terlalu panjang"),
     guests: optionalGuestsArray,

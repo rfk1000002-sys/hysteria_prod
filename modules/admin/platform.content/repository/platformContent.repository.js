@@ -28,8 +28,9 @@ const MINIMAL_SELECT = {
   year: true,
   tags: true,
   createdAt: true,
-  // order: true,
-  // isActive: true,
+  order: true,
+  views: true,
+  isActive: true,
   // ambil hanya satu gambar preview
   images: {
     orderBy: [{ order: "desc" }, { id: "desc" }],
@@ -52,20 +53,31 @@ export async function findContentsByPlatformId(
   platformId,
   categoryItemId = null,
   minimal = false,
+  limit = null,
+  cursor = null
 ) {
+  const take = limit ? limit + 1 : undefined;
+  const cursorObj = cursor ? { id: Number(cursor) } : undefined;
+  const skip = cursor ? 1 : undefined;
   const where = { platformId };
   if (categoryItemId !== null) where.categoryItemId = categoryItemId;
   if (minimal) {
     return prisma.platformContent.findMany({
       where,
       select: MINIMAL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take,
+      cursor: cursorObj,
+      skip,
     });
   }
   return prisma.platformContent.findMany({
     where,
     include: CONTENT_INCLUDE,
-    orderBy: [{ createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take,
+    cursor: cursorObj,
+    skip,
   });
 }
 
@@ -80,21 +92,56 @@ export async function findContentsByPlatformSlug(
   platformSlug,
   categoryItemSlug = null,
   minimal = false,
+  limit = null,
+  cursor = null
 ) {
+  const take = limit ? limit + 1 : undefined;
+  const cursorObj = cursor ? { id: Number(cursor) } : undefined;
+  const skip = cursor ? 1 : undefined;
   const where = { platform: { slug: platformSlug } };
   if (categoryItemSlug) where.categoryItem = { slug: categoryItemSlug };
   if (minimal) {
     return prisma.platformContent.findMany({
       where,
       select: MINIMAL_SELECT,
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take,
+      cursor: cursorObj,
+      skip,
     });
   }
   return prisma.platformContent.findMany({
     where,
     include: CONTENT_INCLUDE,
-    orderBy: [{ createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take,
+    cursor: cursorObj,
+    skip,
   });
+}
+
+/**
+ * Hitung total konten dalam sebuah platform id (untuk pagination UI).
+ * @param {number} platformId
+ * @param {number|null} [categoryItemId]
+ * @returns {Promise<number>}
+ */
+export async function countContentsByPlatformId(platformId, categoryItemId = null) {
+  const where = { platformId };
+  if (categoryItemId !== null) where.categoryItemId = categoryItemId;
+  return prisma.platformContent.count({ where });
+}
+
+/**
+ * Hitung total konten dalam sebuah platform slug (untuk pagination UI).
+ * @param {string} platformSlug
+ * @param {string|null} [categoryItemSlug]
+ * @returns {Promise<number>}
+ */
+export async function countContentsByPlatformSlug(platformSlug, categoryItemSlug = null) {
+  const where = { platform: { slug: platformSlug } };
+  if (categoryItemSlug) where.categoryItem = { slug: categoryItemSlug };
+  return prisma.platformContent.count({ where });
 }
 
 /**

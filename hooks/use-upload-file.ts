@@ -13,9 +13,11 @@ import { z } from 'zod';
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
 
 interface UseUploadFileProps
-  extends Pick<
-    UploadFilesOptions<OurFileRouter['editorUploader']>,
-    'headers' | 'onUploadBegin' | 'onUploadProgress' | 'skipPolling'
+  extends Partial<
+    Pick<
+      UploadFilesOptions<OurFileRouter['editorUploader']>,
+      'headers' | 'onUploadBegin' | 'onUploadProgress' | 'skipPolling'
+    >
   > {
   onUploadComplete?: (file: UploadedFile) => void;
   onUploadError?: (error: unknown) => void;
@@ -48,7 +50,7 @@ export function useUploadFile({
 
       onUploadComplete?.(res[0]);
 
-      return uploadedFile;
+      return res[0];
     } catch (error) {
       const errorMessage = getErrorMessage(error);
 

@@ -46,7 +46,11 @@ export async function fetchDitampartEventData({ query = '', status = null, limit
   const res = await fetch(`/api/admin/platform-content/ditampart/events?${p.toString()}`);
   if (!res.ok) throw new Error('Gagal memuat data event ditampart');
   const json = await res.json();
-  return { data: json.data?.data ?? [], nextCursor: json.data?.nextCursor ?? null };
+  return {
+    data: json.data?.data ?? [],
+    nextCursor: json.data?.nextCursor ?? null,
+    totalCount: json.data?.totalCount ?? 0,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -63,7 +67,11 @@ export async function fetchArtlabEventData({ query = '', categorySlug = null, st
   const res = await fetch(`/api/admin/platform-content/hysteria-artlab/events?${p.toString()}`);
   if (!res.ok) throw new Error('Gagal memuat data event artlab');
   const json = await res.json();
-  return { data: json.data?.data ?? [], nextCursor: json.data?.nextCursor ?? null };
+  return {
+    data: json.data?.data ?? [],
+    nextCursor: json.data?.nextCursor ?? null,
+    totalCount: json.data?.totalCount ?? 0,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -79,6 +87,10 @@ export async function fetchLakiMasakEventData({ query = '', status = null, limit
   const res = await fetch(`/api/admin/platform-content/laki-masak/events?${p.toString()}`);
   if (!res.ok) throw new Error('Gagal memuat data event meramu');
   const json = await res.json();
-  return { data: json.data?.data ?? [], nextCursor: json.data?.nextCursor ?? null };
+  return {
+    data: json.data?.data ?? [],
+    nextCursor: json.data?.nextCursor ?? null,
+    totalCount: json.data?.totalCount ?? 0,
+  };
 }
 

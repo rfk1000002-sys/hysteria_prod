@@ -135,6 +135,7 @@ function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, 
   if (cardType === "video") {
     return (
       <VideoCard
+        id={item.id}
         imageUrl={item.imageUrl || item.src}
         youtube={item.youtube}
         url={item.url}
@@ -155,6 +156,7 @@ function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, 
       : item.url || undefined;
     return (
       <ArtistCard
+        id={item.id}
         imageUrl={item.imageUrl || item.src}
         alt={item.alt}
         title={item.title}
@@ -171,6 +173,7 @@ function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, 
   // default: poster
   return (
     <PosterCard
+      id={item.id}
       imageUrl={item.imageUrl || item.src}
       alt={item.alt}
       title={item.title}

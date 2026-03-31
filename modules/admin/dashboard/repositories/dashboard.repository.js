@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getDashboardStats() {
+  // data total konten
   const [
     totalArticles,
     totalEvents,
@@ -22,6 +23,7 @@ export async function getDashboardStats() {
       where: { isActive: true },
     }),
 
+    // data recent articles, show 5 datas
     prisma.article.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
@@ -33,6 +35,7 @@ export async function getDashboardStats() {
       },
     }),
 
+    // data recent events, show 5 datas
     prisma.event.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },

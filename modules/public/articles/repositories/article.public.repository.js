@@ -133,7 +133,6 @@ export async function findRecommendedArticles({
 }
 
 export async function incrementArticleViews(slug) {
-
   return prisma.article.update({
     where: {
       slug: slug,
@@ -144,5 +143,22 @@ export async function incrementArticleViews(slug) {
       },
     },
   });
-
+}
+// repository article untuk tampilan data article di halaman Home
+export async function findLatestArticles(limit = 3) {
+  return prisma.article.findMany({
+    where: {
+      isDeleted: false,
+      ...publishedArticleCondition(),
+    },
+    take: limit,
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      categories: {
+        include: { category: true },
+      },
+    },
+  });
 }

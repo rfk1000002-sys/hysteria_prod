@@ -79,15 +79,20 @@ export default function EventPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-6 py-4 bg-white rounded-lg shadow-sm">
       
       {/* ================= LIST ================= */}
       {view === "list" && (
         <>
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-black">
-              Daftar Event
-            </h1>
+            <div>
+              <h1 className="text-[28px] font-bold text-black">
+                Event
+              </h1>
+              <p className="text-[14px] text-gray-500">
+                Manage all content across event
+              </p>
+            </div>
 
             <button
               onClick={() => setView("create")}
