@@ -206,7 +206,7 @@ export default function ArtikelPage() {
   return (
     <div className="bg-[var(--Color-1)] pt-19">
       <div className="bg-[var(--background)] text-[var(--foreground)]">
-        <div className="min-h-screen max-w-7xl mx-auto px-6 py-12">
+        <div className="min-h-screen mx-auto px-6 md:px-23 py-12">
           {/* Header */}
           <div className="py-7 max-w-4xl">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">Artikel</h1>
