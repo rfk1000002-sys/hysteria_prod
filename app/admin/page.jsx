@@ -75,7 +75,7 @@ export default function DashboardPage({ onNavigate }) {
   return (
     <div className="space-y-6 p-4 md:p-6">
       {/* HEADER */}
-      <div>
+      <div className="bg-white px-4 py-3 rounded-lg border border-gray-300 shadow-md">
         <h1 className="text-2xl font-bold text-zinc-900">Dashboard</h1>
         <p className="text-sm text-zinc-500">Overview of Hysteria platform</p>
       </div>

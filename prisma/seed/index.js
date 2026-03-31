@@ -12,7 +12,7 @@ const seeds = [
   // require("./005-seed-statuses.js"),
   // require("./006-create-admin-user.js"),
   // require("./008-seed-basic-permissions.js"),
-  // require('./009-nav-category.js'),
+  // require("./009-nav-category.js"),
   // require("./010-team.js"),
   // require("./011-platform-permissions.js"),
   // require("./012-platform-seed.js"),
@@ -21,7 +21,8 @@ const seeds = [
   // require("./015-tentang-default-seed.js"),
   // require("./016-platform-content-seed.js"),
   // require("./017-platform-events-seed.js"),
-  require("./018-homepage-platform-seed.js"),
+  // require("./018-homepage-platform-seed.js"),
+  // require("./019-article-seed.js"),
 ];
 
 async function main() {

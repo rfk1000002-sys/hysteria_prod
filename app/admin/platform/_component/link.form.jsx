@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function LinkForm({
   close,
@@ -70,7 +71,10 @@ export default function LinkForm({
         try {
           setSaving(true);
           await onSave({ name: finalUrl });
+          toast.success("Data berhasil disimpan");
           close();
+        } catch (err) {
+          toast.error(err.message || "Gagal menyimpan data");
         } finally {
           setSaving(false);
         }
@@ -84,7 +88,10 @@ export default function LinkForm({
       try {
         setSaving(true);
         await onSave({ name: input.trim() });
+        toast.success("Data berhasil disimpan");
         close();
+      } catch (err) {
+        toast.error(err.message || "Gagal menyimpan data");
       } finally {
         setSaving(false);
       }

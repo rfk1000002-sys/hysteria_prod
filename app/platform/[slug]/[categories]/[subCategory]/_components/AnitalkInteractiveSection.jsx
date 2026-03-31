@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import Image from "next/image";
+import Pagination from "@/components/ui/Pagination";
 
 const PAGE_SIZE = 8;
 
@@ -44,16 +45,15 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
         (b?.title || "").localeCompare(a?.title || "", "id"),
       );
     } else if (sortBy === "latest" || sortBy === "oldest") {
-      const hasYear = sorted.some((x) => Number.isFinite(Number(x?.year)));
-      if (hasYear) {
-        sorted.sort((a, b) => {
-          const ay = Number(a?.year) || 0;
-          const by = Number(b?.year) || 0;
-          return sortBy === "latest" ? by - ay : ay - by;
-        });
-      } else if (sortBy === "latest") {
-        sorted.reverse();
-      }
+      sorted.sort((a, b) => {
+        const timeA = a?.createdAt
+          ? new Date(a.createdAt).getTime()
+          : Number(a?.year) || 0;
+        const timeB = b?.createdAt
+          ? new Date(b.createdAt).getTime()
+          : Number(b?.year) || 0;
+        return sortBy === "latest" ? timeB - timeA : timeA - timeB;
+      });
     }
 
     return sorted;
@@ -78,7 +78,7 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12 max-w-[1920px]">
+      <section className="mx-auto max-w-7xl px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex h-12 flex-1 items-center rounded-full border border-[#ec3f94] bg-white px-4 shadow-sm sm:h-16 sm:px-6">
             <input
@@ -110,12 +110,12 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
             {openFilter && (
               <div className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
                 <FilterButton
-                  label="Podcast terbaru"
+                  label="Terbaru"
                   active={sortBy === "latest"}
                   onClick={() => applySort("latest")}
                 />
                 <FilterButton
-                  label="Podcast terlama"
+                  label="Terlama"
                   active={sortBy === "oldest"}
                   onClick={() => applySort("oldest")}
                 />
@@ -143,7 +143,9 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
             {pagedItems.map((episode, idx) => (
-              <LazyItem key={`${selectedSub.slug}-${cursor}-${idx}`}>
+              <LazyItem
+                key={episode.id || `${selectedSub.slug}-${cursor}-${idx}`}
+              >
                 <AnitalkEpisodeCard episode={episode} index={cursor + idx} />
               </LazyItem>
             ))}
@@ -151,14 +153,10 @@ export default function AnitalkInteractiveSection({ selectedSub, items = [] }) {
         )}
 
         {(hasPrev || hasNext) && (
-          <CursorPagination
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            onPrev={() => setCursor((c) => Math.max(0, c - PAGE_SIZE))}
-            onNext={() => setCursor((c) => c + PAGE_SIZE)}
-            currentStart={currentStart}
-            currentEnd={currentEnd}
-            total={filteredItems.length}
+          <Pagination
+            currentPage={Math.floor(cursor / PAGE_SIZE) + 1}
+            totalPages={Math.ceil(filteredItems.length / PAGE_SIZE)}
+            onPageChange={(page) => setCursor((page - 1) * PAGE_SIZE)}
           />
         )}
       </section>
@@ -186,7 +184,7 @@ function FilterButton({ label, active, onClick }) {
 function AnitalkEpisodeCard({ episode, index }) {
   const href = episode.youtube || episode.url || null;
   const cardClassName =
-    "block w-full min-w-0 rounded-xl bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden flex flex-col";
+    "block w-full h-full min-w-0 rounded-xl bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden flex flex-col";
   // Extract YouTube thumbnail when possible, with fallback handling
   function extractYouTubeId(url) {
     if (typeof url !== "string") return null;
@@ -203,9 +201,15 @@ function AnitalkEpisodeCard({ episode, index }) {
 
   const sourceForId = episode.youtube || episode.url || episode.imageUrl;
   const ytId = extractYouTubeId(sourceForId);
-  const bestYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : null;
-  const backupYtImg = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
-  const initialImgSrc = ytId ? bestYtImg : (episode.imageUrl || episode.src || "/image/video.webp");
+  const bestYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`
+    : null;
+  const backupYtImg = ytId
+    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+    : null;
+  const initialImgSrc = ytId
+    ? bestYtImg
+    : episode.imageUrl || episode.src || "/image/video.webp";
 
   const [imgSrc, setImgSrc] = useState(initialImgSrc);
 
@@ -221,7 +225,7 @@ function AnitalkEpisodeCard({ episode, index }) {
 
   const content = (
     <>
-      <div className="aspect-video relative w-full flex-shrink-0 bg-black flex items-center justify-center">
+      <div className="aspect-video relative w-full shrink-0 bg-black flex items-center justify-center">
         <Image
           src={imgSrc}
           alt={episode.alt || episode.title || "Episode"}
@@ -240,16 +244,18 @@ function AnitalkEpisodeCard({ episode, index }) {
         </span>
       </div>
 
-      <div className="min-w-0 p-3 sm:p-5 w-full flex-1">
-        <h3 className="line-clamp-2 text-[13px] font-semibold leading-[15px] md:leading-[22px] text-[#111] sm:text-base md:text-xl">
-          {episode.title || `Anitalk #${index + 1}`}
-        </h3>
+      <div className="min-w-0 p-3 sm:p-5 w-full flex-1 flex flex-col justify-between">
+        <div className="space-y-2 sm:space-y-3">
+          <h3 className="line-clamp-2 text-[13px] font-semibold leading-[15px] md:leading-[22px] text-[#111] sm:text-base md:text-xl">
+            {episode.title || `Anitalk #${index + 1}`}
+          </h3>
 
-        <p className="mt-2 text-[10px] md:text-[14px] leading-[14px] md:leading-[20px] text-gray-600 sm:mt-3 sm:text-[12px] sm:leading-[18px] line-clamp-4">
-          {episode.prevdescription || "Belum ada deskripsi."}
-        </p>
+          <p className="text-[10px] md:text-[14px] leading-[14px] md:leading-[20px] text-gray-600 sm:text-[12px] sm:leading-[18px] line-clamp-4">
+            {episode.prevdescription || "Belum ada deskripsi."}
+          </p>
+        </div>
 
-        <div className="mt-2 space-y-1 text-[10px] text-[#ec3f94] sm:mt-4 sm:text-sm">
+        <div className="mt-1 space-y-1 text-[10px] text-[#ec3f94] sm:mt-2 sm:text-sm">
           <div className="flex flex-wrap gap-x-1 items-start min-w-0">
             <span className="font-semibold shrink-0">Pengisi/Host</span>
             <span className="text-gray-400 shrink-0">:</span>
@@ -260,7 +266,7 @@ function AnitalkEpisodeCard({ episode, index }) {
           <div className="flex gap-x-1 items-start min-w-0">
             <span className="font-semibold shrink-0">Podcaster</span>
             <span className="text-gray-400 shrink-0">:</span>
-            <span className="flex-1 line-clamp-2 md:line-clamp-3 break-words min-w-0">
+            <span className="flex-1 line-clamp-2 md:line-clamp-3 wrap-break-words min-w-0">
               {episode.guests?.join(", ") || "-"}
             </span>
           </div>
@@ -304,7 +310,7 @@ function LazyItem({ children, rootMargin = "200px" }) {
           obs.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin }
+      { threshold: 0.1, rootMargin },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -313,7 +319,7 @@ function LazyItem({ children, rootMargin = "200px" }) {
   return (
     <div
       ref={ref}
-      className={`transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+      className={`h-full transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
       style={{ minHeight: 1 }}
     >
       {visible ? children : null}
@@ -321,41 +327,6 @@ function LazyItem({ children, rootMargin = "200px" }) {
   );
 }
 
-function CursorPagination({
-  hasPrev,
-  hasNext,
-  onPrev,
-  onNext,
-  currentStart,
-  currentEnd,
-  total,
-}) {
-  return (
-    <div className="mt-10 flex justify-center sm:mt-12">
-      <div className="flex items-center gap-3 rounded-full bg-[#ec3f94] px-5 py-2 text-white shadow-md">
-        <button
-          type="button"
-          onClick={onPrev}
-          disabled={!hasPrev}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {"<"}
-        </button>
-        <span className="text-sm font-medium tabular-nums">
-          {currentStart}–{currentEnd} / {total}
-        </span>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!hasNext}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {">"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function SearchIcon() {
   return (

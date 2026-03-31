@@ -19,19 +19,13 @@ export async function findEvents({ q, statusFilter, sort }) {
     where.AND = [
       { startAt: { lte: now } },
       {
-        OR: [
-          { endAt: { gte: now } },
-          { endAt: null, startAt: { lte: now } },
-        ],
+        OR: [{ endAt: { gte: now } }, { endAt: null, startAt: { lte: now } }],
       },
     ];
   }
 
   if (statusFilter === "finished") {
-    where.AND = [
-      { endAt: { not: null } },
-      { endAt: { lt: now } }
-    ];
+    where.AND = [{ endAt: { not: null } }, { endAt: { lt: now } }];
   }
 
   let orderBy = { startAt: "desc" };
@@ -75,7 +69,7 @@ export async function findEventBySlug(slug) {
                 include: {
                   parent: {
                     include: {
-                      parent: true, 
+                      parent: true,
                     },
                   },
                 },
@@ -101,5 +95,40 @@ export async function findOtherEvents(slug) {
     },
     orderBy: { startAt: "asc" },
     take: 5,
+  });
+}
+// repo untuk tampilan data carousle sorotan event di halaman home
+export async function findLatestEvents(take = 10) {
+  return prisma.event.findMany({
+    where: {
+      isPublished: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      eventCategories: {
+        include: {
+          categoryItem: true,
+        },
+      },
+      organizers: {
+        include: {
+          categoryItem: true,
+        },
+      },
+    },
+    take,
+  });
+}
+
+export async function incrementEventViews(slug) {
+  return prisma.event.update({
+    where: { slug },
+    data: {
+      views: {
+        increment: 1,
+      },
+    },
   });
 }

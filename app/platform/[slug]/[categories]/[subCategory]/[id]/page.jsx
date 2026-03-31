@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { getPublicContentItem } from "../../../../../../modules/public/platform/services/platform.public.service.js";
 import ArtistCard from "../../_BodyComponent/cards/ArtistCard";
 import LightboxImage from "../../../../../../components/ui/LightboxImage";
+import ViewTracker from "../_components/ViewTracker.client.jsx";
 
 export default async function ArtistDetailPage({ params }) {
   const { slug, categories, subCategory, id } = (await params) || {};
@@ -22,21 +23,22 @@ export default async function ArtistDetailPage({ params }) {
 
   return (
     <div className="bg-zinc-50 min-h-screen font-sans">
+      {/* Tracker Statistik View (Client-side) */}
+      <ViewTracker contentId={item.id} />
 
       {/* ── TWO-COLUMN MAIN ─────────────────────────────────── */}
       <main className="max-w-6xl mx-auto px-5 md:px-12 pt-17 pb-12 md:pt-17 md:pb-20">
-
-        <div className="bg-white flex flex-col md:flex-row gap-10 md:gap-14 items-start rounded-lg border-1 border-gray-100 p-5 md:p-5 shadow-xl">
-
+        <div className="bg-white flex flex-col md:flex-row gap-10 md:gap-14 items-start rounded-lg border border-gray-100 p-5 md:p-5 shadow-xl">
           {/* ── LEFT: Artist poster (glass + glow edge) ─────────────── */}
           <div className="w-[250px] md:w-[260px] lg:w-[280px] shrink-0 mx-auto md:mx-0">
             <div
-              className="relative w-full aspect-[9/16] rounded-2xl p-1"
+              className="relative w-full aspect-9/16 rounded-2xl p-1"
               style={{
-                background: 'linear-gradient(135deg, rgba(232,60,145,0.06), rgba(99,102,241,0.04))'
+                background:
+                  "linear-gradient(135deg, rgba(232,60,145,0.06), rgba(99,102,241,0.04))",
               }}
             >
-              <div className="relative w-full h-full overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border-1 border-gray-400 shadow-2xl hover:scale-[1.03]">
+              <div className="relative w-full h-full overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-gray-400 shadow-2xl hover:scale-[1.03]">
                 <LightboxImage
                   src={heroImg}
                   alt={item.alt || item.title || "Artist"}
@@ -65,13 +67,19 @@ export default async function ArtistDetailPage({ params }) {
               <div className="mb-5 text-sm text-zinc-700 space-y-1">
                 {item.guests?.length > 0 && (
                   <p>
-                    <span className="font-semibold">Artist. Collaborator :</span>{" "}
-                    <span className="text-pink-500">{item.guests.join(", ")}</span>
+                    <span className="font-semibold">
+                      Artist. Collaborator :
+                    </span>{" "}
+                    <span className="text-pink-500">
+                      {item.guests.join(", ")}
+                    </span>
                   </p>
                 )}
                 {item.host && (
                   <p>
-                    <span className="font-semibold">Project Director &amp; Host :</span>{" "}
+                    <span className="font-semibold">
+                      Project Director &amp; Host :
+                    </span>{" "}
                     <span className="text-pink-500">{item.host}</span>
                   </p>
                 )}
@@ -163,7 +171,7 @@ export default async function ArtistDetailPage({ params }) {
             <div className="mt-10 flex justify-center">
               <Link
                 href={backHref}
-                className="bg-zinc-100 px-8 py-2.5 rounded-md text-sm text-pink-500 font-semibold hover:border-1 border-green-500 hover:text-green-500"
+                className="bg-zinc-100 px-8 py-2.5 rounded-md text-sm text-pink-500 font-semibold border hover:border hover:text-green-500"
               >
                 Lihat lebih banyak
               </Link>

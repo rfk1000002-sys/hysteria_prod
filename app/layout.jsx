@@ -42,7 +42,9 @@ export async function generateMetadata() {
       siteName: info.judul,
       locale: "id_ID",
       type: "website",
-      images: [{ url: info.logoWebsite, width: 800, height: 600, alt: info.judul }],
+      images: [
+        { url: info.logoWebsite, width: 800, height: 600, alt: info.judul },
+      ],
       description: info.deskripsi,
     },
   };
@@ -52,9 +54,7 @@ export default async function RootLayout({ children }) {
   const websiteInfo = withWebsiteInfoDefaults(await getPublicWebsiteInfo());
 
   return (
-    <html
-      lang="en"
-      className={poppins.variable}>
+    <html lang="en" className={poppins.variable}>
       <body className="min-h-screen flex flex-col font-sans">
         <Providers>
           <LayoutClient websiteInfo={websiteInfo}>{children}</LayoutClient>

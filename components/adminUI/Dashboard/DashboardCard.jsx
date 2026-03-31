@@ -11,11 +11,10 @@ export default function DashboardCard({
     <div
       className={`
         bg-white
-        border border-black
-        rounded-2xl
-        shadow-sm
-        hover:shadow-md
-        transition
+        border border-gray-300
+        rounded-xl
+        shadow-md
+      hover:border-pink-500
         p-5
         ${className}
       `}
@@ -23,15 +22,9 @@ export default function DashboardCard({
       {/* HEADER */}
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-2xl text-black">
-            {title}
-          </h3>
+          <h3 className="font-bold text-2xl text-black">{title}</h3>
 
-          {action && (
-            <div className="text-sm text-zinc-500 text-black">
-              {action}
-            </div>
-          )}
+          {action && <div className="text-sm text-black">{action}</div>}
         </div>
       )}
 
@@ -40,9 +33,7 @@ export default function DashboardCard({
 
       {/* FOOTER */}
       {footer && (
-        <div className="mt-4 pt-3 border-t text-sm text-zinc-500">
-          {footer}
-        </div>
+        <div className="mt-4 pt-3 border-t text-sm text-zinc-500">{footer}</div>
       )}
     </div>
   );

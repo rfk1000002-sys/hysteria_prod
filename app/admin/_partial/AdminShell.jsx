@@ -50,7 +50,19 @@ import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
 export default function AdminShell({ children }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
-  const [currentView, setCurrentView] = useState("dashboard");
+  const [currentView, setCurrentView] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin_current_view") || "dashboard";
+    }
+    return "dashboard";
+  });
+
+  // Persist currentView state changes to localStorage
+  useEffect(() => {
+    if (currentView) {
+      localStorage.setItem("admin_current_view", currentView);
+    }
+  }, [currentView]);
 
   useEffect(() => {
     function onKey(e) {
@@ -141,10 +153,10 @@ export default function AdminShell({ children }) {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 via-pink-100 to-orange-100 justify-center">
+      <div className="min-h-screen bg-linear-to-br from-blue-100 via-purple-100 to-orange-100 justify-center">
         <div className="lg:flex lg:items-start lg:justify-start">
           <aside
-            className={`hidden lg:block lg:flex-shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
+            className={`hidden lg:block lg:shrink-0 border-r border-zinc-200 bg-white transition-width duration-200 ${collapsed ? "w-20" : "w-64"} sticky top-0 h-screen overflow-hidden`}
           >
             <AdminSidebar
               collapsed={collapsed}

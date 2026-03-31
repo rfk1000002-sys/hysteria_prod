@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-r
 
 const ITEMS_PER_PAGE = 30;
 
-export default function EventsPage() {
+function EventsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -357,5 +357,12 @@ export default function EventsPage() {
         </>
       )}
     </div>
+  );
+}
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div>Loading events...</div>}>
+      <EventsPageContent />
+    </Suspense>
   );
 }
