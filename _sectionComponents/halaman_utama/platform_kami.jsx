@@ -10,11 +10,17 @@ const placeholder = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/
 function ItemCard({ item, tall = false }) {
   const [src, setSrc] = useState(item.src || DEFAULT_IMAGE || placeholder);
 
+  // Define mobile-first padding (e.g., 56.25% for 16:9 or 66.66% for 3:2)
+  // and override it for desktop (sm: 640px+) based on the 'tall' prop.
+  const responsivePadding = tall
+    ? "pt-[66.66%]" // Always 66.66% if tall
+    : "pt-[66.66%] sm:pt-[40%]"; // 66.66% on mobile, 40% on desktop if short
+
   return (
     <article
       className="relative rounded-lg overflow-hidden"
       aria-label={item.title}>
-      <div style={{ position: "relative", width: "100%", paddingTop: tall ? "66.66%" : "40%" }}>
+      <div className={`relative w-full ${responsivePadding}`}>
         <Image
           src={src}
           alt={item.title}
