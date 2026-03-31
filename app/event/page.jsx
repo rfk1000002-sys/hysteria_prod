@@ -8,7 +8,7 @@ import { getEventStatus } from "../../lib/event-status";
 import { useDebounce } from "../../hooks/use-debounce";
 import { Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
-const ITEMS_PER_PAGE = 30;
+const ITEMS_PER_PAGE = 18;
 
 export default function EventsPage() {
   const router = useRouter();
