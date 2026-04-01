@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { useAuth } from "../../../../lib/context/auth-context";
 import {
-  MAX_MEDIA_SIZE,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
   MAX_MEDIA_SIZE_MB,
 } from "../../../../modules/admin/hero/validators/hero.validator";
 import Card from "../../../../components/ui/Card";
@@ -182,7 +184,9 @@ export default function HeroManagement() {
 
     // Media file is mandatory for creation, but optional for updates
     if (mode === "create" && !data.media) {
-      errs.push("Wajib mengunggah file media (gambar/video)");
+      errs.push(
+        "Wajib mengunggah file media (saran WebP, JPG,sarab WebM, atau MP4)",
+      );
     }
 
     return errs;
@@ -214,12 +218,37 @@ export default function HeroManagement() {
     },
     {
       field: "source",
-      headerName: "Source",
-      render: (hero) => (
-        <div className="max-w-xs truncate text-xs text-zinc-500">
-          {hero.source}
-        </div>
-      ),
+      headerName: "Preview",
+      width: "120px",
+      render: (hero) => {
+        const isVideo = hero.source?.match(/\.(mp4|webm)$/i);
+        return (
+          <div className="flex h-12 w-20 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
+            {isVideo ? (
+              <video
+                src={hero.source}
+                className="h-full w-full object-cover"
+                muted
+                onMouseOver={(e) => e.target.play()}
+                onMouseOut={(e) => {
+                  e.target.pause();
+                  e.target.currentTime = 0;
+                }}
+              />
+            ) : (
+              <div className="relative h-full w-full">
+                <Image
+                  src={hero.source}
+                  alt={hero.title || "Hero preview"}
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                />
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       field: "isActive",
@@ -333,12 +362,12 @@ export default function HeroManagement() {
         fields={[
           {
             name: "media",
-            label: "Upload Media (Gambar/Video)",
+            label: "Upload Media (WebP/JPG/WebM/MP4)",
             type: "file",
-            accept: "image/*,video/*",
+            accept: ".webp, .jpg, .jpeg, .webm, .mp4",
             multiple: false,
             placeholder: "",
-            validation: `Maks ${MAX_MEDIA_SIZE_MB} MB, 5 MB untuk video atau 2 MB untuk gambar`,
+            validation: `Gambar (saran WebP/tapi boleh JPG) maks 2 MB, Video (saran WebM/tapi boleh MP4) maks 5 MB.`,
           },
           {
             name: "title",
@@ -386,10 +415,15 @@ export default function HeroManagement() {
               data.media &&
               (data.media instanceof File ? data.media : data.media[0] || null);
             if (mediaFile) {
-              if (mediaFile.size && mediaFile.size > MAX_MEDIA_SIZE) {
+              const isVideo = mediaFile.type?.startsWith("video/");
+              const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+              const limitName = isVideo ? "Video" : "Gambar";
+              const limitMB = isVideo ? 5 : 2;
+
+              if (mediaFile.size && mediaFile.size > limit) {
                 setToast({
                   visible: true,
-                  message: `Maks ${MAX_MEDIA_SIZE_MB} MB`,
+                  message: `Ukuran file ${limitName} terlalu besar (Maks ${limitMB} MB)`,
                   type: "error",
                 });
                 return false;

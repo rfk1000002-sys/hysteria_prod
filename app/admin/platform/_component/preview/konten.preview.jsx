@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 
 /**
  * ArtistPreview — live preview panel for Artist Radar content.
@@ -21,8 +22,8 @@ export default function ArtistPreview({
   instagram = "",
   youtube = "",
   url = "",
-  imageFile = null,        // File object dari UploadBox (add mode)
-  imageUrl = "",           // URL gambar yang sudah ada (edit mode)
+  imageFile = null, // File object dari UploadBox (add mode)
+  imageUrl = "", // URL gambar yang sudah ada (edit mode)
 }) {
   const [tab, setTab] = useState("card");
   const [objUrl, setObjUrl] = useState(null);
@@ -115,16 +116,20 @@ export default function ArtistPreview({
 function CardPreview({ imgSrc, title, prevdescription, host, guestsArr }) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className="text-[10px] text-gray-400 italic">Tampilan di grid konten</p>
+      <p className="text-[10px] text-gray-400 italic">
+        Tampilan di grid konten
+      </p>
 
       <div className="w-[180px] md:w-[220px] lg:w-[260px]">
-        <div className="relative w-full aspect-[9/16] overflow-hidden rounded-2xl shadow-xl bg-zinc-800">
+        <div className="relative w-full aspect-9/16 overflow-hidden rounded-2xl shadow-xl bg-zinc-800">
           {imgSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={imgSrc}
               alt={title || "Artist"}
-              className="absolute inset-0 w-full h-full object-cover"
+              fill
+              unoptimized={imgSrc.startsWith("blob:")}
+              className="object-cover"
+              sizes="(max-width: 260px) 100vw, 260px"
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
@@ -141,19 +146,21 @@ function CardPreview({ imgSrc, title, prevdescription, host, guestsArr }) {
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-zinc-500 text-[9px] text-center">Belum ada gambar</span>
+              <span className="text-zinc-500 text-[9px] text-center">
+                Belum ada gambar
+              </span>
             </div>
           )}
 
           {/* Info overlay — always visible in preview */}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-4 pt-16">
+          <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/60 to-transparent px-3 pb-4 pt-16">
             {title && (
-              <p className="text-white text-[12px] md:text-[13px] font-bold leading-tight mb-1 break-words">
+              <p className="text-white text-[12px] md:text-[13px] font-bold leading-tight mb-1 wrap-break-words">
                 {title}
               </p>
             )}
             {prevdescription && (
-              <p className="text-white/80 text-[9px] md:text-[10px] mt-0.5 leading-tight break-words">
+              <p className="text-white/80 text-[9px] md:text-[10px] mt-0.5 leading-tight wrap-break-words">
                 {prevdescription}
               </p>
             )}
@@ -166,7 +173,9 @@ function CardPreview({ imgSrc, title, prevdescription, host, guestsArr }) {
             {guestsArr.length > 0 && (
               <p className="text-[8px] font-medium mt-0.5">
                 <span style={{ color: "#E83C91" }}>Collaborator: </span>
-                <span className="text-white break-words">{guestsArr.join(", ")}</span>
+                <span className="text-white wrap-break-words">
+                  {guestsArr.join(", ")}
+                </span>
               </p>
             )}
           </div>
@@ -204,22 +213,23 @@ function PagePreview({
 
       <div className="p-3">
         <div className="flex gap-3 bg-white rounded-lg border border-gray-100 p-3 shadow-sm">
-
           {/* Image column */}
           <div className="w-[100px] shrink-0">
             <div
-              className="relative w-full aspect-[9/16] rounded-lg overflow-hidden border border-gray-300 bg-zinc-200 shadow"
+              className="relative w-full aspect-9/16 rounded-lg overflow-hidden border border-gray-300 bg-zinc-200 shadow"
               style={{
                 background:
                   "linear-gradient(135deg, rgba(232,60,145,0.06), rgba(99,102,241,0.04))",
               }}
             >
               {imgSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={imgSrc}
                   alt={title || "Artist"}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  fill
+                  unoptimized={imgSrc.startsWith("blob:")}
+                  className="object-cover"
+                  sizes="100px"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center p-2">
@@ -244,7 +254,7 @@ function PagePreview({
 
             {/* Description */}
             {description ? (
-              <p className="text-zinc-600 text-[9px] leading-[14px] mb-2 text-justify whitespace-pre-line break-words">
+              <p className="text-zinc-600 text-[9px] leading-[14px] mb-2 text-justify whitespace-pre-line wrap-break-words">
                 {description}
               </p>
             ) : (
@@ -260,13 +270,19 @@ function PagePreview({
               <div className="space-y-0.5 mb-2">
                 {guestsArr.length > 0 && (
                   <p className="text-[9px]">
-                    <span className="font-semibold text-zinc-700">Artist. Collaborator: </span>
-                    <span className="text-pink-500">{guestsArr.join(", ")}</span>
+                    <span className="font-semibold text-zinc-700">
+                      Artist. Collaborator:{" "}
+                    </span>
+                    <span className="text-pink-500">
+                      {guestsArr.join(", ")}
+                    </span>
                   </p>
                 )}
                 {host && (
                   <p className="text-[9px]">
-                    <span className="font-semibold text-zinc-700">Project Director & Host: </span>
+                    <span className="font-semibold text-zinc-700">
+                      Project Director & Host:{" "}
+                    </span>
                     <span className="text-pink-500">{host}</span>
                   </p>
                 )}

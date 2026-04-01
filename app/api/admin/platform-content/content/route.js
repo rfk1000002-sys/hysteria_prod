@@ -63,7 +63,7 @@ export const GET = withApiLogging(getHandler, "api/admin/platform-content");
 const postHandler = async (request) => {
   try {
     logInfo("[PlatformContent][Admin][CREATE] Start");
-    await requireAuthWithPermission(request, ["platform.update"]);
+    await requireAuthWithPermission(request, ["platform.create"]);
 
     // Terima multipart (ada gambar) atau JSON biasa
     const isMultipart = request.headers.get("content-type")?.includes("multipart/form-data");

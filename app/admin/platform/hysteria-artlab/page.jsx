@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 // custom component
 import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
+import PermissionGate from "@/components/adminUI/PermissionGate";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import ArtistPreview from "../_component/preview/konten.preview";
@@ -162,7 +163,8 @@ export default function HysteriaArtlabPage() {
   );
 
   return (
-    <div className="p-2 md:p-6 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
+    <PermissionGate requiredPermissions="platform.read">
+      <div className="p-2 md:p-6 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
       {/* Bagian atas  */}
       <div className="max-w-5xl mx-auto px-4 py-6">
         <h1 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
@@ -179,6 +181,7 @@ export default function HysteriaArtlabPage() {
                 Merchandise
               </h2>
               <div className="flex flex-col md:flex-row gap-3 md:gap-5">
+              <PermissionGate requiredPermissions="platform.update" hideOnDenied>
                 <button
                   type="button"
                   className="inline-block bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
@@ -202,6 +205,7 @@ export default function HysteriaArtlabPage() {
                 >
                   Kelola Merchandise
                 </button>
+              </PermissionGate>
               </div>
             </div>
 
@@ -210,12 +214,14 @@ export default function HysteriaArtlabPage() {
                 Workshop Artlab, Screening Film, dan Untuk Perhatian
               </h2>
               <div>
+              <PermissionGate requiredPermissions="platform.create" hideOnDenied>
                 <button
                   onClick={() => router.push("/admin/events/create")}
                   className="w-full md:w-auto bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
                 >
                   Tambah Postingan
                 </button>
+              </PermissionGate>
               </div>
             </div>
           </div>
@@ -224,28 +230,34 @@ export default function HysteriaArtlabPage() {
             <h2 className="text-pink-500 font-bold mb-3 font-poppins">
               Podcast Artlab
             </h2>
-            <button
-              onClick={() =>
-                router.push(
-                  "/admin/events/create?category=stonen-29-radio-show",
-                )
-              }
-              className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-            >
-              Tambah Stonen 29 Radio Show
-            </button>
-            <button
-              onClick={() => setOpenAntalk(true)}
-              className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-            >
-              Kelola Anitalk
-            </button>
-            <button
-              onClick={() => setOpenArtistRadar(true)}
-              className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-            >
-              Tambah Artist Radar
-            </button>
+            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
+              <button
+                onClick={() =>
+                  router.push(
+                    "/admin/events/create?category=stonen-29-radio-show",
+                  )
+                }
+                className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+              >
+                Tambah Stonen 29 Radio Show
+              </button>
+            </PermissionGate>
+            <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+              <button
+                onClick={() => setOpenAntalk(true)}
+                className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+              >
+                Kelola Anitalk
+              </button>
+            </PermissionGate>
+            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
+              <button
+                onClick={() => setOpenArtistRadar(true)}
+                className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+              >
+                Tambah Artist Radar
+              </button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -380,6 +392,7 @@ export default function HysteriaArtlabPage() {
               </p>
             </div>
             <div>
+            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
               <Button
                 variant="contained"
                 size="small"
@@ -392,6 +405,7 @@ export default function HysteriaArtlabPage() {
               >
                 Tambah Postingan
               </Button>
+            </PermissionGate>
             </div>
           </div>
 
@@ -460,6 +474,7 @@ export default function HysteriaArtlabPage() {
         </div>
       </LazyMount>
     </div>
+    </PermissionGate>
   );
 }
 

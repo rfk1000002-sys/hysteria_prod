@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 // Max media upload size (bytes)
-export const MAX_MEDIA_SIZE = 5 * 1024 * 1024; // Increase to 10 MB for video
+export const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5 MB
+export const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
 export const MAX_MEDIA_SIZE_MB = 5;
 
 /**
@@ -10,13 +11,14 @@ export const MAX_MEDIA_SIZE_MB = 5;
 const heroFields = {
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(500, "Title must not exceed 500 characters"),
+    .min(3, "Judul minimal 3 karakter")
+    .max(500, "Judul maksimal 500 karakter"),
   description: z
     .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(2000, "Description must not exceed 2000 characters"),
+    .min(10, "Deskripsi minimal 10 karakter")
+    .max(2000, "Deskripsi maksimal 2000 karakter"),
   isActive: z.boolean().default(false),
+  source: z.string().optional().nullable().or(z.literal("")),
 };
 
 /**

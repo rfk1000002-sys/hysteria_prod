@@ -13,6 +13,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PermissionGate from '@/components/adminUI/PermissionGate';
 
 const FALLBACK_ITEMS = [
   { id: 1, no: 1, title: 'example', year: 2026, url: 'https://example.com' },
@@ -367,16 +368,20 @@ export default function PlatformIndex({
       headerAlign: 'justify-center',
       render: (row) => (
         <div className="flex gap-1 justify-start items-center">
-          <Tooltip title="Edit" arrow>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} sx={{ color: '#ec4899', '&:hover': { color: '#db2777' } }}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Hapus" arrow>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); effectiveDelete?.(row); }} sx={{ color: '#43334C', '&:hover': { color: '#ef4444' } }}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+            <Tooltip title="Edit" arrow>
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} sx={{ color: '#ec4899', '&:hover': { color: '#db2777' } }}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
+          <PermissionGate requiredPermissions="platform.delete" hideOnDenied>
+            <Tooltip title="Hapus" arrow>
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); effectiveDelete?.(row); }} sx={{ color: '#43334C', '&:hover': { color: '#ef4444' } }}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
         </div>
       ),
     },
@@ -441,18 +446,20 @@ export default function PlatformIndex({
           <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
         </div>
         <div className="ml-auto flex flex-end items-end md:flex-row md:items-start gap-2">
-          <Tooltip title="tambah postingan" arrow>
-            <span>
-              <button
-                type="button"
-                onClick={() => handleAdd()}
-                disabled={saving}
-                className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
-              >
-                {actionLabel}
-              </button>
-            </span>
-          </Tooltip>
+          <PermissionGate requiredPermissions="platform.create" hideOnDenied>
+            <Tooltip title="tambah postingan" arrow>
+              <span>
+                <button
+                  type="button"
+                  onClick={() => handleAdd()}
+                  disabled={saving}
+                  className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
+                >
+                  {actionLabel}
+                </button>
+              </span>
+            </Tooltip>
+          </PermissionGate>
 
           <Tooltip title="close" arrow>
             <span>
