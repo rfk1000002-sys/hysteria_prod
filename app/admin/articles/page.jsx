@@ -1,18 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import TableAdmin from "@/components/adminUI/Table";
+import ArticleForm from "@/components/adminUI/Article/ArticleForm";
 
-export default function ArticlesPage({ onNavigate }) {
-  const router = useRouter();
-
+export default function ArticlesPage() {
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [view, setView] = useState("list");
+
+  const [view, setView] = useState("list"); // 🔥 SPA CONTROL
   const [selectedId, setSelectedId] = useState(null);
   const [editData, setEditData] = useState(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
+
   const [meta, setMeta] = useState({
     page: 1,
     totalPages: 1,
@@ -111,27 +111,29 @@ export default function ArticlesPage({ onNavigate }) {
     fetchArticles();
   };
 
+  //////////////////////////////////////////////////////
+  // EDIT (FIXED)
+  //////////////////////////////////////////////////////
   const handleEdit = async (id) => {
-  try {
-    setLoadingEdit(true);
+    try {
+      setLoadingEdit(true);
 
-    const res = await fetch(`/api/admin/events/${id}`);
-    const data = await res.json();
+      const res = await fetch(`/api/admin/articles/${id}`);
+      const data = await res.json();
 
-    setSelectedEventId(id);
-    setEditData(data);
+      setSelectedId(id);
+      setEditData(data.data);
 
-    // pindah view SETELAH data siap
-    setView("edit");
-  } catch (err) {
-    console.error("Gagal ambil data edit", err);
-  } finally {
-    setLoadingEdit(false);
-  }
-};
+      setView("edit"); // 🔥 pindah view
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingEdit(false);
+    }
+  };
 
   //////////////////////////////////////////////////////
-  // TABLE COLUMN (TIDAK DIUBAH)
+  // TABLE COLUMN
   //////////////////////////////////////////////////////
   const columns = [
     {
@@ -224,7 +226,7 @@ export default function ArticlesPage({ onNavigate }) {
       render: (row) => (
         <div className="flex justify-center gap-2">
           <button
-            onClick={() => router.push(`/admin/articles/${row.id}/edit`)}
+            onClick={() => handleEdit(row.id)}
             className="bg-[#413153] hover:bg-[#2d2239] text-white px-3 py-1 rounded text-xs"
           >
             Edit
@@ -246,72 +248,75 @@ export default function ArticlesPage({ onNavigate }) {
   //////////////////////////////////////////////////////
   return (
     <div className="p-6 min-h-screen bg-white space-y-6 rounded-lg shadow-sm">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold text-black">Artikel</h1>
-        <p className="text-gray-600 mt-1">
-          Kelola semua artikel dan konten website.
-        </p>
-      </div>
+      {/* ================= LIST ================= */}
+      {view === "list" && (
+        <>
+          {/* HEADER */}
+          <div>
+            <h1 className="text-3xl font-bold text-black">Artikel</h1>
+            <p className="text-gray-600 mt-1">
+              Kelola semua artikel dan konten website.
+            </p>
+          </div>
 
-      {/* TOOLBAR */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-          <input
-            type="text"
-            placeholder="Cari artikel..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:w-[220px]
+          {/* TOOLBAR */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              <input
+                type="text"
+                placeholder="Cari artikel..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:w-[220px]
       focus:outline-none focus:ring-2 focus:ring-pink-500 shadow-sm"
-          />
+              />
 
-          <select
-            value={typeFilter}
-            onChange={(e) => {
-              setTypeFilter(e.target.value);
-              setPage(1);
-            }}
-            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
       focus:ring-2 focus:ring-pink-500 bg-white shadow-sm"
-          >
-            <option value="">Jenis Artikel</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.title}>
-                {cat.title}
-              </option>
-            ))}
-          </select>
+              >
+                <option value="">Jenis Artikel</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.title}>
+                    {cat.title}
+                  </option>
+                ))}
+              </select>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 w-full md:min-w-[180px]
       focus:ring-2 focus:ring-pink-500 bg-white shadow-sm"
-          >
-            <option value="">Semua Status</option>
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="SCHEDULED">Scheduled</option>
-          </select>
-        </div>
+              >
+                <option value="">Semua Status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="SCHEDULED">Scheduled</option>
+              </select>
+            </div>
 
-        <button
-          onClick={() => onNavigate("article.create")}
-          className="hover:bg-[#2d2239]
+            <button
+              onClick={() => setView("create")}
+              className="hover:bg-[#2d2239]
     px-4 py-2 bg-pink-600 text-white rounded-lg
     transition-colors shadow-sm
     w-full md:w-auto"
-        >
-          + Tambah Artikel
-        </button>
-      </div>
+            >
+              + Tambah Artikel
+            </button>
+          </div>
 
-      {/* TABLE */}
-      <div className="bg-white overflow-hidden">
+          {/* TABLE */}
+          <div className="bg-white overflow-hidden">
         {error && <div className="p-4 text-red-600">{error}</div>}
 
         <TableAdmin columns={columns} data={articles} loading={loading} />
@@ -342,7 +347,52 @@ export default function ArticlesPage({ onNavigate }) {
             Next
           </button>
         </div>
-      </div>
+        </div>
+        </>
+      )}
+
+      {/* ================= CREATE ================= */}
+      {view === "create" && (
+        <ArticleForm
+          categories={categories}
+          mode="create"
+          onSubmit={async (formData) => {
+            await fetch("/api/admin/articles", {
+              method: "POST",
+              body: formData,
+            });
+
+            setView("list");
+            fetchArticles();
+          }}
+          onClose={() => setView("list")}
+        />
+      )}
+
+      {/* ================= EDIT ================= */}
+      {view === "edit" && (
+        <>
+          {loadingEdit ? (
+            <div>Loading...</div>
+          ) : (
+            <ArticleForm
+              initialData={editData}
+              categories={categories}
+              mode="edit"
+              onSubmit={async (formData) => {
+                await fetch(`/api/admin/articles/${selectedId}`, {
+                  method: "PUT",
+                  body: formData,
+                });
+
+                setView("list");
+                fetchArticles();
+              }}
+              onClose={() => setView("list")}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }
