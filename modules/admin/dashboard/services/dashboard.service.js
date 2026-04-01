@@ -1,12 +1,12 @@
 import {
   getDashboardStats,
-  getArticleAnalytics,
+  getDashboardAnalytics,
 } from "../repositories/dashboard.repository";
 
 export async function getDashboardData(range = "weekly") {
   const [stats, analytics] = await Promise.all([
     getDashboardStats(),
-    getArticleAnalytics(range),
+    getDashboardAnalytics(range),
   ]);
 
   return {

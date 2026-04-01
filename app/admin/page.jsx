@@ -8,7 +8,15 @@ import DashboardCard from "@/components/adminUI/Dashboard/DashboardCard";
 import Activity from "@/components/adminUI/Dashboard/ActivityItem";
 import Table from "@/components/adminUI/Dashboard/Table";
 
-import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function DashboardPage({ onNavigate }) {
   const { apiCall, isLoading: authLoading } = useAuth();
@@ -85,7 +93,7 @@ export default function DashboardPage({ onNavigate }) {
         <StatCard title="Total Konten" value={stats.totalContent || 0} />
         <StatCard title="Program Aktif" value={stats.totalPrograms || 0} />
         <StatCard title="Event Aktif" value={stats.totalEvents || 0} />
-        <StatCard title="Platform Aktif" value={stats.totalPlatforms || 0} />
+        <StatCard title="Platform Konten" value={stats.totalPlatformContents || 0} />
       </div>
 
       {/* MAIN GRID */}
@@ -117,15 +125,51 @@ export default function DashboardPage({ onNavigate }) {
           }
         >
           {/* CHART */}
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={analytics}>
-              <XAxis dataKey="createdAt" hide />
-              <Tooltip />
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={analytics} margin={{ left: -20, right: 10, top: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="label" 
+                fontSize={10} 
+                tickMargin={10}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis 
+                fontSize={10} 
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value) => `${value}`}
+              />
+              <Tooltip 
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              />
               <Line
                 type="monotone"
-                dataKey="views"
+                dataKey="article"
+                name="Artikel"
                 stroke="#ec4899"
                 strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="event"
+                name="Event"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="platform"
+                name="Platform"
+                stroke="#10b981"
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -133,11 +177,11 @@ export default function DashboardPage({ onNavigate }) {
           <p className="mt-3 text-xs text-zinc-400">{getRangeLabel(range)}</p>
           {/* TOTAL */}
           <div className="mt-8">
-            <p className="text-3xl font-bold text-pink-500">
+            <p className="text-3xl font-bold text-zinc-900">
               {getTotalViews(analytics)}
             </p>
             <p className="text-xs text-zinc-500">
-              Total {getRangeTitle(range)}
+              Total Tayangan {getRangeTitle(range)}
             </p>
           </div>
         </DashboardCard>
@@ -209,7 +253,11 @@ function mergeActivities(articles = [], events = []) {
 }
 
 function getTotalViews(data) {
-  return data.reduce((acc, item) => acc + (item.views || 0), 0);
+  return data.reduce(
+    (acc, item) =>
+      acc + (item.article || 0) + (item.event || 0) + (item.platform || 0),
+    0
+  );
 }
 
 function getRangeLabel(range) {
