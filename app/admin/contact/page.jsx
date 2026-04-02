@@ -140,7 +140,7 @@ function InputField({ label, value, onChange, required = false }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#E83C91]/30"
+        className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-[#E83C91]/30"
       />
     </label>
   );
@@ -155,7 +155,7 @@ function TextareaField({ label, value, onChange, required = false }) {
         onChange={(e) => onChange(e.target.value)}
         required={required}
         rows={4}
-        className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#E83C91]/30"
+        className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-[#E83C91]/30"
       />
     </label>
   );
