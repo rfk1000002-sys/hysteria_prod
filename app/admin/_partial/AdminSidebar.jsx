@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram, IconInfo } from "../../../components/ui/icon";
+import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram, IconInfo, IconTelephone } from "../../../components/ui/icon";
 
 export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
   const [openKeys, setOpenKeys] = useState({});
@@ -124,7 +124,7 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
         { key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true },
         { key: "tentang", label: "Tentang", view: "tentang", icon: IconBusiness, enabled: true },
         { key: "website-info", label: "Website Info", view: "website-info", icon: IconInfo, enabled: true },
-        { key: "contact", label: "Contact", view: "contact", icon: IconSocial, enabled: true },
+        { key: "contact", label: "Contact", view: "contact", icon: IconTelephone, enabled: true },
         { key: "collaboration", label: "Kolaborasi", view: "collaboration", icon: IconSocial, enabled: true },
       ],
     },

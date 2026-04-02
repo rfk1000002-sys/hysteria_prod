@@ -6,11 +6,24 @@ import Uploads from "../../../../../lib/upload/uploads.js";
 
 const MAX_UPLOAD_SIZE = 3 * 1024 * 1024;
 
+function isManagedUploadSource(source) {
+  if (!source) return false;
+  const value = String(source).trim();
+  if (!value) return false;
+
+  if (value.startsWith("/uploads/") || value.startsWith("uploads/")) return true;
+
+  const publicS3 = process.env.S3_PUBLIC_URL;
+  if (publicS3 && value.startsWith(publicS3.replace(/\/$/, ""))) return true;
+
+  return false;
+}
+
 export async function POST(request) {
   try {
     await requireAuthWithPermission(request, ["tentang.update"]);
 
-    const { files } = await parseMultipartForm(request, {
+    const { fields, files } = await parseMultipartForm(request, {
       maxFileSize: MAX_UPLOAD_SIZE,
     });
 
@@ -31,6 +44,18 @@ export async function POST(request) {
 
     const uploads = new Uploads();
     const result = await uploads.handleUpload(file);
+    const oldUrl = typeof fields?.oldUrl === "string" ? fields.oldUrl.trim() : "";
+
+    if (oldUrl && oldUrl !== result.url && isManagedUploadSource(oldUrl)) {
+      try {
+        await uploads.deleteFile(oldUrl);
+      } catch (deleteError) {
+        logger.warn("Failed to delete old collaboration image after replacement", {
+          oldUrl,
+          error: deleteError && (deleteError.stack || deleteError.message || deleteError),
+        });
+      }
+    }
 
     return respondSuccess(
       {
