@@ -28,13 +28,16 @@ export default function EventDescriptionEditor({ value, onChange }) {
 
   return (
     <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <TextEditor
-        content={value}
-        onCreate={({ editor }) => {
-          editorRef.current = editor;
-        }}
-        onUpdate={({ editor }) => onChange(editor.getHTML())}
-      />
+      <div className="h-[300px] overflow-y-auto scroll-smooth">
+        <TextEditor
+          content={value}
+          onCreate={({ editor }) => {
+            editorRef.current = editor;
+          }}
+          onUpdate={({ editor }) => onChange(editor.getHTML())}
+        />
+      </div>
+      
     </div>
   );
 }
