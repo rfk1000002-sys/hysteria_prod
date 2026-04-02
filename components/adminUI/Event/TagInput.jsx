@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { X, Plus } from "lucide-react";
 
 export default function TagInput({ value = [], onChange }) {
   const [newTag, setNewTag] = useState("");
@@ -37,7 +38,7 @@ export default function TagInput({ value = [], onChange }) {
     const tag = normalize(tagInput);
 
     if (!tag) return;
-    if (tag.includes(" ")) return; // 🚫 tidak boleh spasi
+    if (tag.includes(" ")) return; // tidak boleh spasi
     if (value.includes(tag)) return;
 
     onChange([...value, tag]);
@@ -50,45 +51,46 @@ export default function TagInput({ value = [], onChange }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl border shadow-sm">
-      <label className="block font-semibold mb-2">
+    <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-300 shadow-sm space-y-2">
+      <label className="block text-sm font-semibold text-[var(--Color-5)]">
         Tags / Keywords
       </label>
 
-      <div className="relative flex gap-2">
-        <input
-          value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          className="flex-1 border rounded-lg px-4 py-2"
-          placeholder="Masukkan tag"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addTag();
-            }
+      <div className="relative">
+        <div className="flex items-center rounded border border-gray-300 transition-all overflow-hidden">
+          <input
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            className="flex-1 h-[42px] px-2 text-sm outline-none bg-transparent"
+            placeholder="Masukkan tag"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addTag();
+              }
 
-            if (e.key === " ") {
-              e.preventDefault(); // 🚫 blok spasi
-            }
-          }}
-        />
-
-        <button
-          type="button"
-          onClick={() => addTag()}
-          className="px-4 py-2 bg-[#4B3D52] text-white rounded-lg"
-        >
-          +
-        </button>
-
+              if (e.key === " ") {
+                e.preventDefault(); // blok spasi
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => addTag()}
+            className="h-[42px] px-2 bg-[var(--Color-1)] flex items-center justify-center leading-none text-white text-sm font-medium hover:opacity-90 active:scale-95 transition"
+          >
+            <Plus size={18} strokeWidth={2} />
+          </button>
+        </div>
+        
         {/* suggestion dropdown */}
         {suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow z-20">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden animate-fadeIn max-h-48 overflow-y-auto">
             {suggestions.map((tag) => (
               <div
                 key={tag.name}
                 onClick={() => addTag(tag.name)}
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                className="px-4 py-2 text-sm text-[var(--Color-5)] hover:bg-[var(--Color-1)]/10 hover:text-[var(--Color-1)] cursor-pointer transition"
               >
                 {tag.name}
               </div>
@@ -97,20 +99,21 @@ export default function TagInput({ value = [], onChange }) {
         )}
       </div>
 
+      {/* tag list */}
       {value.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 pt-1">
           {value.map((tag, idx) => (
             <span
               key={`${tag}-${idx}`}
-              className="px-3 py-1 bg-gray-200 rounded-md text-sm flex items-center gap-2"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-[var(--Color-1)]/10 text-[var(--Color-1)] border border-[var(--Color-1)]/30 hover:bg-[var(--Color-1)]/20 transition"
             >
               {tag}
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="text-gray-600 hover:text-red-600"
+                className="text-[var(--Color-1)] hover:text-red-500 transition"
               >
-                ×
+                <X size={14} strokeWidth={2} />
               </button>
             </span>
           ))}

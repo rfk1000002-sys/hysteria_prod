@@ -38,30 +38,43 @@ export default async function EventDetailPage({ params }) {
     endDate &&
     startDate.getFullYear() === endDate.getFullYear();
 
+  const sameDay =
+    endDate &&
+    startDate.getDate() === endDate.getDate() &&
+    startDate.getMonth() === endDate.getMonth() &&
+    startDate.getFullYear() === endDate.getFullYear();
+
   const formattedDate = endDate
-    ? sameMonth
-      ? `${startDate.getDate()} – ${endDate.getDate()} ${startDate.toLocaleDateString(
-          "id-ID",
-          { month: "long", year: "numeric" }
-        )}`
-      : sameYear
-      ? `${startDate.toLocaleDateString("id-ID", {
+    ? sameDay      
+      ? startDate.toLocaleDateString("id-ID", {
           day: "numeric",
-          month: "long",
-        })} – ${endDate.toLocaleDateString("id-ID", {
-          day: "numeric",
+          weekday: "long",
           month: "long",
           year: "numeric",
-        })}`
-      : `${startDate.toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })} – ${endDate.toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}`
+        })
+      : sameMonth
+        ? `${startDate.getDate()} – ${endDate.getDate()} ${startDate.toLocaleDateString(
+            "id-ID",
+            { month: "long", year: "numeric" }
+          )}`
+        : sameYear
+        ? `${startDate.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+          })} – ${endDate.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}`
+        : `${startDate.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })} – ${endDate.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}`
     : startDate.toLocaleDateString("id-ID", {
         day: "numeric",
         month: "long",

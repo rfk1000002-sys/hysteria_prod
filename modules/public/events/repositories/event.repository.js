@@ -93,10 +93,9 @@ export async function findOtherEvents(slug) {
       isPublished: true,
       slug: { not: slug },
     },
-    orderBy: { startAt: "asc" },
-    take: 5,
   });
 }
+
 // repo untuk tampilan data carousle sorotan event di halaman home
 export async function findLatestEvents(take = 10) {
   return prisma.event.findMany({
@@ -128,6 +127,26 @@ export async function incrementEventViews(slug) {
     data: {
       views: {
         increment: 1,
+      },
+    },
+  });
+}
+
+export async function findAllPublishedEvents() {
+  return prisma.event.findMany({
+    where: {
+      isPublished: true,
+    },
+    include: {
+      eventCategories: {
+        include: {
+          categoryItem: true,
+        },
+      },
+      organizers: {
+        include: {
+          categoryItem: true,
+        },
       },
     },
   });
