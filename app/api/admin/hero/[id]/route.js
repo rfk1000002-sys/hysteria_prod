@@ -3,6 +3,10 @@ import { respondSuccess, respondError, AppError } from "../../../../../lib/respo
 import { requireAuthWithPermission } from "../../../../../lib/helper/permission.helper";
 import { parseMultipartForm, validateFileMimeType, validateFileSize } from "../../../../../lib/upload/multipart";
 import * as heroService from "../../../../../modules/admin/hero/services/hero.service.js";
+import {
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+} from "../../../../../modules/admin/hero/validators/hero.validator.js";
 import logger from "../../../../../lib/logger.js";
 
 // GET - Fetch single hero
@@ -23,7 +27,7 @@ export async function GET(request, { params }) {
     if (error instanceof AppError) {
       return respondError(error);
     }
-    return respondError(new AppError("Failed to fetch hero", 500));
+    return respondError(new AppError("Gagal memuat data hero", 500));
   }
 }
 
@@ -32,9 +36,8 @@ export async function PUT(request, { params }) {
   try {
     await requireAuthWithPermission(request, "hero.update");
 
-    logger.info('API PUT /api/admin/hero/:id called', { params });
-
     const { id } = await params;
+    logger.info('API PUT /api/admin/hero/:id called', { id });
     const heroId = Number(id);
     
     if (!Number.isInteger(heroId)) {
@@ -62,18 +65,37 @@ export async function PUT(request, { params }) {
       if (files && files.length > 0) {
         const file = files[0];
 
-        // Validate MIME type
-        const allowedTypes = (process.env.UPLOAD_ALLOWED_TYPES || "image/*,video/*")
-          .split(",")
-          .map((t) => t.trim());
+        // Specific allowed MIME types: webp, jpg, webm, mp4
+        const allowedTypes = [
+          "image/webp",
+          "image/jpeg",
+          "image/jpg",
+          "video/webm",
+          "video/mp4"
+        ];
 
         if (!validateFileMimeType(file, allowedTypes)) {
-          return respondError(new AppError(`Invalid file type. Allowed: ${allowedTypes.join(", ")}`, 415));
+          return respondError(
+            new AppError(
+              "Tipe file tidak didukung. Gunakan: WebP, JPG, WebM, atau MP4.",
+              415,
+            ),
+          );
         }
 
-        // Validate size
-        if (!validateFileSize(file, MAX_UPLOAD_SIZE)) {
-          return respondError(new AppError(`File too large. Max: ${MAX_UPLOAD_SIZE / 1024 / 1024}MB`, 413));
+        // Dynamic size validation
+        const isVideo = file.mimetype?.startsWith("video/") || file.type?.startsWith("video/");
+        const limit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        const limitName = isVideo ? "Video" : "Gambar";
+        const limitMB = limit / (1024 * 1024);
+
+        if (!validateFileSize(file, limit)) {
+          return respondError(
+            new AppError(
+              `Ukuran file ${limitName} terlalu besar. Maksimal: ${limitMB}MB`,
+              413,
+            ),
+          );
         }
 
         // Use service function for transactional update with upload
@@ -104,7 +126,7 @@ export async function PUT(request, { params }) {
     if (error instanceof AppError) {
       return respondError(error);
     }
-    return respondError(new AppError("Failed to update hero", 500));
+    return respondError(new AppError("Gagal memperbarui data hero", 500));
   }
 }
 
@@ -125,6 +147,6 @@ export async function DELETE(request, { params }) {
     if (error instanceof AppError) {
       return respondError(error);
     }
-    return respondError(new AppError("Failed to delete hero", 500));
+    return respondError(new AppError("Gagal menghapus hero", 500));
   }
 }

@@ -514,7 +514,7 @@ model Article {
   publishedAt         DateTime?
   views               Int               @default(0)
   isDeleted           Boolean           @default(false)
-  createdAt           DateTime          @default(now())
+  createdAt           DateTime          @default(now())x
   updatedAt           DateTime          @updatedAt
   featuredImageSource String?           @db.VarChar(255)
   references          Json?
@@ -639,6 +639,17 @@ model PageProgram {
   @@index([pageSlug])
 }
 
+model VisitorStats {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique // Tanggal (start of day)
+  articleViews  Int      @default(0)
+  eventViews    Int      @default(0)
+  platformViews Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
 enum ArticleStatus {
   DRAFT
   PUBLISHED

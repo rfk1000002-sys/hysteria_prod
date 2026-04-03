@@ -10,6 +10,7 @@ import SearchField from "@/components/adminUI/SearchField";
 import SelectField from "@/components/ui/SelectField";
 import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
+import PermissionGate from "@/components/adminUI/PermissionGate";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import PosterPreview from "../_component/preview/poster.preview";
@@ -231,7 +232,8 @@ export default function DitampartPage() {
   );
 
   return (
-    <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
+    <PermissionGate requiredPermissions="platform.read">
+      <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
       {/* ── Bagian Atas: kategori cards ─────────────────────────────────── */}
       <div className="max-w-5xl mx-auto">
         <header className="mb-6">
@@ -255,18 +257,20 @@ export default function DitampartPage() {
               >
                 {cat.title}
               </span>
-              <button
-                onClick={() => {
-                  if ([1, 2, 3, 4].includes(cat.id)) {
-                    openModalForCategory(cat);
-                  } else {
-                    console.log("Manage:", cat);
-                  }
-                }}
-                className="bg-pink-500 hover:bg-pink-600 cursor-pointer text-white rounded-xl px-4 py-2 shadow-md text-sm font-semibold"
-              >
-                Kelola Konten
-              </button>
+              <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+                <button
+                  onClick={() => {
+                    if ([1, 2, 3, 4].includes(cat.id)) {
+                      openModalForCategory(cat);
+                    } else {
+                      console.log("Manage:", cat);
+                    }
+                  }}
+                  className="bg-pink-500 hover:bg-pink-600 cursor-pointer text-white rounded-xl px-4 py-2 shadow-md text-sm font-semibold"
+                >
+                  Kelola Konten
+                </button>
+              </PermissionGate>
             </div>
           ))}
         </section>
@@ -285,6 +289,7 @@ export default function DitampartPage() {
               </p>
             </div>
             <div>
+            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
               <Button
                 variant="contained"
                 size="small"
@@ -297,6 +302,7 @@ export default function DitampartPage() {
               >
                 Tambah Event
               </Button>
+            </PermissionGate>
             </div>
           </div>
 
@@ -413,6 +419,7 @@ export default function DitampartPage() {
         </div>
       </LazyMount>
     </div>
+    </PermissionGate>
   );
 }
 

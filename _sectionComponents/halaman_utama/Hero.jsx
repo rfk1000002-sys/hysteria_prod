@@ -100,7 +100,7 @@ export default function Hero() {
           />
         )}
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/70"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
       </div>
 
       <div className="relative z-10 h-full flex items-start pt-64 md:pt-72 lg:pt-[288px]">

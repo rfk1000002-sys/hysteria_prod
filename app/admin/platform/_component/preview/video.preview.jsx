@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 
 function extractYouTubeId(url) {
   if (typeof url !== "string") return null;
@@ -62,25 +63,31 @@ export default function VideoPreview({
   const thumbSrc =
     objUrl ||
     imageUrl ||
-    (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : "/image/video.webp");
+    (ytId
+      ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+      : "/image/video.webp");
 
   const guestList = Array.isArray(guests) ? guests.filter(Boolean) : [];
 
   return (
     <div className="flex flex-col gap-3 items-center">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Preview Card</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">
+        Preview Card
+      </p>
 
       <div className="w-full max-w-[320px] h-full mx-auto">
         {/* Thumbnail 16:9 */}
         <div className="relative w-full aspect-video bg-zinc-800 rounded-t-lg overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={thumbSrc}
             alt={title || "Video"}
-            className="absolute inset-0 w-full h-full object-cover brightness-90"
-            onError={(e) => {
-              e.currentTarget.src = "/image/video.webp";
-            }}
+            fill
+            unoptimized={
+              thumbSrc.startsWith("blob:") ||
+              thumbSrc.includes("img.youtube.com")
+            }
+            className="object-cover brightness-90"
+            sizes="(max-width: 320px) 100vw, 320px"
           />
           {/* Dark scrim */}
           <div className="absolute inset-0 bg-black/30" />
@@ -101,17 +108,17 @@ export default function VideoPreview({
         {/* Teks di bawah thumbnail */}
         <div className="px-2.5 py-2 flex flex-col gap-1 bg-white border border-t-0 border-zinc-300 rounded-b-lg">
           {title && (
-            <p className="text-zinc-800 text-[13px] font-semibold leading-tight break-words">
+            <p className="text-zinc-800 text-[13px] font-semibold leading-tight wrap-break-words">
               {title}
             </p>
           )}
           {prevdescription && (
-            <p className="text-zinc-500 text-[11px] leading-snug break-words">
+            <p className="text-zinc-500 text-[11px] leading-snug wrap-break-words">
               {prevdescription}
             </p>
           )}
           {(host || guestList.length > 0) && (
-            <div className="text-[11px] text-zinc-400 break-words mt-0.5">
+            <div className="text-[11px] text-zinc-400 wrap-break-words mt-0.5">
               {host && (
                 <span>
                   Host: <span className="text-zinc-600">{host}</span>

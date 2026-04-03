@@ -264,7 +264,7 @@ function AnitalkEpisodeCard({ episode, index }) {
             </span>
           </div>
           <div className="flex gap-x-1 items-start min-w-0">
-            <span className="font-semibold shrink-0">Podcaster</span>
+            <span className="font-semibold shrink-0">Guest</span>
             <span className="text-gray-400 shrink-0">:</span>
             <span className="flex-1 line-clamp-2 md:line-clamp-3 wrap-break-words min-w-0">
               {episode.guests?.join(", ") || "-"}
@@ -326,7 +326,6 @@ function LazyItem({ children, rootMargin = "200px" }) {
     </div>
   );
 }
-
 
 function SearchIcon() {
   return (

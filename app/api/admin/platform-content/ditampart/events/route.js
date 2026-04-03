@@ -12,18 +12,23 @@ const STATUS_PARAM_MAP = {
 
 export async function GET(request) {
   try {
-    await requireAuthWithPermission(request, "categories.view");
+    await requireAuthWithPermission(request, "platform.read");
 
     const { searchParams } = new URL(request.url);
 
     const rawStatus = searchParams.get("status") || undefined;
-    const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 100);
+    const limit = Math.min(
+      parseInt(searchParams.get("limit") || "10", 10),
+      100,
+    );
     const rawCursor = searchParams.get("cursor");
     const cursor = rawCursor ? parseInt(rawCursor, 10) : undefined;
 
     const filters = {
       q: searchParams.get("q") || undefined,
-      status: rawStatus ? (STATUS_PARAM_MAP[rawStatus] ?? rawStatus) : undefined,
+      status: rawStatus
+        ? (STATUS_PARAM_MAP[rawStatus] ?? rawStatus)
+        : undefined,
       categorySlug: searchParams.get("categorySlug") || undefined,
       limit,
       cursor,
@@ -37,6 +42,9 @@ export async function GET(request) {
     if (error.statusCode) {
       return respondError({ message: error.message, status: error.statusCode });
     }
-    return respondError({ message: "Failed to fetch ditampart events", status: 500 });
+    return respondError({
+      message: "Failed to fetch ditampart events",
+      status: 500,
+    });
   }
 }

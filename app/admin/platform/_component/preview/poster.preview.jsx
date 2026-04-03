@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 
 /**
  * PosterPreview — live preview for MockUpPosterCard / KomikRamuanCard-style content.
@@ -47,31 +48,32 @@ export default function PosterPreview({
 
   return (
     <div className="flex flex-col gap-3 items-center">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">Preview Card</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center">
+        Preview Card
+      </p>
 
       <div className="w-full max-w-[300px] min-h-screen mx-auto flex flex-col overflow-hidden rounded-xl border-2 border-zinc-300 bg-white shadow-md">
         {/* Image 16:9 */}
-        <div className="relative w-full aspect-video bg-zinc-300 flex-shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative w-full aspect-video bg-zinc-300 shrink-0">
+          <Image
             src={imgSrc}
             alt={fullTitle || "Poster"}
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/image/DummyPoster.webp";
-            }}
+            fill
+            unoptimized={imgSrc.startsWith("blob:")}
+            className="object-cover"
+            sizes="(max-width: 300px) 100vw, 300px"
           />
         </div>
 
         {/* Konten */}
         <div className="flex flex-col gap-1 px-3 py-2 flex-1">
           {fullTitle && (
-            <h3 className="text-zinc-900 text-[12px] font-bold leading-tight break-words">
+            <h3 className="text-zinc-900 text-[12px] font-bold leading-tight wrap-break-words">
               {fullTitle}
             </h3>
           )}
           {prevdescription && (
-            <p className="text-zinc-600 text-[11px] leading-snug break-words">
+            <p className="text-zinc-600 text-[11px] leading-snug wrap-break-words">
               {prevdescription}
             </p>
           )}

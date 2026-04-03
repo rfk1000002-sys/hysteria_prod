@@ -19,6 +19,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Image from "next/image";
 import { StatusBadge } from "./data.jsx";
+import PermissionGate from "@/components/adminUI/PermissionGate";
 
 // Map status internal → label bahasa Indonesia (sama dengan StatusBadge di data.js)
 const STATUS_LABEL = {
@@ -206,30 +207,34 @@ export function buildEventColumns({ onEdit, onDelete, preferredCategorySlugs } =
       headerAlign: "center",
       render: (row) => (
         <div className="flex items-center justify-center gap-1">
-          <Tooltip title="Edit">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(row);
-              }}
-              className="text-blue-600 hover:bg-blue-50"
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Hapus">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(row);
-              }}
-              className="text-red-500 hover:bg-red-50"
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+            <Tooltip title="Edit">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(row);
+                }}
+                className="text-blue-600 hover:bg-blue-50"
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
+          <PermissionGate requiredPermissions="platform.delete" hideOnDenied>
+            <Tooltip title="Hapus">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(row);
+                }}
+                className="text-red-500 hover:bg-red-50"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
         </div>
       ),
     },

@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import DataTable from "@/components/ui/DataTable";
 import PageFilter from "@/components/ui/PageFilter";
+import PermissionGate from "@/components/adminUI/PermissionGate";
 import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import VideoPreview from "../_component/preview/video.preview";
@@ -245,7 +246,8 @@ export default function LakiMasakPage() {
   );
 
   return (
-    <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
+    <PermissionGate requiredPermissions="platform.read">
+      <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
       {/* bagian atas */}
       <div className="max-w-5xl mx-auto">
         <header className="mb-6">
@@ -273,18 +275,20 @@ export default function LakiMasakPage() {
               </div>
 
               <div className="mt-auto items-center">
-                <button
-                  onClick={() => {
-                    if ([1, 2, 3].includes(cat.id)) {
-                      openModalForCategory(cat);
-                    } else {
-                      console.log("Manage:", cat);
-                    }
-                  }}
-                  className="bg-pink-500 cursor-pointer hover:bg-pink-600 text-white rounded-xl px-5 py-2 shadow-md"
-                >
-                  Kelola Konten
-                </button>
+                <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+                  <button
+                    onClick={() => {
+                      if ([1, 2, 3].includes(cat.id)) {
+                        openModalForCategory(cat);
+                      } else {
+                        console.log("Manage:", cat);
+                      }
+                    }}
+                    className="bg-pink-500 cursor-pointer hover:bg-pink-600 text-white rounded-xl px-5 py-2 shadow-md"
+                  >
+                    Kelola Konten
+                  </button>
+                </PermissionGate>
               </div>
             </div>
           ))}
@@ -304,18 +308,20 @@ export default function LakiMasakPage() {
             </p>
           </div>
           <div>
-            <Button
-              variant="contained"
-              size="small"
-              sx={{
-                backgroundColor: "#43334C",
-                "&:hover": { backgroundColor: "#352837" },
-                textTransform: "none",
-              }}
-              onClick={() => router.push("/admin/events/create")}
-            >
-              Tambah Event
-            </Button>
+            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  backgroundColor: "#43334C",
+                  "&:hover": { backgroundColor: "#352837" },
+                  textTransform: "none",
+                }}
+                onClick={() => router.push("/admin/events/create")}
+              >
+                Tambah Event
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 
@@ -435,6 +441,7 @@ export default function LakiMasakPage() {
         </div>
       </LazyMount>
     </div>
+    </PermissionGate>
   );
 }
 

@@ -16,7 +16,7 @@ export async function GET(req) {
     console.error("DASHBOARD ERROR:", error);
 
     return NextResponse.json(
-      { success: false, error: "Failed to load dashboard" },
+      { success: false, error: "Failed to load dashboard", details: error.message, stack: error.stack },
       { status: 500 }
     );
   }

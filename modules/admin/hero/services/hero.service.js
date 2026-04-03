@@ -61,10 +61,14 @@ export async function createHero(data) {
   try {
     validatedData = validateHeroData(data, createHeroSchema);
   } catch (error) {
-    // Log incoming payload together with validation errors for easier debugging
-    logger.warn('Hero validation failed', { payload: data, error: error.errors });
+    // Collect all validation error messages for logging and response
+    const errorDetails = error.errors?.length 
+      ? error.errors.map(e => e.message).join(', ') 
+      : (error.message || 'Data tidak valid');
+      
+    logger.warn('Hero validation failed', { payload: data, error: errorDetails });
     throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
+      error.errors?.[0]?.message || errorDetails || 'Data hero tidak valid',
       400,
       'VALIDATION_ERROR'
     );
@@ -210,15 +214,25 @@ export async function setActiveHero(id) {
  * @returns {Promise<Object>} - Created hero with uploaded file URL
  */
 export async function createHeroWithFile(data, file) {
-  // Validate input (omit source requirement since file will provide it)
   const schema = heroBaseSchema.omit({ source: true });
+
+  // Explicitly remove source from metadata (it's handled after upload)
+  // to avoid 'Unrecognized key' validation errors
+  const metaData = { ...data };
+  delete metaData.source;
+  if (metaData.media) delete metaData.media;
+
   let validated;
   try {
-    validated = validateHeroData(data, schema);
+    validated = validateHeroData(metaData, schema);
   } catch (error) {
-    logger.warn('Hero validation failed (with file)', { payload: data, error: error.errors });
+    const errorDetails = error.errors?.length 
+      ? error.errors.map(e => e.message).join(', ') 
+      : (error.message || 'Data tidak valid');
+
+    logger.warn('Hero validation failed (with file)', { payload: data, error: errorDetails });
     throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
+      error.errors?.[0]?.message || errorDetails || 'Data hero tidak valid',
       400,
       'VALIDATION_ERROR'
     );
@@ -278,13 +292,23 @@ export async function createHeroWithFile(data, file) {
 export async function updateHeroWithFile(id, data, file) {
   // Validate input (omit source requirement)
   const schema = updateHeroSchema.omit({ source: true });
+
+  // Clean data for validation
+  const metaData = { ...data };
+  delete metaData.source;
+  if (metaData.media) delete metaData.media;
+
   let validated;
   try {
-    validated = validateHeroData(data, schema);
+    validated = validateHeroData(metaData, schema);
   } catch (error) {
-    logger.warn('Hero update validation failed (with file)', { heroId: id, payload: data, error: error.errors });
+    const errorDetails = error.errors?.length 
+      ? error.errors.map(e => e.message).join(', ') 
+      : (error.message || 'Data tidak valid');
+
+    logger.warn('Hero update validation failed (with file)', { heroId: id, payload: data, error: errorDetails });
     throw new AppError(
-      error.errors?.[0]?.message || 'Invalid hero data',
+      error.errors?.[0]?.message || errorDetails || 'Data hero tidak valid',
       400,
       'VALIDATION_ERROR'
     );

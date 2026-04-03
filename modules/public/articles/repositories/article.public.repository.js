@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { publishedArticleCondition } from "../query/article.public.query";
+import { incrementDailyStats } from "@/modules/admin/dashboard/repositories/visitor-stats.repository";
 
 export async function findPublishedArticles({
   search,
@@ -133,16 +134,16 @@ export async function findRecommendedArticles({
 }
 
 export async function incrementArticleViews(slug) {
-  return prisma.article.update({
-    where: {
-      slug: slug,
-    },
-    data: {
-      views: {
-        increment: 1,
-      },
-    },
-  });
+  // Parallel execution for better performance
+  const [updatedArticle] = await Promise.all([
+    prisma.article.update({
+      where: { slug: slug },
+      data: { views: { increment: 1 } },
+    }),
+    incrementDailyStats("article"),
+  ]);
+
+  return updatedArticle;
 }
 // repository article untuk tampilan data article di halaman Home
 export async function findLatestArticles(limit = 3) {
