@@ -10,7 +10,7 @@ export default function HeroSectionEditor({ heroData, onChangeHero }) {
             type="text"
             value={heroData.subHeadline}
             onChange={(e) => onChangeHero({ ...heroData, subHeadline: e.target.value })}
-            className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-base outline-none focus:border-[#ea4c9d]"
+            className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-[#222] outline-none focus:border-[#ea4c9d]"
           />
         </div>
 
@@ -20,7 +20,7 @@ export default function HeroSectionEditor({ heroData, onChangeHero }) {
             type="text"
             value={heroData.notes}
             onChange={(e) => onChangeHero({ ...heroData, notes: e.target.value })}
-            className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-base outline-none focus:border-[#ea4c9d]"
+            className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-[#222] outline-none focus:border-[#ea4c9d]"
           />
         </div>
       </div>

@@ -95,7 +95,7 @@ export default function EditorSection({
               type="text"
               value={form.title || ""}
               onChange={(e) => onChange({ ...form, title: e.target.value })}
-              className="w-full rounded-xl border border-[#8f8f8f] px-4 py-3 outline-none focus:border-[#ea4c9d]"
+              className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-[#111] placeholder:text-[#8a8a8a] outline-none focus:border-[#ea4c9d]"
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function EditorSection({
                 rows={3}
                 value={form.subTitle || ""}
                 onChange={(e) => onChange({ ...form, subTitle: e.target.value })}
-                className="w-full rounded-xl border border-[#8f8f8f] px-4 py-3 outline-none focus:border-[#ea4c9d]"
+                className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-[#111] placeholder:text-[#8a8a8a] outline-none focus:border-[#ea4c9d]"
               />
             </div>
           )}
@@ -119,7 +119,7 @@ export default function EditorSection({
                 value={form.imageUrl || ""}
                 onChange={(e) => onChange({ ...form, imageUrl: e.target.value })}
                 placeholder="https://..."
-                className="w-full rounded-xl border border-[#8f8f8f] px-4 py-3 outline-none focus:border-[#ea4c9d]"
+                className="w-full rounded-xl border border-[#8f8f8f] bg-white px-4 py-3 text-[#111] placeholder:text-[#8a8a8a] outline-none focus:border-[#ea4c9d]"
               />
             </div>
           )}
