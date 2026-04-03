@@ -1,5 +1,7 @@
 "use client";
 
+// file untuk tampilan kontent artist radar atau stonen 29 radio show
+
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useDebounce } from "../../../../../../hooks/use-debounce";
 import { useParams } from "next/navigation";
@@ -185,6 +187,7 @@ export default function GenericSubCategorySection({
 
   return (
     <>
+      {/* section atas yaitu search, filter*/}
       <section className="mx-auto px-2 py-8 sm:px-4 sm:py-10 lg:px-6 lg:py-12 max-w-[1920px]">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex h-12 flex-1 items-center rounded-full border border-[#ec3f94] bg-white px-4 shadow-sm sm:h-16 sm:px-6">
@@ -293,12 +296,13 @@ export default function GenericSubCategorySection({
         </section>
       )}
 
+      {/* section data konten */}
       <section className="w-full max-w-480 mx-auto px-3 pb-10 sm:px-5 sm:pb-12 md:px-8 md:pb-14 lg:px-12 lg:pb-16 xl:px-24">
         {!pagedItems.length ? (
           <p className="text-zinc-500">Belum ada konten untuk kategori ini.</p>
         ) : (
           <div
-            className={`grid gap-4 sm:gap-5 md:gap-6 ${isRadioShow ? "grid-cols-3 md:grid-cols-6" : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"}`}
+            className={`grid gap-4 sm:gap-5 md:gap-6 mb-8 ${isRadioShow ? "grid-cols-3 md:grid-cols-6" : "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"}`}
           >
             {pagedItems.map((item, idx) => (
               <LazyItem key={item.id || `${selectedSub.slug}-${cursor}-${idx}`}>
@@ -323,7 +327,6 @@ export default function GenericSubCategorySection({
     </>
   );
 }
-
 
 function LazyItem({ children, rootMargin = "200px" }) {
   const ref = useRef(null);

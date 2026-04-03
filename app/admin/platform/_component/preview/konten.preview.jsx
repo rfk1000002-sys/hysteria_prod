@@ -155,7 +155,7 @@ function CardPreview({ imgSrc, title, prevdescription, host, guestsArr }) {
           {/* Info overlay — always visible in preview */}
           <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/60 to-transparent px-3 pb-4 pt-16">
             {title && (
-              <p className="text-white text-[12px] md:text-[13px] font-bold leading-tight mb-1 wrap-break-words">
+              <p className="text-white text-[12px] md:text-[13px] font-bold leading-tight mb-1 wrap-break-words line-clamp-4 text-justify">
                 {title}
               </p>
             )}

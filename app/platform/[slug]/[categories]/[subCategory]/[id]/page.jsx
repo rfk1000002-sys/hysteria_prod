@@ -8,6 +8,8 @@ import ArtistCard from "../../_BodyComponent/cards/ArtistCard";
 import LightboxImage from "../../../../../../components/ui/LightboxImage";
 import ViewTracker from "../_components/ViewTracker.client.jsx";
 
+// halaman ini adalah halaman detail dari sebuah konten, sejauh ini hanya digunakan oleh konten artist radar
+
 export default async function ArtistDetailPage({ params }) {
   const { slug, categories, subCategory, id } = (await params) || {};
   if (!slug || !categories || !subCategory || !id) return notFound();

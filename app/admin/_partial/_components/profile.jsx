@@ -128,7 +128,7 @@ export default function ProfileSheet({ open, onClose }) {
             <button
               onClick={() => setIsEditing(true)}
               className="p-2 rounded-md hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 cursor-pointer"
-              title="Sunting profil"
+              title="Edit profile"
             >
               <svg
                 width="18"

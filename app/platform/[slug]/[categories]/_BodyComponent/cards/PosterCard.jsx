@@ -71,7 +71,7 @@ export default function PosterCard({
       ref={wrapperRef}
       role="button"
       tabIndex={0}
-      className="group relative w-full aspect-2/3 overflow-visible rounded-xl cursor-pointer shadow-xl border-2 border-zinc-300"
+      className="group relative w-full aspect-2/3 overflow-visible rounded-xl shadow-xl border-2 border-zinc-300"
       onClick={(e) => {
         const tgt = e.target;
         if (tgt && tgt.tagName) {
@@ -150,12 +150,15 @@ export default function PosterCard({
                   e.stopPropagation();
                   handleTrackClick();
                 }}
-                className="mt-2 w-full block bg-linear-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer text-center"
+                className="mt-2 w-full block bg-linear-to-r from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 active:from-pink-700 active:to-orange-600 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer text-center transition-all duration-200 active:scale-[0.98]"
               >
                 Lihat Detail
               </Link>
             ) : (
-              <button className="mt-2 w-full bg-linear-to-r from-pink-500 to-orange-400 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-pointer">
+              <button 
+                disabled
+                className="mt-2 w-full bg-linear-to-r from-gray-400 to-gray-500 text-white text-[9px] md:text-xs font-semibold py-1.5 rounded-md cursor-not-allowed opacity-70"
+              >
                 Lihat Detail
               </button>
             )}

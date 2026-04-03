@@ -48,7 +48,7 @@ export default function Pagination({
           type="button"
           disabled={currentPage <= 1}
           onClick={handlePrev}
-          className="flex h-auto w-auto items-center justify-center rounded-full bg-white/30 text-pink-600 transition hover:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="cursor-pointer flex h-auto w-auto items-center justify-center rounded-full bg-white/30 text-pink-600 transition hover:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label="Previous page"
         >
           <svg
@@ -101,7 +101,7 @@ export default function Pagination({
           type="button"
           disabled={currentPage >= totalPages}
           onClick={handleNext}
-          className="flex h-auto w-auto items-center justify-center rounded-full bg-white text-[#ec3f94] transition hover:bg-pink-50 disabled:bg-white/30 disabled:text-pink-600 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="cursor-pointer flex h-auto w-auto items-center justify-center rounded-full bg-white text-[#ec3f94] transition hover:bg-pink-50 disabled:bg-white/30 disabled:text-pink-600 disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label="Next page"
         >
           <svg

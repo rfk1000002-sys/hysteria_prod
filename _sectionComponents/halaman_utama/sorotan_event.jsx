@@ -254,7 +254,7 @@ export default function SorotanEvent({ initialEvents = [] }) {
             Sorotan Event
           </h2>
           <p className="text-#626262 text-[0.9rem] md:text-base max-w-[600px] mx-auto mb-10">
-            Deretan event terbaik dan paling menarik untuk diikuti!
+            Deretan event terbaru dan paling menarik untuk diikuti!
           </p>
         </header>
 
@@ -288,7 +288,7 @@ export default function SorotanEvent({ initialEvents = [] }) {
                     }
                     if (e.key === "Escape") setActiveId(null);
                   }}
-                  className="relative rounded-xl overflow-hidden h-[240px] sm:h-[300px] md:h-[450px] border border-gray-100 shadow-md cursor-pointer transition-all duration-300 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:z-20 group"
+                  className="relative rounded-xl overflow-hidden h-[240px] sm:h-[300px] md:h-[450px] border border-gray-100 shadow-md transition-all duration-300 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] hover:z-20 group"
                 >
                   {/* IMAGE / POSTER */}
                   <figure className="relative w-full h-full">
@@ -328,13 +328,13 @@ export default function SorotanEvent({ initialEvents = [] }) {
 
                     <p className="text-white/80 text-xs">📍 {event.location}</p>
 
-                    <button
-                      type="button"
+                    <Link
+                      href={`/event/${event.slug}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="bg-[#7c3aed] text-white text-xs py-1 rounded-lg"
+                      className="bg-[#7c3aed] text-white text-xs py-2 rounded-lg cursor-pointer z-50 text-center w-full block hover:bg-[#6d28d9] transition-colors mt-2"
                     >
-                      Ikuti Sekarang
-                    </button>
+                      Lihat Detail
+                    </Link>
                   </figcaption>
                 </article>
               </div>

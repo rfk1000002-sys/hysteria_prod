@@ -134,47 +134,17 @@ export async function getDashboardAnalytics(range = "weekly") {
 
   // Fetch BOTH sources to provide historical baseline + live tracking
   try {
-    const [stats, oldArticles, oldEvents, oldPlatforms] = await Promise.all([
+    const [stats] = await Promise.all([
       prisma.visitorStats.findMany({
         where: { date: { gte: startDate } },
         orderBy: { date: "asc" },
       }),
-      // Historical fallback: items created on these dates
-      prisma.article.findMany({
-        where: { createdAt: { gte: startDate }, isDeleted: false },
-        select: { createdAt: true, views: true },
-      }),
-      prisma.event.findMany({
-        where: { createdAt: { gte: startDate } },
-        select: { createdAt: true, views: true },
-      }),
-      prisma.platformContent.findMany({
-        where: { createdAt: { gte: startDate }, isActive: true },
-        select: { createdAt: true, views: true },
-      }),
     ]);
 
-    // 1. Process Historical Data (Baseline)
-    const processBaseline = (items, key) => {
-      items.forEach((item) => {
-        const label = formatKey(item.createdAt);
-        if (statsMap[label]) {
-          statsMap[label][key] += item.views || 0;
-        }
-      });
-    };
-    processBaseline(oldArticles, "article");
-    processBaseline(oldEvents, "event");
-    processBaseline(oldPlatforms, "platform");
-
-    // 2. Process Live Stats (VisitorStats)
-    // We add these views to the baseline. 
-    // Since we just started tracking, this will mostly provide data for "Today".
+    // Process Live Stats (VisitorStats)
     stats.forEach((item) => {
       const label = formatKey(item.date);
       if (statsMap[label]) {
-        // We only add new tracked views if it's on/after we started tracking
-        // For simplicity, we just add them.
         statsMap[label].article += item.articleViews || 0;
         statsMap[label].event += item.eventViews || 0;
         statsMap[label].platform += item.platformViews || 0;

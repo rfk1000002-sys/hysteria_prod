@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import SelectField from "@/components/ui/SelectField";
 import SearchField from "@/components/adminUI/SearchField";
@@ -16,6 +22,7 @@ import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import ArtistPreview from "../_component/preview/konten.preview";
 import VideoPreview from "../_component/preview/video.preview";
+import EventForm from "@/components/adminUI/Event/EventForm";
 
 import { useRouter } from "next/navigation";
 import { statusOptions, fetchArtlabEventData } from "../_handler/data";
@@ -44,15 +51,31 @@ export default function HysteriaArtlabPage() {
   const [openAntalk, setOpenAntalk] = useState(false);
   const [openArtistRadar, setOpenArtistRadar] = useState(false);
 
+  const [view, setView] = useState("list");
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const debouncedSearch = useDebounce(searchQuery);
   const router = useRouter();
 
-  const handleEdit = useCallback(
-    (row) => {
-      router.push(`/admin/events/${row.id}/edit`);
-    },
-    [router],
-  );
+  const handleEdit = useCallback(async (row) => {
+    try {
+      setLoadingEdit(true);
+      setView("edit");
+
+      const res = await fetch(`/api/admin/events/${row.id}`);
+      const data = await res.json();
+
+      setSelectedEventId(row.id);
+      setEditData(data);
+    } catch (err) {
+      console.error("Gagal ambil data edit", err);
+    } finally {
+      setLoadingEdit(false);
+    }
+  }, []);
 
   const handleDelete = useCallback(async (row) => {
     const confirmed = window.confirm(
@@ -81,21 +104,30 @@ export default function HysteriaArtlabPage() {
   const totalPages = Math.ceil(totalCount / perPage) || 1;
 
   // Untuk melacak perubahan filter dan menghindari double fetch
-  const lastFiltersRef = useRef({ debouncedSearch, subKategori, statusFilter, perPage });
+  const lastFiltersRef = useRef({
+    debouncedSearch,
+    subKategori,
+    statusFilter,
+    perPage,
+  });
 
   useEffect(() => {
     let cancelled = false;
 
     // Cek apakah filter berubah untuk reset ke halaman 1
-    const filtersChanged = (
+    const filtersChanged =
       lastFiltersRef.current.debouncedSearch !== debouncedSearch ||
       lastFiltersRef.current.subKategori !== subKategori ||
       lastFiltersRef.current.statusFilter !== statusFilter ||
-      lastFiltersRef.current.perPage !== perPage
-    );
+      lastFiltersRef.current.perPage !== perPage;
 
     if (filtersChanged) {
-      lastFiltersRef.current = { debouncedSearch, subKategori, statusFilter, perPage };
+      lastFiltersRef.current = {
+        debouncedSearch,
+        subKategori,
+        statusFilter,
+        perPage,
+      };
       cursorStackRef.current = [null]; // Reset stack
       if (currentPage !== 1) {
         setCurrentPage(1);
@@ -133,7 +165,14 @@ export default function HysteriaArtlabPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, subKategori, statusFilter, perPage, currentPage]);
+  }, [
+    debouncedSearch,
+    subKategori,
+    statusFilter,
+    perPage,
+    currentPage,
+    refreshKey,
+  ]);
 
   const handleNextPage = useCallback(() => {
     if (currentPage < totalPages && !loading) {
@@ -165,315 +204,376 @@ export default function HysteriaArtlabPage() {
   return (
     <PermissionGate requiredPermissions="platform.read">
       <div className="p-2 md:p-6 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
-      {/* Bagian atas  */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <h1 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
-          Hysteria Artlab
-        </h1>
-        <p className="text-sm text-gray-700 mb-6 font-poppins">
-          Kelola semua konten dari platform Hysteria Artlab
-        </p>
+        {view === "list" && (
+          <>
+            {/* Bagian atas  */}
+            <div className="max-w-5xl mx-auto px-4 py-6">
+              <h1 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
+                Hysteria Artlab
+              </h1>
+              <p className="text-sm text-gray-700 mb-6 font-poppins">
+                Kelola semua konten dari platform Hysteria Artlab
+              </p>
 
-        <div className="grid md:grid-cols-7 gap-6">
-          <div className="flex flex-col gap-6 md:col-span-4">
-            <div className="p-5 border border-gray-400 rounded-lg bg-white shadow-xl">
-              <h2 className="py-1 text-pink-500 font-bold mb-3 font-poppins">
-                Merchandise
-              </h2>
-              <div className="flex flex-col md:flex-row gap-3 md:gap-5">
-              <PermissionGate requiredPermissions="platform.update" hideOnDenied>
-                <button
-                  type="button"
-                  className="inline-block bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(
-                        "/api/admin/platform-content/merchandise",
-                      );
-                      if (!res.ok)
-                        throw new Error("Failed to fetch merchandise");
-                      const data = await res.json();
-                      const url = data?.item?.url || "";
-                      setMerchInitial({ input: url });
-                      setOpenMerch(true);
-                    } catch (err) {
-                      // still open modal with empty value
-                      setMerchInitial({ input: "" });
-                      setOpenMerch(true);
-                    }
-                  }}
-                >
-                  Kelola Merchandise
-                </button>
-              </PermissionGate>
+              <div className="grid md:grid-cols-7 gap-6">
+                <div className="flex flex-col gap-6 md:col-span-4">
+                  <div className="p-5 border border-gray-400 rounded-lg bg-white shadow-xl">
+                    <h2 className="py-1 text-pink-500 font-bold mb-3 font-poppins">
+                      Merchandise
+                    </h2>
+                    <div className="flex flex-col md:flex-row gap-3 md:gap-5">
+                      <PermissionGate
+                        requiredPermissions="platform.update"
+                        hideOnDenied
+                      >
+                        <button
+                          type="button"
+                          className="inline-block bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+                          onClick={async () => {
+                            try {
+                              const res = await fetch(
+                                "/api/admin/platform-content/merchandise",
+                              );
+                              if (!res.ok)
+                                throw new Error("Failed to fetch merchandise");
+                              const data = await res.json();
+                              const url = data?.item?.url || "";
+                              setMerchInitial({ input: url });
+                              setOpenMerch(true);
+                            } catch (err) {
+                              // still open modal with empty value
+                              setMerchInitial({ input: "" });
+                              setOpenMerch(true);
+                            }
+                          }}
+                        >
+                          Kelola Merchandise
+                        </button>
+                      </PermissionGate>
+                    </div>
+                  </div>
+
+                  <div className="p-5 border border-gray-400 rounded-lg bg-white shadow-xl">
+                    <h2 className="py-1 text-pink-500 font-bold mb-3 font-poppins">
+                      Workshop Artlab, Screening Film, dan Untuk Perhatian
+                    </h2>
+                    <div>
+                      <PermissionGate
+                        requiredPermissions="platform.create"
+                        hideOnDenied
+                      >
+                        <button
+                          onClick={() => setView("create")}
+                          className="px-4 py-2 bg-[#43334C] hover:bg-pink-600 text-white rounded-lg cursor-pointer"
+                        >
+                          Tambah Postingan
+                        </button>
+                      </PermissionGate>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 border border-gray-500 rounded-lg bg-white shadow-xl flex flex-col space-y-3 md:space-y-5 md:col-span-3">
+                  <h2 className="text-pink-500 font-bold mb-3 font-poppins">
+                    Podcast Artlab
+                  </h2>
+                  <PermissionGate
+                    requiredPermissions="platform.create"
+                    hideOnDenied
+                  >
+                    <button
+                      onClick={() => setView("create")}
+                      className="px-4 py-2 bg-[#43334C] hover:bg-pink-600 text-white rounded-lg cursor-pointer"
+                    >
+                      Tambah Stonen 29 Radio Show
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate
+                    requiredPermissions="platform.update"
+                    hideOnDenied
+                  >
+                    <button
+                      onClick={() => setOpenAntalk(true)}
+                      className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+                    >
+                      Kelola Anitalk
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate
+                    requiredPermissions="platform.create"
+                    hideOnDenied
+                  >
+                    <button
+                      onClick={() => setOpenArtistRadar(true)}
+                      className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
+                    >
+                      Tambah Artist Radar
+                    </button>
+                  </PermissionGate>
+                </div>
               </div>
             </div>
 
-            <div className="p-5 border border-gray-400 rounded-lg bg-white shadow-xl">
-              <h2 className="py-1 text-pink-500 font-bold mb-3 font-poppins">
-                Workshop Artlab, Screening Film, dan Untuk Perhatian
-              </h2>
-              <div>
-              <PermissionGate requiredPermissions="platform.create" hideOnDenied>
-                <button
-                  onClick={() => router.push("/admin/events/create")}
-                  className="w-full md:w-auto bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-                >
-                  Tambah Postingan
-                </button>
-              </PermissionGate>
+            {/* open modals */}
+            {openMerch && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                {/* blur */}
+                <div
+                  className="absolute inset-0 bg-black/50"
+                  onClick={() => setOpenMerch(false)}
+                />
+                {/* modal content */}
+                <div className="relative z-10 w-full max-h-[90vh] overflow-auto px-4">
+                  <div className="mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
+                    <LinkForm
+                      close={() => setOpenMerch(false)}
+                      title="Merchandise"
+                      subtitle="edit dengan nomor hp/whatsapp yang aktif"
+                      placeholders={{ input: "contoh: 085535235339" }}
+                      prefix={"https://api.whatsapp.com/send/?phone=62"}
+                      isPhone={true}
+                      initial={merchInitial}
+                      onSave={async ({ name }) => {
+                        try {
+                          const body = { url: name };
+                          const res = await fetch(
+                            "/api/admin/platform-content/merchandise",
+                            {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(body),
+                            },
+                          );
+                          if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            throw new Error(
+                              err.message || "Failed to save merchandise",
+                            );
+                          }
+                          // Optionally refresh page or state here
+                        } catch (err) {
+                          console.error("Error saving merchandise:", err);
+                          throw err;
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="p-5 border border-gray-500 rounded-lg bg-white shadow-xl flex flex-col space-y-3 md:space-y-5 md:col-span-3">
-            <h2 className="text-pink-500 font-bold mb-3 font-poppins">
-              Podcast Artlab
-            </h2>
-            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
-              <button
-                onClick={() =>
-                  router.push(
-                    "/admin/events/create?category=stonen-29-radio-show",
-                  )
-                }
-                className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-              >
-                Tambah Stonen 29 Radio Show
-              </button>
-            </PermissionGate>
-            <PermissionGate requiredPermissions="platform.update" hideOnDenied>
-              <button
-                onClick={() => setOpenAntalk(true)}
-                className="w-full bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-              >
-                Kelola Anitalk
-              </button>
-            </PermissionGate>
-            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
-              <button
-                onClick={() => setOpenArtistRadar(true)}
-                className="w-full bg-[#43334C] hover:bg-pink-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold cursor-pointer"
-              >
-                Tambah Artist Radar
-              </button>
-            </PermissionGate>
-          </div>
-        </div>
-      </div>
+            {openAntalk && (
+              <div className="fixed w-full inset-0 z-50 flex items-center justify-center min-h-screen min-w-screen">
+                <div
+                  className="absolute inset-0 bg-black/50"
+                  onClick={() => setOpenAntalk(false)}
+                />
+                <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
+                  <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
+                    <PlatformIndex
+                      platformSlug="hysteria-artlab"
+                      categoryItemSlug="anitalk"
+                      title="Anitalk"
+                      subtitle="Kelola Anitalk Konten"
+                      showImageUpload={false}
+                      actionLabel="+Add"
+                      // pass data field (judul dan tahun default)
+                      // showTags={true}
+                      searchPlaceholder="Cari judul podcast..."
+                      showURL={true}
+                      showPrevDescription={true}
+                      // showDescription={true}
+                      showGuests={true}
+                      showHost={true}
+                      showViews={true}
+                      showMeta={true}
+                      showPreview={true}
+                      PreviewComponent={VideoPreview}
+                      close={() => setOpenAntalk(false)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-      {/* open modals */}
-      {openMerch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* blur */}
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpenMerch(false)}
-          />
-          {/* modal content */}
-          <div className="relative z-10 w-full max-h-[90vh] overflow-auto px-4">
-            <div className="mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
-              <LinkForm
-                close={() => setOpenMerch(false)}
-                title="Merchandise"
-                subtitle="edit dengan nomor hp/whatsapp yang aktif"
-                placeholders={{ input: "contoh: 085535235339" }}
-                prefix={"https://api.whatsapp.com/send/?phone=62"}
-                isPhone={true}
-                initial={merchInitial}
-                onSave={async ({ name }) => {
-                  try {
-                    const body = { url: name };
-                    const res = await fetch(
-                      "/api/admin/platform-content/merchandise",
-                      {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(body),
-                      },
-                    );
-                    if (!res.ok) {
-                      const err = await res.json().catch(() => ({}));
-                      throw new Error(
-                        err.message || "Failed to save merchandise",
-                      );
-                    }
-                    // Optionally refresh page or state here
-                  } catch (err) {
-                    console.error("Error saving merchandise:", err);
-                    throw err;
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+            {openArtistRadar && (
+              <div className="fixed w-full inset-0 z-50 flex items-center justify-center min-h-screen min-w-screen">
+                <div
+                  className="absolute inset-0 bg-black/50"
+                  onClick={() => setOpenArtistRadar(false)}
+                />
+                <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
+                  <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
+                    <PlatformIndex
+                      platformSlug="hysteria-artlab"
+                      categoryItemSlug="artist-radar"
+                      title="Artist Radar"
+                      subtitle="Kelola Artist Radar"
+                      actionLabel="+Add"
+                      searchPlaceholder="Cari judul artist radar..."
+                      showURL={false}
+                      showImageUpload={true}
+                      showTags={true}
+                      showInstagram={true}
+                      showYoutube={true}
+                      showPrevDescription={true}
+                      showDescription={true}
+                      showHost={true}
+                      showGuests={true}
+                      showViews={true}
+                      showMeta={true}
+                      showPreview={true}
+                      PreviewComponent={ArtistPreview}
+                      close={() => setOpenArtistRadar(false)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-      {openAntalk && (
-        <div className="fixed w-full inset-0 z-50 flex items-center justify-center min-h-screen min-w-screen">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpenAntalk(false)}
-          />
-          <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
-            <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
-              <PlatformIndex
-                platformSlug="hysteria-artlab"
-                categoryItemSlug="anitalk"
-                title="Anitalk"
-                subtitle="Kelola Anitalk Konten"
-                showImageUpload={false}
-                actionLabel="+Add"
-                // pass data field (judul dan tahun default)
-                // showTags={true}
-                searchPlaceholder="Cari judul podcast..."
-                showURL={true}
-                showPrevDescription={true}
-                // showDescription={true}
-                showGuests={true}
-                showHost={true}
-                showViews={true}
-                showMeta={true}
-                showPreview={true}
-                PreviewComponent={VideoPreview}
-                close={() => setOpenAntalk(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+            {/* Bagian bawah (lazy-mount) */}
+            <LazyMount>
+              <div className="max-w-5xl mx-auto px-4 py-6">
+                <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
+                      Semua Postingan
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-6 font-poppins">
+                      Kelola Workshop Artlab, Screening Film dan Untuk Perhatian
+                    </p>
+                  </div>
+                  <div>
+                    <PermissionGate
+                      requiredPermissions="platform.create"
+                      hideOnDenied
+                    >
+                      <button
+                        onClick={() => setView("create")}
+                        className="px-4 py-2 bg-[#43334C] hover:bg-pink-600 text-white rounded-lg cursor-pointer"
+                      >
+                        Tambah Postingan
+                      </button>
+                    </PermissionGate>
+                  </div>
+                </div>
 
-      {openArtistRadar && (
-        <div className="fixed w-full inset-0 z-50 flex items-center justify-center min-h-screen min-w-screen">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setOpenArtistRadar(false)}
-          />
-          <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
-            <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
-              <PlatformIndex
-                platformSlug="hysteria-artlab"
-                categoryItemSlug="artist-radar"
-                title="Artist Radar"
-                subtitle="Kelola Artist Radar"
-                actionLabel="+Add"
-                searchPlaceholder="Cari judul artist radar..."
-                showURL={false}
-                showImageUpload={true}
-                showTags={true}
-                showInstagram={true}
-                showYoutube={true}
-                showPrevDescription={true}
-                showDescription={true}
-                showHost={true}
-                showGuests={true}
-                showViews={true}
-                showMeta={true}
-                showPreview={true}
-                PreviewComponent={ArtistPreview}
-                close={() => setOpenArtistRadar(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+                {/* filter */}
+                <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
+                  <div className="w-full md:w-auto">
+                    <SearchField
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari judul postingan..."
+                      showAdornment={false}
+                      endAdornment={
+                        <IconButton size="small" aria-label="search">
+                          <SearchIcon fontSize="small" />
+                        </IconButton>
+                      }
+                      className="rounded-md bg-white border border-gray-300 shadow-sm"
+                    />
+                  </div>
+                  <SelectField
+                    className="w-full md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
+                    value={subKategori}
+                    onChange={setSubKategori}
+                    options={artlabEventCategoryOptions}
+                    emptyOptionLabel="Semua Sub Kategori"
+                  />
+                  <PageFilter perPage={perPage} onChange={setPerPage} />
+                  <SelectField
+                    className="w-[190px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={statusOptions}
+                    emptyOptionLabel="Semua Status"
+                  />
+                </div>
 
-      {/* Bagian bawah (lazy-mount) */}
-      <LazyMount>
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row md:gap-0 justify-between items-center md:items-center mb-6 md:mb-0">
-            <div>
-              <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
-                Semua Postingan
-              </h2>
-              <p className="text-sm text-gray-600 mb-6 font-poppins">
-                Kelola Workshop Artlab, Screening Film dan Untuk Perhatian
+                <DataTable
+                  columns={columns}
+                  rows={rows}
+                  loading={loading}
+                  getRowId={(r) => r.id}
+                />
+                <div className="flex justify-center items-center gap-4 mt-6">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={currentPage <= 1 || loading}
+                    onClick={handlePrevPage}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-sm text-gray-600 font-poppins">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={currentPage >= totalPages || loading}
+                    onClick={handleNextPage}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </LazyMount>
+          </>
+        )}
+
+        {/* ================= CREATE ================= */}
+        {view === "create" && (
+          <div className="max-w-5xl mx-auto p-4">
+            <div className="space-y-1 mb-6">
+              <h1 className="text-2xl font-semibold text-black">
+                Create Event Hysteria Artlab
+              </h1>
+              <p className="text-sm text-gray-500">
+                Create new content for Hysteria Artlab
               </p>
             </div>
-            <div>
-            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  backgroundColor: "#43334C",
-                  "&:hover": { backgroundColor: "#352837" },
-                  textTransform: "none",
+
+            <EventForm
+              onClose={() => {
+                setView("list");
+                setRefreshKey((p) => p + 1);
+              }}
+            />
+          </div>
+        )}
+
+        {/* ================= EDIT ================= */}
+        {view === "edit" && (
+          <div className="max-w-5xl mx-auto p-4">
+            <div className="space-y-1 mb-6">
+              <h1 className="text-xl font-semibold text-black">
+                Edit Event Hysteria Artlab
+              </h1>
+              <p className="text-sm text-gray-500">
+                Edited a content for Hysteria Artlab
+              </p>
+            </div>
+
+            {loadingEdit ? (
+              <div className="text-sm text-gray-500">Loading...</div>
+            ) : (
+              <EventForm
+                initialData={editData}
+                isEdit
+                eventId={selectedEventId}
+                onClose={() => {
+                  setView("list");
+                  setRefreshKey((p) => p + 1);
                 }}
-                onClick={() => router.push("/admin/events/create")}
-              >
-                Tambah Postingan
-              </Button>
-            </PermissionGate>
-            </div>
-          </div>
-
-          {/* filter */}
-          <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
-            <div className="w-full md:w-auto">
-              <SearchField
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari judul postingan..."
-                showAdornment={false}
-                endAdornment={
-                  <IconButton size="small" aria-label="search">
-                    <SearchIcon fontSize="small" />
-                  </IconButton>
-                }
-                className="rounded-md bg-white border border-gray-300 shadow-sm"
               />
-            </div>
-            <SelectField
-              className="w-full md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
-              value={subKategori}
-              onChange={setSubKategori}
-              options={artlabEventCategoryOptions}
-              emptyOptionLabel="Semua Sub Kategori"
-            />
-            <PageFilter perPage={perPage} onChange={setPerPage} />
-            <SelectField
-              className="w-[190px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={statusOptions}
-              emptyOptionLabel="Semua Status"
-            />
+            )}
           </div>
-
-          <DataTable
-            columns={columns}
-            rows={rows}
-            loading={loading}
-            getRowId={(r) => r.id}
-          />
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage <= 1 || loading}
-              onClick={handlePrevPage}
-              sx={{ textTransform: "none" }}
-            >
-              Prev
-            </Button>
-            <span className="text-sm text-gray-600 font-poppins">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage >= totalPages || loading}
-              onClick={handleNextPage}
-              sx={{ textTransform: "none" }}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      </LazyMount>
-    </div>
+        )}
+      </div>
     </PermissionGate>
   );
 }
