@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter } from "next/navigation";
 import SelectField from "@/components/ui/SelectField";
@@ -15,10 +21,8 @@ import LinkForm from "../_component/link.form";
 import PlatformIndex from "../_component/index.page";
 import VideoPreview from "../_component/preview/video.preview";
 import PosterPreview from "../_component/preview/poster.preview";
-import {
-  statusOptions,
-  fetchLakiMasakEventData,
-} from "../_handler/data";
+import EventForm from "@/components/adminUI/Event/EventForm";
+import { statusOptions, fetchLakiMasakEventData } from "../_handler/data";
 import { buildEventColumns } from "../_handler/TablePlatformColom";
 
 const categories = [
@@ -52,24 +56,45 @@ export default function LakiMasakPage() {
     previewComponent: null,
   });
 
+  const [view, setView] = useState("list");
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [editData, setEditData] = useState(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const debouncedSearch = useDebounce(searchQuery);
   const router = useRouter();
 
   const [deletingId, setDeletingId] = useState(null);
 
-  const handleEdit = useCallback((row) => {
-    router.push(`/admin/events/${row.id}/edit`);
-  }, [router]);
+  const handleEdit = useCallback(async (row) => {
+    try {
+      setLoadingEdit(true);
+      setView("edit");
+
+      const res = await fetch(`/api/admin/events/${row.id}`);
+      const data = await res.json();
+
+      setSelectedEventId(row.id);
+      setEditData(data);
+    } catch (err) {
+      console.error("Gagal ambil data edit", err);
+    } finally {
+      setLoadingEdit(false);
+    }
+  }, []);
 
   const handleDelete = useCallback(async (row) => {
     const confirmed = window.confirm(
-      `Yakin ingin menghapus event "${row.title}"? Tindakan ini tidak dapat dibatalkan.`
+      `Yakin ingin menghapus event "${row.title}"? Tindakan ini tidak dapat dibatalkan.`,
     );
     if (!confirmed) return;
     try {
       setDeletingId(row.id);
-      const res = await fetch(`/api/admin/events/${row.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Gagal menghapus event');
+      const res = await fetch(`/api/admin/events/${row.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Gagal menghapus event");
       setRows((prev) => prev.filter((e) => e.id !== row.id));
     } catch (err) {
       alert(err.message);
@@ -92,11 +117,10 @@ export default function LakiMasakPage() {
     let cancelled = false;
 
     // Cek apakah filter berubah untuk reset ke halaman 1
-    const filtersChanged = (
+    const filtersChanged =
       lastFiltersRef.current.debouncedSearch !== debouncedSearch ||
       lastFiltersRef.current.statusFilter !== statusFilter ||
-      lastFiltersRef.current.perPage !== perPage
-    );
+      lastFiltersRef.current.perPage !== perPage;
 
     if (filtersChanged) {
       lastFiltersRef.current = { debouncedSearch, statusFilter, perPage };
@@ -136,7 +160,7 @@ export default function LakiMasakPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, statusFilter, perPage, currentPage]);
+  }, [debouncedSearch, statusFilter, perPage, currentPage, refreshKey]);
 
   const handleNextPage = useCallback(() => {
     if (currentPage < totalPages && !loading) {
@@ -248,199 +272,259 @@ export default function LakiMasakPage() {
   return (
     <PermissionGate requiredPermissions="platform.read">
       <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
-      {/* bagian atas */}
-      <div className="max-w-5xl mx-auto">
-        <header className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Laki Masak
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Kelola semua konten dari platform Laki Masak
-          </p>
-        </header>
+        {view === "list" && (
+          <>
+            {/* bagian atas */}
+            <div className="max-w-5xl mx-auto">
+              <header className="mb-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  Laki Masak
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Kelola semua konten dari platform Laki Masak
+                </p>
+              </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {categories.map((cat) => (
-            <div
-              key={cat.id}
-              className="h-30 bg-white border border-zinc-800 rounded-xl shadow-xl p-3 flex flex-col items-center text-center"
-            >
-              <div className="w-full h-auto flex items-start justify-start">
-                <span
-                  className="text-pink-600 font-semibold font-poppins block truncate"
-                  title={cat.title}
-                >
-                  {cat.title}
-                </span>
-              </div>
-
-              <div className="mt-auto items-center">
-                <PermissionGate requiredPermissions="platform.update" hideOnDenied>
-                  <button
-                    onClick={() => {
-                      if ([1, 2, 3].includes(cat.id)) {
-                        openModalForCategory(cat);
-                      } else {
-                        console.log("Manage:", cat);
-                      }
-                    }}
-                    className="bg-pink-500 cursor-pointer hover:bg-pink-600 text-white rounded-xl px-5 py-2 shadow-md"
+              <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="h-30 bg-white border border-zinc-800 rounded-xl shadow-xl p-3 flex flex-col items-center text-center"
                   >
-                    Kelola Konten
-                  </button>
-                </PermissionGate>
-              </div>
+                    <div className="w-full h-auto flex items-start justify-start">
+                      <span
+                        className="text-pink-600 font-semibold font-poppins block truncate"
+                        title={cat.title}
+                      >
+                        {cat.title}
+                      </span>
+                    </div>
+
+                    <div className="mt-auto items-center">
+                      <PermissionGate
+                        requiredPermissions="platform.update"
+                        hideOnDenied
+                      >
+                        <button
+                          onClick={() => {
+                            if ([1, 2, 3].includes(cat.id)) {
+                              openModalForCategory(cat);
+                            } else {
+                              console.log("Manage:", cat);
+                            }
+                          }}
+                          className="bg-pink-500 cursor-pointer hover:bg-pink-600 text-white rounded-xl px-5 py-2 shadow-md"
+                        >
+                          Kelola Konten
+                        </button>
+                      </PermissionGate>
+                    </div>
+                  </div>
+                ))}
+              </section>
             </div>
-          ))}
-        </section>
-      </div>
 
-      {/* bagian bawah (lazy-mount) */}
-      <LazyMount>
-        <div className="max-w-5xl mx-auto mt-12">
-        <div className="flex flex-col md:flex-row md:gap-0 justify-between items-start md:items-center mb-6 md:mb-0">
-          <div>
-            <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
-              Meramu
-            </h2>
-            <p className="text-sm text-gray-600 mb-6 font-poppins">
-              Kumpulan postingan dari Meramu, salah satu kegiatan di Laki Masak
-            </p>
-          </div>
-          <div>
-            <PermissionGate requiredPermissions="platform.create" hideOnDenied>
-              <Button
-                variant="contained"
-                size="small"
-                sx={{
-                  backgroundColor: "#43334C",
-                  "&:hover": { backgroundColor: "#352837" },
-                  textTransform: "none",
-                }}
-                onClick={() => router.push("/admin/events/create")}
-              >
-                Tambah Event
-              </Button>
-            </PermissionGate>
-          </div>
-        </div>
+            {/* bagian bawah (lazy-mount) */}
+            <LazyMount>
+              <div className="max-w-5xl mx-auto mt-12">
+                <div className="flex flex-col md:flex-row md:gap-0 justify-between items-start md:items-center mb-6 md:mb-0">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl text-zinc-700 font-extrabold mb-1 font-poppins">
+                      Meramu
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-6 font-poppins">
+                      Kumpulan postingan dari Meramu, salah satu kegiatan di
+                      Laki Masak
+                    </p>
+                  </div>
+                  <div>
+                    <PermissionGate
+                      requiredPermissions="platform.create"
+                      hideOnDenied
+                    >
+                      <button
+                        onClick={() => setView("create")}
+                        className="px-4 py-2 bg-[#43334C] hover:bg-pink-600 text-white rounded-lg cursor-pointer"
+                      >
+                        Tambah Postingan
+                      </button>
+                    </PermissionGate>
+                  </div>
+                </div>
 
-        {/* filter */}
-        <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
-          <div className="w-full md:w-auto">
-            <SearchField
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari judul postingan..."
-              showAdornment={false}
-              endAdornment={
-                <IconButton size="small" aria-label="search">
-                  <SearchIcon fontSize="small" />
-                </IconButton>
-              }
-              className="rounded-md bg-white border border-gray-300 shadow-sm"
+                {/* filter */}
+                <div className="flex flex-wrap md:flex-row items-center gap-3 mb-4">
+                  <div className="w-full md:w-auto">
+                    <SearchField
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari judul postingan..."
+                      showAdornment={false}
+                      endAdornment={
+                        <IconButton size="small" aria-label="search">
+                          <SearchIcon fontSize="small" />
+                        </IconButton>
+                      }
+                      className="rounded-md bg-white border border-gray-300 shadow-sm"
+                    />
+                  </div>
+                  <SelectField
+                    className="w-[206px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={statusOptions}
+                    emptyOptionLabel="Semua Status"
+                  />
+                  <PageFilter perPage={perPage} onChange={setPerPage} />
+                </div>
+
+                <DataTable
+                  columns={columns}
+                  rows={rows}
+                  loading={loading}
+                  getRowId={(r) => r.id}
+                />
+                <div className="flex justify-center items-center gap-4 mt-6">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={currentPage <= 1 || loading}
+                    onClick={handlePrevPage}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Prev
+                  </Button>
+                  <span className="text-sm text-gray-600 font-poppins">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    disabled={currentPage >= totalPages || loading}
+                    onClick={handleNextPage}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Next
+                  </Button>
+                </div>
+                {platformModal.open && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div
+                      className="absolute inset-0 bg-black/50"
+                      onClick={() =>
+                        setPlatformModal((p) => ({ ...p, open: false }))
+                      }
+                    />
+                    <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
+                      <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
+                        <PlatformIndex
+                          platformSlug="laki-masak"
+                          categoryItemSlug={platformModal.categoryItemSlug}
+                          title={platformModal.title}
+                          subtitle={platformModal.subtitle}
+                          // pass data
+                          // judul, tahun default ada
+                          showURL={platformModal.showURL}
+                          showPrevDescription={
+                            platformModal.showPrevDescription
+                          }
+                          showImageUpload={platformModal.showImageUpload}
+                          showMeta={platformModal.showMeta}
+                          showHost={platformModal.showHost}
+                          showGuests={platformModal.showGuests}
+                          showViews={platformModal.showViews}
+                          showPreview={!!platformModal.previewComponent}
+                          PreviewComponent={platformModal.previewComponent}
+                          actionLabel="+add"
+                          searchPlaceholder="Cari konten..."
+                          close={() =>
+                            setPlatformModal((p) => ({ ...p, open: false }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {modalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    {/* blur */}
+                    <div
+                      className="absolute inset-0 bg-black opacity-40"
+                      onClick={() => setModalOpen(false)}
+                    />
+                    {/* modal content */}
+                    <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
+                      <LinkForm
+                        close={() => setModalOpen(false)}
+                        title={modalTitle}
+                        subtitle={
+                          modalIsPhone
+                            ? "edit dengan nomor hp/whatsapp yang aktif"
+                            : ""
+                        }
+                        initial={modalInitial}
+                        placeholders={modalPlaceholders}
+                        isPhone={modalIsPhone}
+                        prefix={modalPrefix}
+                        onSave={handleSaveFromForm}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </LazyMount>
+          </>
+        )}
+
+        {/* ================= CREATE ================= */}
+        {view === "create" && (
+          <div className="max-w-5xl mx-auto">
+            <div className="space-y-1 mb-6">
+              <h1 className="text-2xl font-semibold text-black">
+                Create Event Laki Masak
+              </h1>
+              <p className="text-sm text-gray-500">
+                Create new content for Laki Masak (Meramu)
+              </p>
+            </div>
+
+            <EventForm
+              onClose={() => {
+                setView("list");
+                setRefreshKey((p) => p + 1);
+              }}
             />
           </div>
-          <SelectField
-            className="w-[206px] md:w-auto rounded-md bg-white border border-gray-300 shadow-sm"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
-            emptyOptionLabel="Semua Status"
-          />
-          <PageFilter perPage={perPage} onChange={setPerPage} />
-        </div>
+        )}
 
-          <DataTable
-            columns={columns}
-            rows={rows}
-            loading={loading}
-            getRowId={(r) => r.id}
-          />
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage <= 1 || loading}
-              onClick={handlePrevPage}
-              sx={{ textTransform: "none" }}
-            >
-              Prev
-            </Button>
-            <span className="text-sm text-gray-600 font-poppins">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={currentPage >= totalPages || loading}
-              onClick={handleNextPage}
-              sx={{ textTransform: "none" }}
-            >
-              Next
-            </Button>
+        {/* ================= EDIT ================= */}
+        {view === "edit" && (
+          <div className="max-w-5xl mx-auto">
+            <div className="space-y-1 mb-6">
+              <h1 className="text-xl font-semibold text-black">
+                Edit Event Laki Masak
+              </h1>
+              <p className="text-sm text-gray-500">
+                Edited a content for event
+              </p>
+            </div>
+
+            {loadingEdit ? (
+              <div className="text-sm text-gray-500">Loading...</div>
+            ) : (
+              <EventForm
+                initialData={editData}
+                isEdit
+                eventId={selectedEventId}
+                onClose={() => {
+                  setView("list");
+                  setRefreshKey((p) => p + 1);
+                }}
+              />
+            )}
           </div>
-          {platformModal.open && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              <div
-                className="absolute inset-0 bg-black/50"
-                onClick={() => setPlatformModal((p) => ({ ...p, open: false }))}
-              />
-              <div className="relative z-10 w-full max-h-[95vh] overflow-auto px-4">
-                <div className="mx-auto w-full sm:max-w-lg md:max-w-6xl p-2 bg-white rounded-lg shadow-lg">
-                  <PlatformIndex
-                    platformSlug="laki-masak"
-                    categoryItemSlug={platformModal.categoryItemSlug}
-                    title={platformModal.title}
-                    subtitle={platformModal.subtitle}
-
-                    // pass data
-                    // judul, tahun default ada
-                    showURL={platformModal.showURL}
-                    showPrevDescription={platformModal.showPrevDescription}
-                    showImageUpload={platformModal.showImageUpload}
-                    showMeta={platformModal.showMeta}
-                    showHost={platformModal.showHost}
-                    showGuests={platformModal.showGuests}
-                    showViews={platformModal.showViews}
-                    showPreview={!!platformModal.previewComponent}
-                    PreviewComponent={platformModal.previewComponent}
-
-                    actionLabel="+add"
-                    searchPlaceholder="Cari konten..."
-                    close={() => setPlatformModal((p) => ({ ...p, open: false }))}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          {modalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* blur */}
-              <div
-                className="absolute inset-0 bg-black opacity-40"
-                onClick={() => setModalOpen(false)}
-              />
-              {/* modal content */}
-              <div className="z-60 mx-auto w-full sm:max-w-md md:max-w-lg lg:max-w-2xl p-2 bg-white rounded-lg shadow-lg">
-                <LinkForm
-                  close={() => setModalOpen(false)}
-                  title={modalTitle}
-                  subtitle={
-                    modalIsPhone ? "edit dengan nomor hp/whatsapp yang aktif" : ""
-                  }
-                  initial={modalInitial}
-                  placeholders={modalPlaceholders}
-                  isPhone={modalIsPhone}
-                  prefix={modalPrefix}
-                  onSave={handleSaveFromForm}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </LazyMount>
-    </div>
+        )}
+      </div>
     </PermissionGate>
   );
 }
@@ -466,7 +550,11 @@ function LazyMount({ children, rootMargin = "300px", className = "" }) {
   }, [visible, rootMargin]);
 
   return (
-    <div ref={ref} className={className} style={{ minHeight: visible ? undefined : 120 }}>
+    <div
+      ref={ref}
+      className={className}
+      style={{ minHeight: visible ? undefined : 120 }}
+    >
       {visible ? children : null}
     </div>
   );

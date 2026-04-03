@@ -69,12 +69,12 @@ export default function ArtistCard({
         }`}
       >
         {title && (
-          <h3 className="text-white text-[14px] md:text-sm font-bold leading-tight">
+          <h3 className="text-white text-[14px] md:text-[16px] font-bold leading-tight line-clamp-4">
             {title}
           </h3>
         )}
         {prevdescription && (
-          <p className="text-white/90 text-[11px] md:text-xs font-semibold mt-0.5 line-clamp-4">
+          <p className="text-white/90 text-[11px] md:text-xs mt-0.5 line-clamp-4">
             {prevdescription}
           </p>
         )}
