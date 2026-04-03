@@ -1,4 +1,5 @@
 import { prisma } from "../../../../lib/prisma";
+import { incrementDailyStats } from "@/modules/admin/dashboard/repositories/visitor-stats.repository";
 
 export async function findEvents({ q, statusFilter, sort }) {
   const now = new Date();
@@ -123,12 +124,17 @@ export async function findLatestEvents(take = 10) {
 }
 
 export async function incrementEventViews(slug) {
-  return prisma.event.update({
-    where: { slug },
-    data: {
-      views: {
-        increment: 1,
+  const [updatedEvent] = await Promise.all([
+    prisma.event.update({
+      where: { slug },
+      data: {
+        views: {
+          increment: 1,
+        },
       },
-    },
-  });
+    }),
+    incrementDailyStats("event"),
+  ]);
+
+  return updatedEvent;
 }

@@ -63,6 +63,18 @@ export default function AdminShell({ children }) {
     }
   }, [currentView]);
 
+  // Handle sidebar collapse/expand: trigger window resize for Recharts
+  useEffect(() => {
+    const triggerResize = () => {
+      window.dispatchEvent(new Event("resize"));
+    };
+
+    // Trigger immediately and after transition
+    triggerResize();
+    const timer = setTimeout(triggerResize, 250); 
+    return () => clearTimeout(timer);
+  }, [collapsed]);
+
   useEffect(() => {
     function onKey(e) {
       if (e.key === "Escape") setOpen(false);

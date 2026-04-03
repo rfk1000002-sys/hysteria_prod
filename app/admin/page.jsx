@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/context/auth-context";
 
 import StatCard from "@/components/adminUI/Dashboard/StatCard";
@@ -29,11 +29,7 @@ export default function DashboardPage({ onNavigate }) {
   // FETCH
   ////////////////////////////////////////////////////////
 
-  useEffect(() => {
-    if (!authLoading) fetchDashboard();
-  }, [range, authLoading]);
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       const res = await apiCall(`/api/admin/dashboard?range=${range}`);
       const json = await res.json();
@@ -43,7 +39,11 @@ export default function DashboardPage({ onNavigate }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [range, apiCall]);
+
+  useEffect(() => {
+    if (!authLoading) fetchDashboard();
+  }, [fetchDashboard, authLoading]);
 
   ////////////////////////////////////////////////////////
   // LOADING
@@ -125,54 +125,67 @@ export default function DashboardPage({ onNavigate }) {
           }
         >
           {/* CHART */}
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={analytics} margin={{ left: -20, right: 10, top: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="label" 
-                fontSize={10} 
-                tickMargin={10}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis 
-                fontSize={10} 
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value) => `${value}`}
-              />
-              <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="article"
-                name="Artikel"
-                stroke="#ec4899"
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="event"
-                name="Event"
-                stroke="#3b82f6"
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="platform"
-                name="Platform"
-                stroke="#10b981"
-                strokeWidth={3}
-                dot={false}
-                activeDot={{ r: 6 }}
-              />
+          <div className="w-full min-w-0 h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics} margin={{ left: 10, right: 30, top: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="label" 
+                  fontSize={10} 
+                  tickMargin={10}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                  minTickGap={15}
+                  tick={{ fill: '#888' }}
+                />
+                <YAxis 
+                  fontSize={10} 
+                  axisLine={false}
+                  tickLine={false}
+                  width={50}
+                  tick={{ fill: '#888' }}
+                  tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(1)}k` : value}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                />
+                <Line
+                  isAnimationActive={false}
+                  type="linear"
+                  strokeOpacity={0.8}
+                  dataKey="article"
+                  name="Artikel"
+                  stroke="#ec4899"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#ec4899', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  isAnimationActive={false}
+                  type="linear"
+                  strokeOpacity={0.8}
+                  dataKey="event"
+                  name="Event"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  isAnimationActive={false}
+                  type="linear"
+                  strokeOpacity={0.8}
+                  dataKey="platform"
+                  name="Platform"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6 }}
+                />
             </LineChart>
           </ResponsiveContainer>
+        </div>
 
           <p className="mt-3 text-xs text-zinc-400">{getRangeLabel(range)}</p>
           {/* TOTAL */}

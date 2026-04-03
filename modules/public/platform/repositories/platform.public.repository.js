@@ -5,6 +5,7 @@
  * Hanya berisi operasi Prisma read-only — tidak ada mutasi di sini.
  */
 import { prisma } from "@/lib/prisma.js";
+import { incrementDailyStats } from "@/modules/admin/dashboard/repositories/visitor-stats.repository";
 
 // ─── SELECT SHAPES ──────────────────────────────────────────────────────────
 
@@ -261,8 +262,13 @@ export async function findActiveHomepagePlatformCards() {
  * @param {number} id
  */
 export async function incrementContentView(id) {
-  return prisma.platformContent.update({
-    where: { id: Number(id) },
-    data: { views: { increment: 1 } },
-  });
+  const [updatedContent] = await Promise.all([
+    prisma.platformContent.update({
+      where: { id: Number(id) },
+      data: { views: { increment: 1 } },
+    }),
+    incrementDailyStats("platform"),
+  ]);
+
+  return updatedContent;
 }
