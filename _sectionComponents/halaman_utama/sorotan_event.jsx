@@ -328,13 +328,13 @@ export default function SorotanEvent({ initialEvents = [] }) {
 
                     <p className="text-white/80 text-xs">📍 {event.location}</p>
 
-                    <button
-                      type="button"
+                    <Link
+                      href={`/event/${event.slug}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="bg-[#7c3aed] text-white text-xs py-1 rounded-lg"
+                      className="bg-[#7c3aed] text-white text-xs py-2 rounded-lg cursor-pointer z-50 text-center w-full block hover:bg-[#6d28d9] transition-colors mt-2"
                     >
-                      Ikuti Sekarang
-                    </button>
+                      Lihat Detail
+                    </Link>
                   </figcaption>
                 </article>
               </div>

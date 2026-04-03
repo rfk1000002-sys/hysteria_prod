@@ -33,7 +33,7 @@ export default function ArticleViewTracker({ slug }) {
             key,
             JSON.stringify({
               time: Date.now(),
-            })
+            }),
           );
         }
       } catch (err) {
