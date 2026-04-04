@@ -20,21 +20,20 @@ module.exports = async function seed() {
 	]
 
 	const items = [
-		// Program Hysteria (category: program-hysteria)
         // Program Hysteria (category: program-hysteria)
         { categorySlug: 'program-hysteria', title: 'Festival dan Pameran', slug: 'festival-dan-pameran', url: '/program#festival-dan-pameran', order: 0, parentSlug: null },
-            { categorySlug: 'program-hysteria', title: 'Festival Kampung', slug: 'festival-kampung', url: '/program/festival-kampung', order: 0, parentSlug: 'festival-dan-pameran' },
-                { categorySlug: 'program-hysteria', title: 'Gebyuran Bustaman', slug: 'gebyuran-bustaman', url: '/program/festival-and-pameran/festival-kampung?kategori=gebyuran-bustaman', order: 0, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Nginguk Githok', slug: 'nginguk-githok', url: '/program/festival-and-pameran/festival-kampung?kategori=nginguk-githok', order: 1, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Festival Bukit Jatiwayang', slug: 'festival-bukit-jatiwayang', url: '/program/festival-and-pameran/festival-kampung?kategori=festival-bukit-jatiwayang', order: 2, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Sobo Roworejo', slug: 'sobo-roworejo', url: '/program/festival-and-pameran/festival-kampung?kategori=sobo-roworejo', order: 3, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Srawung Sendang', slug: 'srawung-sendang', url: '/program/festival-and-pameran/festival-kampung?kategori=srawung-sendang', order: 4, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Festival Ngijo', slug: 'festival-ngijo', url: '/program/festival-and-pameran/festival-kampung?kategori=festival-ngijo', order: 5, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Banyu Pitu', slug: 'banyu-pitu', url: '/program/festival-and-pameran/festival-kampung?kategori=banyu-pitu', order: 6, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Bulusan Fest', slug: 'bulusan-fest', url: '/program/festival-and-pameran/festival-kampung?kategori=bulusan-fest', order: 7, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Labuhan Kali', slug: 'labuhan-kali', url: '/program/festival-and-pameran/festival-kampung?kategori=labuhan-kali', order: 8, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Iki Buntu Fest', slug: 'iki-buntu-fest', url: '/program/festival-and-pameran/festival-kampung?kategori=iki-buntu-fest', order: 9, parentSlug: 'festival-kampung' },
-                { categorySlug: 'program-hysteria', title: 'Festival ke Tugu', slug: 'festival-ke-tugu', url: '/program/festival-and-pameran/festival-kampung?kategori=festival-ke-tugu', order: 10, parentSlug: 'festival-kampung' },
+    { categorySlug: 'program-hysteria', title: 'Festival Kampung', slug: 'festival-kampung', url: '/program/festival-kampung', order: 0, parentSlug: 'festival-dan-pameran' },
+        { categorySlug: 'program-hysteria', title: 'Gebyuran Bustaman', slug: 'gebyuran-bustaman', url: '/program/festival-kampung?kategori=gebyuran-bustaman', order: 0, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Nginguk Githok', slug: 'nginguk-githok', url: '/program/festival-kampung?kategori=nginguk-githok', order: 1, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Festival Bukit Jatiwayang', slug: 'festival-bukit-jatiwayang', url: '/program/festival-kampung?kategori=festival-bukit-jatiwayang', order: 2, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Sobo Roworejo', slug: 'sobo-roworejo', url: '/program/festival-kampung?kategori=sobo-roworejo', order: 3, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Srawung Sendang', slug: 'srawung-sendang', url: '/program/festival-kampung?kategori=srawung-sendang', order: 4, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Festival Ngijo', slug: 'festival-ngijo', url: '/program/festival-kampung?kategori=festival-ngijo', order: 5, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Banyu Pitu', slug: 'banyu-pitu', url: '/program/festival-kampung?kategori=banyu-pitu', order: 6, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Bulusan Fest', slug: 'bulusan-fest', url: '/program/festival-kampung?kategori=bulusan-fest', order: 7, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Labuhan Kali', slug: 'labuhan-kali', url: '/program/festival-kampung?kategori=labuhan-kali', order: 8, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Iki Buntu Fest', slug: 'iki-buntu-fest', url: '/program/festival-kampung?kategori=iki-buntu-fest', order: 9, parentSlug: 'festival-kampung' },
+        { categorySlug: 'program-hysteria', title: 'Festival ke Tugu', slug: 'festival-ke-tugu', url: '/program/festival-kampung?kategori=festival-ke-tugu', order: 10, parentSlug: 'festival-kampung' },
 
             { categorySlug: 'program-hysteria', title: 'Festival Kota', slug: 'festival-kota', url: '/program/festival-kota', order: 1, parentSlug: 'festival-dan-pameran' },
                 { categorySlug: 'program-hysteria', title: 'Zine Fest', slug: 'zine-fest', url: '/program/festival-kota?kategori=zine-fest', order: 0, parentSlug: 'festival-kota' },

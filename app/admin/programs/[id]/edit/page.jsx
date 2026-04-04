@@ -1,46 +1,56 @@
 // app/admin/programs/[id]/edit/page.jsx
-import ProgramForm from "@/components/adminUI/Program/ProgramForm";
+import EventForm from "@/components/adminUI/Event/EventForm";
+import BerkelanaForm from "@/components/adminUI/Program/BerkelanaForm"; // 👉 Panggil BerkelanaForm
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 
 export default async function EditProgramPage({ params }) {
-  // 👉 PERBAIKAN UNTUK NEXT.JS 15: params harus di-await!
   const resolvedParams = await params;
   const id = Number(resolvedParams.id);
   
-  // Ambil data langsung lewat Prisma
-  const program = await prisma.program.findUnique({
+  // 👉 PERUBAHAN: Deep include categoryItem biar kita bisa baca "slug"-nya
+  const programData = await prisma.event.findUnique({
     where: { id },
     include: {
-      programCategories: true,
-      programOrganizers: true,
-      programTags: { include: { tag: true } },
+      eventCategories: { include: { categoryItem: true } }, // Wajib include ini
+      organizers: { include: { categoryItem: true } }, 
+      tags: { include: { tag: true } }, 
     },
   });
 
-  if (!program) {
+  if (!programData) {
     return notFound();
   }
 
-  // Merapikan nama objek agar cocok dengan state di ProgramForm.jsx kamu
-  const formattedData = {
-    ...program,
-    organizers: program.programOrganizers, // Mengganti nama property untuk form
-    tags: program.programTags,             // Mengganti nama property untuk form
-  };
+  // 👉 LOGIKA DETEKSI: Cek apakah ada kategori bernama "hysteria-berkelana"
+  const isBerkelana = programData.eventCategories?.some(
+    (cat) => cat.categoryItem?.slug === 'hysteria-berkelana' || 
+             cat.categoryItem?.title.toLowerCase().includes('berkelana')
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 bg-gray-50 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-black">Edit Postingan Program</h1>
-        <p className="text-gray-600 mt-1">Perbarui konten program yang sudah ada</p>
+        <h1 className="text-3xl font-bold text-black font-poppins">Edit Postingan Program</h1>
+        <p className="text-gray-600 mt-1 font-poppins">Perbarui konten program yang sudah ada</p>
       </div>
       
-      <ProgramForm 
-        initialData={formattedData} 
-        isEdit={true} 
-        programId={id} 
-      />
+      {/* 👉 KONDISI OTOMATIS: Pilih form sesuai kategorinya */}
+      {isBerkelana ? (
+        <BerkelanaForm 
+          initialData={programData} 
+          isEdit={true} 
+          eventId={id} 
+        />
+      ) : (
+        <EventForm 
+          initialData={programData} 
+          isEdit={true} 
+          eventId={id} 
+          defaultType="PROGRAM"
+          redirectUrl="/admin/programs"
+        />
+      )}
     </div>
   );
 }

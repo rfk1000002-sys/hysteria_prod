@@ -62,7 +62,10 @@ export default function ProgramPostsSection({
               key={post.id}
               href={`/program/${programSlug}/${post.id}`}
               thumbnailUrl={post.thumbnailUrl}
-              alt={post.alt ?? "Instagram thumbnail"}
+              alt={post.alt ?? post.heading ?? "Instagram thumbnail"}
+              // 👉 LEMPAR DATA JUDUL DAN PREVIEW KE COMPONENT CARD
+              title={post.heading}       
+              previewText={post.shortText} 
             />
           ))}
         </div>

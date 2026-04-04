@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function ProgramTable() {
   const router = useRouter();
   
-  // 1. STATE UNTUK MENYIMPAN DATA ASLI DARI DATABASE
+  // 1. STATE UNTUK MENYIMPAN DATA
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  // 2. FETCH DATA DARI API (Saat halaman dimuat)
+  // 👉 STATE UNTUK FILTER
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  // 2. FETCH DATA DARI API
   useEffect(() => {
     async function fetchPrograms() {
       try {
@@ -30,17 +34,16 @@ export default function ProgramTable() {
     fetchPrograms();
   }, []);
 
-  // 3. FUNGSI HAPUS ASLI (Nembak API Delete)
+  // 3. FUNGSI HAPUS ASLI
   const handleDelete = async (id) => {
     const confirmed = window.confirm("Yakin ingin menghapus postingan ini?");
     if (!confirmed) return;
 
     try {
       setDeletingId(id);
-      const res = await fetch(`/api/admin/programs/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/events/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Gagal menghapus data");
 
-      // Hapus dari layar tanpa harus refresh browser
       setPrograms((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       alert(err.message);
@@ -49,15 +52,38 @@ export default function ProgramTable() {
     }
   };
 
-  // Fungsi bantuan untuk menentukan status pelaksanaan acara
-  const getEventStatus = (startAt) => {
+  // 👉 LOGIKA STATUS ACARA
+  const getEventStatus = (startAt, categoryName) => {
+    if (categoryName && categoryName.toLowerCase().includes("berkelana")) {
+      return "-";
+    }
+
     if (!startAt) return "-";
     const startDate = new Date(startAt);
     const today = new Date();
-    return startDate > today ? "Akan Berlangsung" : "Selesai";
+    return startDate > today ? "Akan Berlangsung" : "Telah Berakhir";
   };
 
-  // Tampilan Loading & Error
+  // 👉 MENGAMBIL DAFTAR KATEGORI UNIK UNTUK DROPDOWN
+  const uniqueCategories = useMemo(() => {
+    const categories = programs.map(p => p.eventCategories?.[0]?.categoryItem?.title || "Program");
+    return [...new Set(categories)].filter(Boolean);
+  }, [programs]);
+
+  // 👉 MELAKUKAN FILTER DATA
+  const filteredPrograms = useMemo(() => {
+    return programs.filter((program) => {
+      const categoryName = program.eventCategories?.[0]?.categoryItem?.title || "Program";
+      const statusName = getEventStatus(program.startAt, categoryName);
+
+      const matchCategory = filterCategory === "" || categoryName === filterCategory;
+      const matchStatus = filterStatus === "" || statusName === filterStatus;
+
+      return matchCategory && matchStatus;
+    });
+  }, [programs, filterCategory, filterStatus]);
+
+
   if (loading) return <div className="text-center py-20 font-medium text-gray-500 text-lg">Memuat data dari database...</div>;
   if (error) return <div className="text-center py-20 font-medium text-[#E83C91] text-lg">Error: {error}</div>;
 
@@ -65,18 +91,33 @@ export default function ProgramTable() {
     <div className="space-y-6">
       {/* HEADER: Judul & Subjudul */}
       <div>
-        <h1 className="text-3xl font-bold text-black">Program</h1>
-        <p className="text-gray-600 mt-1">Manage all content across program</p>
+        <h1 className="text-3xl font-bold text-black font-poppins">Program</h1>
+        <p className="text-gray-600 mt-1 font-poppins">Kelola semua konten program Hysteria</p>
       </div>
 
       {/* TOOLBAR: Filter Dropdown & Tombol Tambah */}
       <div className="flex items-center justify-between">
         <div className="flex gap-4">
-          <select className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-pink-500 appearance-none bg-white font-medium shadow-sm">
-            <option>Sub Kategori</option>
+          
+          <select 
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-pink-500 appearance-none bg-white font-medium shadow-sm cursor-pointer"
+          >
+            <option value="">Semua Sub Kategori</option>
+            {uniqueCategories.map((cat, idx) => (
+              <option key={idx} value={cat}>{cat}</option>
+            ))}
           </select>
-          <select className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-pink-500 appearance-none bg-white font-medium shadow-sm">
-            <option>Status</option>
+
+          <select 
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-pink-500 appearance-none bg-white font-medium shadow-sm cursor-pointer"
+          >
+            <option value="">Semua Status</option>
+            <option value="Akan Berlangsung">Akan Berlangsung</option>
+            <option value="Telah Berakhir">Telah Berakhir</option>
           </select>
         </div>
 
@@ -96,22 +137,28 @@ export default function ProgramTable() {
               <tr>
                 <th className="py-4 px-6 text-center w-24">Thumbnail</th>
                 <th className="py-4 px-6 text-left">Title</th>
-                <th className="py-4 px-6 text-center">Tipe</th>
+                <th className="py-4 px-6 text-center">Kategori</th>
                 <th className="py-4 px-6 text-center">Date</th>
                 <th className="py-4 px-6 text-center">Status Acara</th>
                 <th className="py-4 px-6 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-700">
-              {programs.length === 0 ? (
+              
+              {filteredPrograms.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-10 text-gray-500">
-                    Belum ada data program yang ditambahkan di Database.
+                    Tidak ada data program yang sesuai dengan filter.
                   </td>
                 </tr>
               ) : (
-                programs.map((program) => {
+                filteredPrograms.map((program) => {
                   const startDate = program.startAt ? new Date(program.startAt) : null;
+                  const categoryName = program.eventCategories?.[0]?.categoryItem?.title || "Program";
+                  const statusAcara = getEventStatus(program.startAt, categoryName);
+                  
+                  // 👉 PERUBAHAN: Cek apakah ini Hysteria Berkelana
+                  const isBerkelana = categoryName.toLowerCase().includes("berkelana");
 
                   return (
                     <tr key={program.id} className="hover:bg-gray-50 transition-colors">
@@ -146,27 +193,31 @@ export default function ProgramTable() {
 
                       {/* Tipe Kategori Kolom */}
                       <td className="py-4 px-6 text-center">
-                        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                          {program.type === "HYSTERIA_BERKELANA" ? "Hysteria Berkelana" : "Umum"}
+                        <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                          {categoryName}
                         </span>
                       </td>
 
-                      {/* Date Kolom */}
+                      {/* 👉 Date Kolom (Diperbarui) */}
                       <td className="py-4 px-6 text-center text-sm text-gray-600">
-                        {startDate ? (
-                          new Intl.DateTimeFormat("id-ID", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }).format(startDate)
-                        ) : (
-                          "-"
+                        {isBerkelana ? "-" : (
+                          startDate ? (
+                            new Intl.DateTimeFormat("id-ID", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }).format(startDate)
+                          ) : (
+                            "-"
+                          )
                         )}
                       </td>
 
                       {/* Event Status Kolom */}
-                      <td className="py-4 px-6 text-center text-sm text-gray-600">
-                        {getEventStatus(program.startAt)}
+                      <td className="py-4 px-6 text-center text-sm font-medium">
+                        <span className={`${statusAcara === "Akan Berlangsung" ? "text-pink-600" : "text-gray-500"}`}>
+                           {statusAcara}
+                        </span>
                       </td>
 
                       {/* Action Kolom */}

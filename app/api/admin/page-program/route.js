@@ -1,6 +1,25 @@
-// app/api/admin/page-program/route.js
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import path from "path";
+import { writeFile, mkdir } from "fs/promises";
+
+// Fungsi helper untuk menyimpan File fisik ke folder server
+async function saveFile(file) {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  
+  // Penamaan unik agar tidak tertimpa
+  const filename = `${Date.now()}-${file.name.replaceAll(/\s+/g, "_")}`;
+  const uploadDir = path.join(process.cwd(), "public/uploads/program");
+  
+  // Buat folder jika belum ada
+  await mkdir(uploadDir, { recursive: true });
+  
+  const filepath = path.join(uploadDir, filename);
+  await writeFile(filepath, buffer);
+  
+  return `/uploads/program/${filename}`;
+}
 
 export async function GET() {
   try {
@@ -21,8 +40,25 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { mainHero, covers, slugHeros } = body;
+    const formData = await req.formData();
+    let payloadString = formData.get("payload");
+    
+    if (!payloadString) throw new Error("Payload tidak ditemukan");
+
+    // Looping melalui setiap File yang dikirim dari Frontend
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith("file_") && typeof value === 'object' && value.name) {
+        // Simpan File Fisik
+        const url = await saveFile(value);
+        
+        // Cari Penanda (Marker) di JSON String dan Gantikan dengan URL yang baru disimpan!
+        const marker = `UPLOAD_PENDING_${key.replace("file_", "")}`;
+        payloadString = payloadString.replace(marker, url);
+      }
+    }
+
+    // Sekarang JSON String sudah berisi Teks URL murni (Bukan File lagi)
+    const { mainHero, covers, slugHeros } = JSON.parse(payloadString);
 
     const savedSettings = await prisma.pageProgram.upsert({
       where: { pageSlug: "program" },
