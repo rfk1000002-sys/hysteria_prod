@@ -1,7 +1,7 @@
 // components/program-detail/DefaultProgramView.client.jsx
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Poppins } from 'next/font/google';
@@ -29,11 +29,9 @@ const PROGRAM_DATA = {
   'sapa-warga': { title: 'Sapa Warga', desc: 'Dokumentasi video interaksi warga.', categories: [] }
 };
 
-// 1. TAMBAHKAN PROPS "heroData" DI SINI
 export default function DefaultProgramView({ actualSlug, heroData }) {
   const data = PROGRAM_DATA[actualSlug];
 
-  // 2. SIAPKAN VARIABEL TAMPILAN HERO (Utamakan dari Admin, kalau kosong pakai default)
   const displayTitle = heroData?.title || data?.title || "Program";
   const displayDesc = heroData?.subtitle || data?.desc || "";
   const displayImage = heroData?.image || "/image/bg_program.jpeg";
@@ -46,13 +44,33 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
+  const [sortOption, setSortOption] = useState('Terbaru');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   const [realItems, setRealItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 👉 STATE UNTUK CUSTOM SCROLLBAR MOBILE
+  const categoryScrollRef = useRef(null);
+  const [catScrollProgress, setCatScrollProgress] = useState(0);
+  const [catThumbWidth, setCatThumbWidth] = useState(20);
 
   const hasSidebar = data?.categories && data.categories.length > 0;
   const itemsPerPage = hasSidebar ? 15 : 18; 
 
-  // 👉 FETCH DATA & FILTERING STRICT BERDASARKAN "SUB KATEGORI" DATABASE
+  // Tutup Dropdown saat klik di luar
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch Data dari API Database
   useEffect(() => {
     async function fetchPrograms() {
       setIsLoading(true);
@@ -61,54 +79,56 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
         if (!res.ok) throw new Error('Gagal memuat data');
         const dbPrograms = await res.json();
 
-        // 1. KUMPULKAN KATA KUNCI SAH UNTUK HALAMAN INI
         const mainTitle = data?.title.toLowerCase().trim() || "";
         const fallbackTitle = actualSlug.toLowerCase().replace(/-/g, ' ').trim();
         
-        // Ambil nama sub-kategori (Kecuali kata 'semua')
         const validCategoryNames = data?.categories
             ?.map(c => c.name.toLowerCase().trim())
             .filter(name => name !== 'semua') || [];
 
-        // Gabungkan jadi satu "Daftar Putih" (Whitelist)
         const validPageTags = [mainTitle, fallbackTitle, ...validCategoryNames];
 
         const formatted = dbPrograms
-          .filter(p => p.isPublished && p.type !== 'HYSTERIA_BERKELANA')
+          .filter(p => p.isPublished)
           .filter(p => {
-             // 2. AMBIL HANYA SUB KATEGORI DARI DATABASE (Abaikan Tag Manual/Penyelenggara)
-             const catNames = p.programCategories?.map(pc => pc.categoryItem?.title.toLowerCase().trim()) || [];
-
-             // 3. LOGIKA KUNCI: Program ini masuk JIKA punya minimal 1 Sub Kategori yang ada di Daftar Putih
+             const catNames = p.eventCategories?.map(pc => pc.categoryItem?.title.toLowerCase().trim()) || [];
              return catNames.some(cat => validPageTags.includes(cat));
           })
           .map(p => {
             const startDate = p.startAt ? new Date(p.startAt) : null;
             const today = new Date();
-            const status = startDate && startDate > today ? 'Akan Berlangsung' : 'Selesai';
+            const status = startDate && startDate > today ? 'Akan Berlangsung' : 'Telah Berakhir';
             
             const dateStr = startDate 
               ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(startDate)
               : 'Waktu Menyesuaikan';
 
-            // Ambil nama original (huruf besar/kecil asli) khusus dari Sub Kategori
-            const rawCatNames = p.programCategories?.map(pc => pc.categoryItem?.title.trim()) || [];
+            const rawDate = startDate ? startDate.getTime() : new Date(p.createdAt).getTime();
 
-            // Cari label paling spesifik untuk kartu (Hindari tulisan "Semua" atau judul halaman utama)
-            const specificCats = rawCatNames.filter(c => 
-                c.toLowerCase() !== mainTitle && 
-                c.toLowerCase() !== fallbackTitle &&
-                c.toLowerCase() !== 'semua'
+            const rawCats = p.eventCategories?.map(pc => pc.categoryItem) || [];
+            const filterCategoryNames = rawCats.map(c => c?.title?.trim()).filter(Boolean);
+
+            const specificCats = rawCats.filter(c => 
+                c?.title &&
+                c.title.toLowerCase() !== mainTitle && 
+                c.title.toLowerCase() !== fallbackTitle &&
+                c.title.toLowerCase() !== 'semua'
             );
-            const primaryCat = specificCats.length > 0 ? specificCats[0] : (data?.title || 'Program');
+            
+            const primaryCatObj = specificCats.length > 0 ? specificCats[0] : rawCats[0];
+            const primaryCatName = primaryCatObj?.title || data?.title || 'Program';
+            
+            const itemSlug = primaryCatObj?.slug || actualSlug;
 
             return {
               id: p.id,
               title: p.title,
-              category: primaryCat, // Label ungu/pink di dalam kartu
-              filterCategories: rawCatNames, // 👉 Strictly untuk filter Sidebar
+              category: primaryCatName, 
+              slug: itemSlug, 
+              filterCategories: filterCategoryNames, 
               status: status,
               date: dateStr,
+              rawDate: rawDate, 
               image: p.poster,
               isChoice: false 
             };
@@ -125,7 +145,33 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
     fetchPrograms();
   }, [actualSlug, data]);
 
-  // Efek ganti kategori lewat URL param
+  // Fungsi Logika Sync Scrollbar Mobile
+  const handleCategoryScroll = () => {
+    const el = categoryScrollRef.current;
+    if (el) {
+      const { scrollLeft, scrollWidth, clientWidth } = el;
+      const maxScrollLeft = scrollWidth - clientWidth;
+      const progress = maxScrollLeft > 0 ? scrollLeft / maxScrollLeft : 0;
+      setCatScrollProgress(progress);
+
+      const thumbW = Math.max((clientWidth / scrollWidth) * 100, 10);
+      setCatThumbWidth(thumbW);
+    }
+  };
+
+  useEffect(() => {
+    handleCategoryScroll();
+    window.addEventListener('resize', handleCategoryScroll);
+    return () => window.removeEventListener('resize', handleCategoryScroll);
+  }, [data?.categories]);
+
+  const scrollCatRight = () => {
+    if (categoryScrollRef.current) categoryScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+  };
+  const scrollCatLeft = () => {
+    if (categoryScrollRef.current) categoryScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
   useEffect(() => {
     const paramKategori = searchParams.get('kategori');
     if (paramKategori && data?.categories) {
@@ -147,10 +193,8 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
     }
   };
 
-  // 👉 LOGIKA FILTER SIDEBAR (HANYA MENGGUNAKAN SUB-KATEGORI)
   const filteredItems = useMemo(() => {
-    return realItems.filter((item) => {
-      // Cek apakah activeCategory ada di dalam array kategori asli milik program ini
+    let result = realItems.filter((item) => {
       const matchCategory = !hasSidebar || activeCategory === 'Semua' || 
           item.filterCategories.some(c => c.toLowerCase() === activeCategory.toLowerCase().trim());
           
@@ -158,7 +202,17 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
       
       return matchCategory && matchSearch;
     });
-  }, [realItems, activeCategory, searchQuery, hasSidebar]);
+
+    result = result.sort((a, b) => {
+      if (sortOption === 'Terbaru') return b.rawDate - a.rawDate;
+      if (sortOption === 'Terlama') return a.rawDate - b.rawDate;
+      if (sortOption === 'Judul, A - Z') return a.title.localeCompare(b.title);
+      if (sortOption === 'Judul, Z - A') return b.title.localeCompare(a.title);
+      return 0;
+    });
+
+    return result;
+  }, [realItems, activeCategory, searchQuery, hasSidebar, sortOption]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const currentDisplayItems = useMemo(() => {
@@ -187,50 +241,153 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
 
   return (
     <main className={`min-h-screen bg-white ${poppins.className}`}>
-      {/* 3. HERO SECTION DENGAN UKURAN 100% PROPORSIONAL GAMBAR */}
-      <section className="relative w-full aspect-square sm:aspect-video md:aspect-[1920/850] flex flex-col justify-end">
-        <div className="absolute inset-0">
-          <Image 
-            src={displayImage} 
-            alt={displayTitle} 
-            fill 
-            priority 
-            className="object-cover object-center" 
-            quality={100} 
-          />
-          <div className="absolute inset-0 bg-black/40"></div> 
+      
+      {/* 👉 HERO SECTION: Tinggi diperpanjang di Mobile (min-h-[400px]), di Desktop tetap aspect ratio 1920/850 */}
+      <section className="relative w-full bg-[#1a1a1a] flex flex-col justify-end overflow-hidden min-h-[400px] md:min-h-0 md:aspect-[1920/850]">
+        <div className="absolute inset-0 w-full h-full">
+          <Image src={displayImage} alt={displayTitle} fill priority className="object-cover object-center" quality={100} sizes="100vw" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent md:via-black/30"></div> 
         </div>
-        
-        {/* Padding bawah (pb) dikurangi sedikit biar teks agak turun dan rapi */}
-        <div className="relative z-10 w-full px-10 lg:px-20 pb-10 md:pb-14 text-white mt-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-4 drop-shadow-lg tracking-tight uppercase whitespace-pre-line">
+        <div className="relative z-10 w-full px-6 md:px-10 lg:px-20 pb-8 md:pb-12 text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-bold mb-3 md:mb-4 drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] tracking-tight uppercase whitespace-pre-line leading-tight">
             {displayTitle}
           </h1>
-          <p className="text-base md:text-lg lg:text-xl max-w-2xl font-medium opacity-95 leading-relaxed drop-shadow-md whitespace-pre-line">
+          <p className="text-sm md:text-lg lg:text-xl max-w-3xl font-medium opacity-95 leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-pre-line line-clamp-4 md:line-clamp-none">
             {displayDesc}
           </p>
+
+          {/* 👉 TAMBAHAN KHUSUS BIENNALE: Tombol Instagram Penta K Labs */}
+          {actualSlug === 'festival-biennale' && (
+            <div className="mt-6 md:mt-8">
+              <a 
+                href={heroData?.instagramLink || "#"} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block bg-white text-[#D63384] font-bold text-sm md:text-base px-6 py-2.5 rounded-lg shadow-md hover:bg-pink-50 hover:scale-105 transition-all duration-300"
+              >
+                Instagram Penta K Labs
+              </a>
+            </div>
+          )}
+
         </div>
       </section>
 
-      {/* SEARCH SECTION */}
-      <div className="w-full px-10 lg:px-20 mt-10 mb-8">
-        <div className="flex gap-4 items-center w-full max-w-3xl mx-auto">
+      {/* 👉 SEARCH & FILTER SECTION */}
+      <div className="w-full px-6 md:px-10 lg:px-20 mt-6 md:mt-10 mb-4 md:mb-6">
+        <div className="flex gap-3 md:gap-4 items-center w-full max-w-3xl mx-auto">
+            
+            {/* Search Input */}
             <div className="relative flex-grow">
-              <input type="text" placeholder="Cari program atau karya..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full border border-[#D63384] rounded-full py-3 px-6 text-[#D63384] placeholder-[#D63384]/60 focus:outline-none focus:ring-1 focus:ring-[#D63384] transition-all bg-white shadow-sm" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchQuery} 
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
+                className="w-full border border-[#D63384] rounded-full py-2.5 md:py-3 px-5 md:px-6 text-sm md:text-base text-[#D63384] placeholder-[#D63384]/60 focus:outline-none focus:ring-1 focus:ring-[#D63384] transition-all bg-white shadow-sm" 
+              />
+              <div className="absolute right-4 md:right-5 top-1/2 -translate-y-1/2 text-[#D63384] pointer-events-none">
+                <svg width="18" height="18" className="md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
             </div>
-            {hasSidebar && (
-              <button onClick={() => { setSearchQuery(''); handleCategoryChange({ name: 'Semua', id: 'semua' }); }} className="flex-shrink-0 w-12 h-12 rounded-full border border-[#D63384] flex items-center justify-center text-[#D63384] hover:bg-pink-50 transition-colors bg-white shadow-sm">
-                 <span className="font-bold">X</span>
+
+            {/* Sort Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+                className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D63384] flex items-center justify-center text-[#D63384] transition-colors shadow-sm ${isDropdownOpen ? 'bg-pink-50' : 'bg-white hover:bg-pink-50'}`}
+              >
+                <svg width="16" height="16" className="md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
               </button>
-            )}
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] p-2 z-50">
+                  <p className="text-[#3F334D] font-bold px-4 pt-2 pb-2 text-xs md:text-sm">Sort by</p>
+                  <div className="flex flex-col gap-1">
+                    {['Terbaru', 'Terlama', 'Judul, A - Z', 'Judul, Z - A'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => { setSortOption(opt); setIsDropdownOpen(false); setCurrentPage(1); }}
+                        className={`text-left px-4 py-2 text-xs md:text-[13px] rounded-lg transition-colors ${sortOption === opt ? 'bg-pink-50 text-[#D63384] font-semibold' : 'text-[#3F334D] hover:bg-gray-50'}`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="w-full px-10 lg:px-20 pb-20">
+      {/* 👉 KATEGORI MOBILE KHUSUS (Tampil sebagai Chips Horizontal Scroll & Custom Scrollbar) */}
+      {hasSidebar && (
+         <div className="md:hidden w-full pb-6">
+            
+            {/* Wrapper Tombol Chips - Menggunakan Spacer untuk Padding Kiri/Kanan agar bisa tembus edge */}
+            <div 
+              ref={categoryScrollRef}
+              onScroll={handleCategoryScroll}
+              className="w-full flex overflow-x-auto gap-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+               {/* Spacer Kiri seukuran px-6 (24px) */}
+               <div className="w-6 flex-shrink-0" />
+               
+               {data.categories.map((catItem, index) => {
+                 const isActive = activeCategory === catItem.name;
+                 return (
+                    <button 
+                      key={index} 
+                      onClick={() => handleCategoryChange(catItem)}
+                      className={`flex-shrink-0 snap-start px-4 py-1.5 text-xs font-semibold rounded-full border transition-all whitespace-nowrap
+                        ${isActive ? 'bg-[#D63384] text-white border-[#D63384]' : 'bg-white text-[#D63384] border-[#D63384] hover:bg-pink-50'}`}
+                    >
+                      {catItem.name}
+                    </button>
+                 );
+               })}
+               
+               {/* Spacer Kanan seukuran px-6 (24px) */}
+               <div className="w-6 flex-shrink-0" />
+            </div>
+
+            {/* Custom Bar Scroll Indicator sesuai Desain */}
+            <div className="flex items-center justify-between px-6 mt-4 gap-2">
+              <button onClick={scrollCatLeft} className="text-[#D63384] flex-shrink-0 focus:outline-none text-[10px] sm:text-xs">
+                ◀
+              </button>
+
+              {/* Track Bar (Latar Abu-abu Tipis) */}
+              <div className="flex-1 bg-gray-200 h-2.5 rounded-full relative overflow-hidden">
+                 {/* Thumb Bar (Indikator Scroll Abu-abu Gelap) */}
+                 <div 
+                   className="absolute top-0 bottom-0 bg-[#A39CA9] rounded-full transition-all duration-150"
+                   style={{
+                     width: `${catThumbWidth}%`,
+                     left: `${catScrollProgress * (100 - catThumbWidth)}%`
+                   }}
+                 />
+              </div>
+
+              <button onClick={scrollCatRight} className="text-[#D63384] flex-shrink-0 focus:outline-none text-[10px] sm:text-xs">
+                ▶
+              </button>
+            </div>
+
+         </div>
+      )}
+
+      {/* 👉 MAIN CONTENT AREA */}
+      <div className="w-full px-6 md:px-10 lg:px-20 pb-16 md:pb-20">
          <div className={`flex flex-row gap-8 items-start ${hasSidebar ? 'justify-center lg:justify-start' : 'justify-center'}`}>
             
-            {/* SIDEBAR */}
+            {/* 👉 SIDEBAR DESKTOP (Sembunyi di Mobile) */}
             {hasSidebar && (
                 <aside className="w-[240px] flex-shrink-0 hidden md:block">
                    <div className="flex flex-col border border-[#D63384] rounded-xl overflow-hidden shadow-sm">
@@ -248,49 +405,64 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
                 </aside>
             )}
 
-            {/* CARD AREA */}
-            <div className={`flex-1 w-full ${!hasSidebar ? 'max-w-7xl' : ''}`}>
-                {/* TAMPILAN LOADING */}
+            {/* 👉 GRID KARTU (CARD) */}
+            <div className={`flex-1 w-full ${!hasSidebar ? 'max-w-7xl mx-auto' : ''}`}>
                 {isLoading ? (
-                    <div className="w-full h-[400px] flex flex-col items-center justify-center text-[#D63384]">
-                        <p className="text-lg font-medium animate-pulse">Memuat program...</p>
+                    <div className="w-full h-[300px] md:h-[400px] flex flex-col items-center justify-center text-[#D63384]">
+                        <p className="text-base md:text-lg font-medium animate-pulse">Memuat program...</p>
                     </div>
                 ) : currentDisplayItems.length === 0 ? (
-                    <div className="w-full h-[400px] flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                        <p className="text-lg font-medium">Tidak ada program yang ditemukan.</p>
+                    <div className="w-full h-[300px] md:h-[400px] flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl px-4 text-center">
+                        <p className="text-sm md:text-lg font-medium">Tidak ada program yang ditemukan.</p>
                     </div>
                 ) : (
-                    <div className={`grid gap-6 justify-items-center ${
-                        hasSidebar ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 sm:justify-items-start' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+                    <div className={`grid gap-4 md:gap-6 justify-items-start md:justify-items-center ${
+                        hasSidebar 
+                        ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' 
+                        : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
                     }`}>
                         {currentDisplayItems.map((item) => (
                             <Link 
-                                  href={`/program/${actualSlug}/${item.id}`} 
+                                  href={`/program/${item.slug}/${item.id}`} 
                                   key={item.id} 
-                                  className="group relative rounded-[10px] overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 w-full block" 
-                                  style={{ 
-                                    maxWidth: '210px', 
-                                    height: '290px', 
-                                    backgroundImage: item.image ? `url(${item.image})` : 'linear-gradient(180deg, #F2C94C 0%, #F2994A 100%)',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center'
-                                  }}
+                                  className="group relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 w-full aspect-[4/5] md:max-w-[210px] md:h-[290px] block bg-gray-100" 
                               >
-                                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-0 transition-opacity duration-300 group-hover:opacity-0"></div>
-                                <div className="relative z-10 p-4 h-full flex flex-col justify-between text-white transition-opacity duration-300 group-hover:opacity-0">
-                                    <div className="self-start">{item.isChoice && <span className="text-[9px] font-bold uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm border border-white/10">Pilihan</span>}</div>
+                                <Image 
+                                  src={item.image || "https://via.placeholder.com/400x500?text=No+Poster"} 
+                                  alt={item.title} 
+                                  fill 
+                                  className="object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+                                  sizes="(max-width: 640px) 50vw, 210px"
+                                />
+
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
+                                
+                                {/* Info Default (Selalu Tampil di Mobile, Hilang saat hover di Desktop) */}
+                                <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-end text-white transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-4 pointer-events-none">
+                                    <div className="self-start mb-1">{item.isChoice && <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 md:py-1 rounded backdrop-blur-sm border border-white/10">Pilihan</span>}</div>
                                     <div>
-                                      <span className="text-[10px] font-medium text-pink-300 block mb-1">{item.category}</span>
-                                      <h3 className="font-bold text-sm leading-tight line-clamp-3 drop-shadow-md">{item.title}</h3>
+                                      <span className="text-[9px] md:text-[10px] font-medium text-pink-300 block mb-0.5 md:mb-1 line-clamp-1">{item.category}</span>
+                                      <h3 className="font-bold text-xs md:text-sm leading-tight line-clamp-2 drop-shadow-md">{item.title}</h3>
                                     </div>
                                 </div>
-                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex flex-col justify-end p-4">
+
+                                {/* Hover Overlay (Hanya aktif di Desktop) */}
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex flex-col justify-end p-3 md:p-4 hidden md:flex">
                                     <div className="flex flex-col transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
-                                        <span className="bg-white text-[#D63384] text-[10px] font-bold px-3 py-1 rounded-full w-max mb-2 shadow-sm">{item.status}</span>
-                                        <h3 className="font-bold text-sm leading-snug text-white mb-1">{item.title}</h3>
-                                        <span className="text-[10px] font-medium text-gray-200 block mb-3">{item.date}</span>
+                                        <div className="mb-2">
+                                          <span className="bg-white text-[#D63384] text-[9px] md:text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm inline-block">
+                                            {item.status}
+                                          </span>
+                                        </div>
+                                        <h3 className="font-bold text-xs md:text-sm leading-snug text-white drop-shadow-md mb-0.5 line-clamp-2">{item.title}</h3>
+                                        <h4 className="font-bold text-xs md:text-sm leading-snug text-white drop-shadow-md mb-1 line-clamp-1">-{item.category}-</h4>
+                                        <span className="text-[9px] md:text-[10px] font-medium text-gray-200 block mb-3">{item.date}</span>
                               
-                                        {item.status === 'Akan Berlangsung' && <span className="bg-[#D63384] hover:bg-[#b52a6f] text-white text-[11px] py-2 px-4 rounded-md font-semibold w-max transition-colors shadow-md cursor-pointer block text-center">Ikuti Sekarang</span>}
+                                        <span className={`text-white text-[10px] md:text-[11px] py-1.5 md:py-2 px-3 md:px-4 rounded-md font-semibold w-max transition-colors shadow-md block text-center
+                                            ${item.status === 'Akan Berlangsung' ? 'bg-[#D63384] hover:bg-[#b52a6f]' : 'bg-[#3F334D] hover:bg-[#2c2336]'}
+                                        `}>
+                                            Lihat Sekarang
+                                        </span>
                                     </div>
                                 </div>
                             </Link>
@@ -298,17 +470,17 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
                     </div>
                 )}
 
-                {/* PAGINATION */}
+                {/* 👉 PAGINATION */}
                 {totalPages > 1 && (
-                    <div className="flex justify-center mt-12">
-                        <div className="flex items-center gap-2 bg-[#D63384] px-3 py-2 rounded-full shadow-lg">
-                            <button onClick={() => handlePageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="w-9 h-9 flex items-center justify-center rounded-full bg-white text-[#D63384] disabled:opacity-50">&lt;</button>
-                            <div className="flex items-center gap-1 px-2">
+                    <div className="flex justify-center mt-10 md:mt-12">
+                        <div className="flex items-center gap-1 md:gap-2 bg-[#D63384] px-2 md:px-3 py-1.5 md:py-2 rounded-full shadow-lg">
+                            <button onClick={() => handlePageChange(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white text-[#D63384] disabled:opacity-50 text-xs md:text-sm">&lt;</button>
+                            <div className="flex items-center gap-0.5 md:gap-1 px-1 md:px-2">
                                 {getVisiblePageNumbers().map((page) => (
-                                    <button key={page} onClick={() => handlePageChange(page)} className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-bold ${currentPage === page ? 'bg-white/30 text-white' : 'text-white'}`}>{page}</button>
+                                    <button key={page} onClick={() => handlePageChange(page)} className={`w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-full text-xs md:text-sm font-bold ${currentPage === page ? 'bg-white/30 text-white' : 'text-white'}`}>{page}</button>
                                 ))}
                             </div>
-                            <button onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="w-9 h-9 flex items-center justify-center rounded-full bg-white text-[#D63384] disabled:opacity-50">&gt;</button>
+                            <button onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="w-7 h-7 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white text-[#D63384] disabled:opacity-50 text-xs md:text-sm">&gt;</button>
                         </div>
                     </div>
                 )}

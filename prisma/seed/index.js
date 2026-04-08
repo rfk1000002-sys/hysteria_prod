@@ -24,6 +24,7 @@ const seeds = [
   // require("./018-homepage-platform-seed.js"),
   // require("./019-article-seed.js"),
   require("./020-visitor-stats.js"),
+  // require("./021-program-events-seed.js"),
 ];
 
 async function main() {

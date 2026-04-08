@@ -569,62 +569,11 @@ model ArticleMedia {
   @@index([articleId])
 }
 
-model Program {
-  id                Int                @id @default(autoincrement())
-  title             String
-  slug              String             @unique
-  description       String
-  poster            String?
-  type              ProgramType        @default(UMUM)
-  isPublished       Boolean            @default(false)
-  startAt           DateTime?
-  endAt             DateTime?
-  registerLink      String?
-  location          String?
-  mapsEmbedSrc      String?
-  driveLink         String?
-  youtubeLink       String?
-  instagramLink     String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  drivebukuLink     String?
-  isFlexibleTime    Boolean            @default(false)
-  programCategories ProgramCategory[]
-  programOrganizers ProgramOrganizer[]
-  programTags       ProgramTag[]
-}
-
 model Podcast {
   id               Int      @id @default(autoincrement())
   astonLink        String?
   soreDiStonenLink String?
   updatedAt        DateTime @updatedAt
-}
-
-model ProgramCategory {
-  id             Int          @id @default(autoincrement())
-  programId      Int
-  categoryItemId Int
-  isPrimary      Boolean      @default(false)
-  order          Int          @default(0)
-  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
-  program        Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
-}
-
-model ProgramTag {
-  id        Int     @id @default(autoincrement())
-  programId Int
-  tagId     Int
-  program   Program @relation(fields: [programId], references: [id], onDelete: Cascade)
-  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-}
-
-model ProgramOrganizer {
-  id             Int          @id @default(autoincrement())
-  programId      Int
-  categoryItemId Int
-  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
-  program        Program      @relation(fields: [programId], references: [id], onDelete: Cascade)
 }
 
 model PageProgram {

@@ -1,99 +1,133 @@
 import Link from "next/link";
 import InstagramPreviewCard from "./InstagramPreviewCard";
-import TagList from "./TagList";
 
-function InstagramIcon() {
+function UserIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
-      <path
-        d="M7.5 2.75h9A4.75 4.75 0 0 1 21.25 7.5v9A4.75 4.75 0 0 1 16.5 21.25h-9A4.75 4.75 0 0 1 2.75 16.5v-9A4.75 4.75 0 0 1 7.5 2.75Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M12 16.25a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M17.25 6.75h.01"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
     </svg>
   );
 }
 
-function SoundIcon() {
+function SoundOffIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none">
-      <path
-        d="M11 5 6.5 8.5H4v7h2.5L11 19V5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M15 9.5a3.5 3.5 0 0 1 0 5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M17.5 7a7 7 0 0 1 0 10"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg viewBox="0 0 24 24" className="h-[14px] w-[14px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+      <line x1="23" y1="9" x2="17" y2="15"></line>
+      <line x1="17" y1="9" x2="23" y2="15"></line>
     </svg>
   );
 }
 
 export default function PostDetailSection({ post }) {
+  if (!post) return null;
+
+  // 1. OLAH DATA TAGS
+  const tagNames = post.tags && Array.isArray(post.tags) 
+    ? post.tags.map(t => t.tag?.name).filter(Boolean)
+    : [];
+
+  // 2. OLAH DESKRIPSI
+  let rawDesc = post.description || "";
+  let mainDescription = rawDesc;
+  let host = "";
+  let podcaster = "";
+
+  if (rawDesc.includes("---")) {
+    const parts = rawDesc.split("---");
+    mainDescription = parts[0].trim(); 
+    const meta = parts[1] || ""; 
+
+    const hostMatch = meta.match(/\*\*Host:\*\*\s*(.*)/);
+    const podMatch = meta.match(/\*\*Podcaster:\*\*\s*(.*)/);
+
+    if (hostMatch && hostMatch[1] !== "-") host = hostMatch[1].trim();
+    if (podMatch && podMatch[1] !== "-") podcaster = podMatch[1].trim();
+  }
+
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[320px_1fr] lg:gap-16">
-          <div className="flex justify-center lg:justify-start">
+      {/* 👉 PERUBAHAN: Lebarkan max-w-5xl menjadi max-w-[1200px] dan tambah padding */}
+      <div className="mx-auto max-w-[1200px] px-6 lg:px-12 pb-20">
+        
+        {/* 👉 PERUBAHAN GRID: Sesuaikan lebar kolom gambar dan kurangi gap sedikit */}
+        <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+          
+          {/* BAGIAN KIRI: GAMBAR */}
+          {/* Ubah lebar gambar menjadi 340px agar sedikit lebih besar proporsional dengan layar lebar */}
+          <div className="w-full lg:w-[340px] flex-shrink-0 mx-auto lg:mx-0">
             <InstagramPreviewCard
-              thumbnailUrl={post.thumbnailUrl}
-              alt={post.title}
-              leftBadge={<InstagramIcon />}
-              rightBadge={<SoundIcon />}
-              className="max-w-70"
+              thumbnailUrl={post.poster || "/image/default-placeholder.png"}
+              alt={post.title || "Post Image"}
+              leftBadge={<UserIcon />}
+              rightBadge={<SoundOffIcon />}
             />
           </div>
 
-          <div className="max-w-2xl">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-[#2b2433]">
-              {post.heading}
-            </h2>
+          {/* BAGIAN KANAN: TEKS */}
+          <div className="flex-1 w-full pt-2 lg:pt-4 overflow-hidden">
+            
+            {/* Judul */}
+            <h1 className="text-3xl md:text-[36px] font-black uppercase tracking-wide text-[#3F334D] mb-8 leading-[1.2]">
+              {post.title}
+            </h1>
 
-            {post.shortText ? (
-              <p className="mt-6 text-sm text-[#2b2433]/80">{post.shortText}</p>
-            ) : null}
+            {/* INFO HOST & PODCASTER */}
+            {(host || podcaster) && (
+              <div className="mb-10 p-5 bg-pink-50/40 border border-pink-100 rounded-2xl inline-block w-full sm:w-auto min-w-[280px]">
+                {host && (
+                  <p className="text-sm text-[#8a2a78] font-medium mb-1">
+                    <span className="font-bold uppercase tracking-wider text-[11px] text-[#ff4aa2] block mb-0.5">Pengisi / Host</span>
+                    {host}
+                  </p>
+                )}
+                {podcaster && (
+                  <p className={`text-sm text-[#8a2a78] font-medium ${host ? "mt-4 pt-4 border-t border-pink-200/50" : ""}`}>
+                    <span className="font-bold uppercase tracking-wider text-[11px] text-[#ff4aa2] block mb-0.5">Podcaster</span>
+                    {podcaster}
+                  </p>
+                )}
+              </div>
+            )}
 
-            {post.paragraphs?.length ? (
-              <div className="mt-6 space-y-4 text-sm leading-relaxed text-[#2b2433]/80">
-                {post.paragraphs.map((p, idx) => (
-                  <p key={idx}>{p}</p>
+            {/* Deskripsi */}
+            {mainDescription ? (
+              <div 
+                className="space-y-5 text-[15px] md:text-base leading-relaxed text-[#3F334D] font-medium break-words prose prose-p:my-0 max-w-none"
+                dangerouslySetInnerHTML={{ __html: mainDescription }}
+              />
+            ) : (
+               <p className="text-base text-[#3F334D]/70 italic">Belum ada deskripsi.</p>
+            )}
+
+            {/* List Tags */}
+            {tagNames.length > 0 && (
+              <div className="mt-10 flex flex-wrap items-center gap-2 text-base">
+                <span className="font-black text-[#3F334D] mr-2 text-[17px]">Tags:</span>
+                {tagNames.map((tag, idx) => (
+                  <Link 
+                    key={idx} 
+                    href={`/program/hysteria-berkelana?q=${tag}`} 
+                    className="text-[#E83C91] hover:text-[#b02a6b] font-medium transition-colors"
+                  >
+                    #{tag}
+                  </Link>
                 ))}
               </div>
-            ) : null}
+            )}
 
-            <TagList tags={post.tags} />
-
-            <div className="mt-10">
+            {/* Tombol Aksi */}
+            <div className="mt-10 flex flex-wrap gap-4">
               <Link
-                href={post.instagramUrl || "#"}
-                className="inline-flex items-center justify-center rounded-xl bg-[#2b2433] px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
-                target={post.instagramUrl ? "_blank" : undefined}
-                rel={post.instagramUrl ? "noreferrer" : undefined}
+                href={post.instagramLink || "#"}
+                className="inline-flex items-center justify-center rounded-xl bg-[#3F334D] px-8 py-3.5 text-[15px] font-bold text-white hover:bg-[#2c2336] transition-colors shadow-lg"
+                target={post.instagramLink ? "_blank" : "_self"}
+                rel="noreferrer"
               >
                 Lihat di Instagram
               </Link>
             </div>
+
           </div>
         </div>
       </div>

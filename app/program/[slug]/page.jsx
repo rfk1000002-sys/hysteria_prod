@@ -1,18 +1,12 @@
 // app/program/[slug]/page.jsx
 import { notFound } from "next/navigation";
-
-// 1. Import Prisma untuk ambil data dari database
 import { prisma } from "@/lib/prisma";
 
-// 2. Import komponen untuk tampilan Khusus (Punya Temanmu)
+// 👉 PERUBAHAN 1: Hapus import getProgramDetailData yang lama
 import ProgramHero from "@/components/program-detail/ProgramHero";
 import ProgramPostsSection from "@/components/program-detail/ProgramPostsSection.client";
-import { getProgramDetailData } from "@/lib/programDetailApi";
-
-// 3. Import komponen untuk tampilan Default kita (Sidebar Pink / 6 Card Grid)
 import DefaultProgramView from "@/components/program-detail/DefaultProgramView.client";
 
-// Daftar SEMUA slug utama yang valid agar server aman dari halaman 404
 const VALID_SLUGS = [
   'festival-kampung', 'festival-kota', 'festival-biennale', 
   'forum', 'music', 'pemutaran-film', 
@@ -20,8 +14,6 @@ const VALID_SLUGS = [
   'aston', 'sore-di-stonen', 'sapa-warga', 'hysteria-berkelana'
 ];
 
-// KAMUS PENERJEMAH (Mapping): 
-// Mengubah nama di URL (kebab-case) menjadi nama key di Database (camelCase) yang tadi kita buat di Admin
 const slugToDbKey = {
   'festival-kampung': 'festivalKampung',
   'festival-kota': 'festivalKota',
@@ -39,11 +31,9 @@ const slugToDbKey = {
 };
 
 export default async function ProgramDetailPage({ params, searchParams }) {
-  // Await untuk aturan Next.js 15+
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   
-  // Ambil nama slug utama dari URL
   const rawSlug = resolvedParams.slug;
   const actualSlug = Array.isArray(rawSlug) ? rawSlug[rawSlug.length - 1] : rawSlug;
 
@@ -59,44 +49,84 @@ export default async function ProgramDetailPage({ params, searchParams }) {
   });
 
   const slugHerosData = settings?.slugHeros || {};
-  
-  // Terjemahkan URL slug jadi key Database
   const dbKey = slugToDbKey[actualSlug]; 
-  
-  // Ambil data spesifik untuk halaman ini saja (Title, Subtitle, Image)
   const heroData = slugHerosData[dbKey] || null;
 
-  // ==========================================================
-  // LOGIKA SWITCHER (PENGATUR KOMPONEN)
-  // ==========================================================
 
+  // ==========================================================
   // KONDISI 1: JIKA USER MEMBUKA HALAMAN HYSTERIA BERKELANA
+  // ==========================================================
   if (actualSlug === 'hysteria-berkelana') {
     const q = resolvedSearchParams?.q ?? "";
     const page = Number(resolvedSearchParams?.page ?? 1);
+    const itemsPerPage = 6; // 👉 Bisa diubah mau nampilin berapa card per halaman
     
-    // Fetch API dari backend temanmu
-    const data = await getProgramDetailData({ slug: actualSlug, q, page });
+    // 1. Buat Filter Pencarian ke Tabel Event
+    const whereClause = {
+      isPublished: true,
+      eventCategories: {
+        some: {
+          categoryItem: {
+            slug: 'hysteria-berkelana' // Pastikan hanya narik kategori ini
+          }
+        }
+      },
+      // Fitur Search (Jika ada inputan di search bar)
+      ...(q ? { title: { contains: q, mode: 'insensitive' } } : {})
+    };
+
+    // 2. Hitung Total Data & Halaman
+    const totalItems = await prisma.event.count({ where: whereClause });
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    // 3. Tarik Data dari Tabel Event
+    const dbEvents = await prisma.event.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * itemsPerPage,
+      take: itemsPerPage,
+    });
+
+    // 4. Format Data Agar Cocok dengan Komponen Temanmu (ProgramPostsSection)
+    const formattedPosts = dbEvents.map(event => {
+      // 🪄 Trik Ekstrak "Preview Deskripsi" dari string gabungan
+      let previewText = "";
+      if (event.description && event.description.includes("**Preview:**")) {
+        const match = event.description.match(/\*\*Preview:\*\*\s*(.*)/);
+        if (match && match[1] !== "-") previewText = match[1];
+      } else {
+        // Fallback kalau nggak nemu teks preview (ambil 80 karakter awal)
+        previewText = event.description ? event.description.substring(0, 80) + "..." : "";
+      }
+
+      return {
+        id: event.id,
+        title: event.title,
+        slug: actualSlug, // Biar URL detailnya rapi: /program/hysteria-berkelana/123
+        thumbnailUrl: event.poster || "/image/default-placeholder.png",
+        heading: event.title,
+        shortText: previewText, // 👉 Sekarang beneran narik teks Preview!
+      };
+    });
 
     return (
       <main className="min-h-screen bg-white">
-        {/* Kita oper heroData ke ProgramHero supaya dia bisa pakai Gambar/Title dari Admin */}
         <ProgramHero 
-          title={heroData?.title || data.title} 
-          subtitle={heroData?.subtitle || data.subtitle} 
-          heroImage={heroData?.image} // Lempar gambar dari DB
+          title={heroData?.title || "Hysteria Berkelana"} 
+          subtitle={heroData?.subtitle || "Jelajah dan Dokumentasi"} 
+          heroImage={heroData?.image} 
         />
         <ProgramPostsSection
           programSlug={actualSlug} 
-          posts={data.posts}
-          totalPages={data.totalPages}
+          posts={formattedPosts}      // 👉 Lempar data yang sudah diolah
+          totalPages={totalPages}     // 👉 Lempar jumlah halaman
         />
       </main>
     );
   }
 
-  // KONDISI 2: JIKA BUKAN HYSTERIA BERKELANA 
-  // (Sapa Warga, Flash Residency, Festival Kampung, dll)
-  // Tampilkan komponen default milikmu, dan JANGAN LUPA lempar `heroData`-nya!
+  // ==========================================================
+  // KONDISI 2: DEFAULT PROGRAM (Selain Berkelana)
+  // ==========================================================
   return <DefaultProgramView actualSlug={actualSlug} heroData={heroData} />;
 }
