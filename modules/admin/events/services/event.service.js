@@ -1,6 +1,7 @@
 import slugify from "slugify";
 import { prisma } from "@/lib/prisma";
 import * as repo from "../repositories/event.repository";
+import Uploads from "@/lib/upload/uploads";
 
 export async function getEvents() {
   return repo.findAllEvents();
@@ -11,7 +12,25 @@ export async function getEventById(id) {
 }
 
 export async function deleteEvent(id) {
-  return repo.deleteEvent(id);
+  const eventId = Number(id);
+  const uploader = new Uploads();
+
+  // ambil data dulu
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { poster: true },
+  });
+
+  // delete file
+  try {
+    if (event?.poster) {
+      await uploader.deleteFile(event.poster);
+    }
+  } catch (err) {
+    console.warn("Gagal hapus poster:", err.message);
+  }
+
+  return repo.deleteEvent(eventId);
 }
 
 /* CREATE */
@@ -92,6 +111,13 @@ export async function createEvent(body) {
 /* UPDATE */
 export async function updateEvent(id, body) {
   const eventId = Number(id);
+  const uploader = new Uploads();
+
+  // ambil data lama
+  const existingEvent = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { poster: true },
+  });
 
   const data = {
     title: body.title,
@@ -119,6 +145,18 @@ export async function updateEvent(id, body) {
 
   if (body.startAt) data.startAt = new Date(body.startAt);
   data.endAt = body.endAt ? new Date(body.endAt) : null;
+
+  // DELETE FILE LAMA (kalau diganti / dihapus)
+  try {
+    if (
+      existingEvent?.poster &&
+      existingEvent.poster !== body.poster
+    ) {
+      await uploader.deleteFile(existingEvent.poster);
+    }
+  } catch (err) {
+    console.warn("Gagal hapus file lama:", err.message);
+  }
 
   await repo.updateEvent(eventId, data);
 

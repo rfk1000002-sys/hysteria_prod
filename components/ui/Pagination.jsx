@@ -15,13 +15,13 @@ export default function Pagination({
   totalPages,
   currentPage,
   onPageChange,
-  jumpStep = 5,
-  maxVisible = 9,
+  maxVisible = 5,
   className = "",
   ariaLabelPrefix = "Page",
 }) {
   const pages = useMemo(() => {
-    if (totalPages <= maxVisible) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (totalPages <= maxVisible)
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
 
     const delta = 1; // siblings around current
     const left = Math.max(2, currentPage - delta);
@@ -37,79 +37,88 @@ export default function Pagination({
 
   const handlePrev = () => onPageChange(Math.max(1, currentPage - 1));
   const handleNext = () => onPageChange(Math.min(totalPages, currentPage + 1));
-  const handleJumpBack = () => onPageChange(Math.max(1, currentPage - jumpStep));
-  const handleJumpForward = () => onPageChange(Math.min(totalPages, currentPage + jumpStep));
 
   if (totalPages <= 1) return null;
 
   return (
     <div className={`flex justify-center ${className}`}>
-      <button
-        disabled={currentPage <= 1}
-        onClick={handlePrev}
-        className="w-9 h-9 flex items-center justify-center text-pink-500 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
-        aria-label="Previous page"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <button
-        disabled={currentPage <= 1}
-        onClick={handleJumpBack}
-        className="w-9 h-9 flex items-center justify-center text-pink-400 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
-        aria-label={`Jump back ${jumpStep} pages`}
-        title={`Prev ${jumpStep} Pages`}
-      >
-        <span className="text-3xl">«</span>
-      </button>
-
-      {pages.map((p, idx) => {
-        if (p === "left-ellipsis" || p === "right-ellipsis") {
-          return (
-            <span key={`e-${idx}`} className="px-2 text-zinc-400">
-              …
-            </span>
-          );
-        }
-
-        return (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={`w-9 h-9 text-sm font-medium transition-colors ${
-              currentPage === p
-                ? "rounded-full bg-gradient-to-r from-pink-500 to-orange-400 text-white shadow cursor-pointer"
-                : "rounded-full text-zinc-600 hover:bg-pink-200 cursor-pointer"
-            }`}
-            aria-label={`${ariaLabelPrefix} ${p}`}
+      <div className="flex items-center gap-1 sm:gap-2 rounded-full bg-[#ec3f94] px-4 py-2 text-white shadow-md">
+        {/* Previous Button */}
+        <button
+          type="button"
+          disabled={currentPage <= 1}
+          onClick={handlePrev}
+          className="cursor-pointer flex h-auto w-auto items-center justify-center rounded-full bg-white/30 text-pink-600 transition hover:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Previous page"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            viewBox="0 0 24 24"
           >
-            {p}
-          </button>
-        );
-      })}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
 
-      <button
-        disabled={currentPage >= totalPages}
-        onClick={handleJumpForward}
-        className="w-9 h-9 flex items-center justify-center text-pink-400 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
-        aria-label={`Jump forward ${jumpStep} pages`}
-        title={`Next ${jumpStep} Pages`}
-      >
-        <span className="text-3xl">»</span>
-      </button>
+        {/* Page Numbers */}
+        <div className="flex items-center gap-1 sm:gap-2 px-1">
+          {pages.map((p, idx) => {
+            if (p === "left-ellipsis" || p === "right-ellipsis") {
+              return (
+                <span key={`e-${idx}`} className="px-1 font-bold text-white">
+                  ...
+                </span>
+              );
+            }
 
-      <button
-        disabled={currentPage >= totalPages}
-        onClick={handleNext}
-        className="w-9 h-9 flex items-center justify-center text-pink-500 hover:bg-pink-200 disabled:opacity-30 transition cursor-pointer"
-        aria-label="Next page"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
+            const active = currentPage === p;
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onPageChange(p)}
+                className={`flex h-7 w-7 items-center justify-center text-sm font-bold transition-all cursor-pointer ${
+                  active
+                    ? "rounded-full bg-white/40 text-white shadow-xs scale-110"
+                    : "text-white hover:text-pink-200"
+                }`}
+                aria-label={`${ariaLabelPrefix} ${p}`}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Next Button */}
+        <button
+          type="button"
+          disabled={currentPage >= totalPages}
+          onClick={handleNext}
+          className="cursor-pointer flex h-auto w-auto items-center justify-center rounded-full bg-white text-[#ec3f94] transition hover:bg-pink-50 disabled:bg-white/30 disabled:text-pink-600 disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Next page"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

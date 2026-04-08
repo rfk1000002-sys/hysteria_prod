@@ -255,6 +255,21 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
           <p className="text-sm md:text-lg lg:text-xl max-w-3xl font-medium opacity-95 leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] whitespace-pre-line line-clamp-4 md:line-clamp-none">
             {displayDesc}
           </p>
+
+          {/* 👉 TAMBAHAN KHUSUS BIENNALE: Tombol Instagram Penta K Labs */}
+          {actualSlug === 'festival-biennale' && (
+            <div className="mt-6 md:mt-8">
+              <a 
+                href={heroData?.instagramLink || "#"} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block bg-white text-[#D63384] font-bold text-sm md:text-base px-6 py-2.5 rounded-lg shadow-md hover:bg-pink-50 hover:scale-105 transition-all duration-300"
+              >
+                Instagram Penta K Labs
+              </a>
+            </div>
+          )}
+
         </div>
       </section>
 

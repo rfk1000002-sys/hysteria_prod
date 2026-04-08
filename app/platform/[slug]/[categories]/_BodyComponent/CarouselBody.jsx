@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import PosterCard from "./cards/PosterCard";
 import VideoCard from "./cards/VideoCard";
@@ -24,7 +24,11 @@ import ArtistCard from "./cards/ArtistCard";
  * Props:
  *   subCategories : Array<{ title, slug?, linkUrl?, items: Array<{ src, alt, title, subtitle }> }>
  */
-export default function CarouselBody({ subCategories = [], platformSlug = null, categorySlug = null }) {
+export default function CarouselBody({
+  subCategories = [],
+  platformSlug = null,
+  categorySlug = null,
+}) {
   if (!subCategories.length) {
     return (
       <div className="py-20 text-center text-zinc-400">
@@ -36,7 +40,12 @@ export default function CarouselBody({ subCategories = [], platformSlug = null, 
   return (
     <div className="w-full pb-16">
       {subCategories.map((sub, idx) => (
-        <SubCategoryRow key={sub.slug || idx} {...sub} platformSlug={platformSlug} categorySlug={categorySlug} />
+        <SubCategoryRow
+          key={sub.slug || idx}
+          {...sub}
+          platformSlug={platformSlug}
+          categorySlug={categorySlug}
+        />
       ))}
     </div>
   );
@@ -44,13 +53,50 @@ export default function CarouselBody({ subCategories = [], platformSlug = null, 
 
 /* ---------- internal: one horizontal row per sub-category ---------- */
 
-function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platformSlug = null, categorySlug = null, slug: subSlug = null }) {
+function SubCategoryRow({
+  title,
+  linkUrl,
+  items = [],
+  cardType = "poster",
+  platformSlug = null,
+  categorySlug = null,
+  slug: subSlug = null,
+}) {
   const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    // Allow for a few pixels of margin
+    setCanScrollLeft(scrollLeft > 10);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Initial check
+    checkScroll();
+
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll]);
 
   const scroll = (dir) => {
     if (!scrollRef.current) return;
-    const amount = 340;
-    scrollRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    const amount = 400; // Adjusted for a smoother leap
+    scrollRef.current.scrollBy({
+      left: dir === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
   };
 
   if (!items.length) return null;
@@ -59,15 +105,17 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
   const displayedItems = items.slice(0, 9);
 
   // Lebar card bervariasi per tipe — responsive untuk mobile
-  const cardWidth = cardType === "video"
-    ? "w-[220px] sm:w-[280px] md:w-[320px]"
-    : "w-[180px] md:w-[220px]";
+  const cardWidth =
+    cardType === "video"
+      ? "w-[220px] sm:w-[280px] md:w-[320px]"
+      : "w-[180px] md:w-[220px]";
 
   return (
     <section className="w-full max-w-[1920px] mx-auto mt-12 px-4 md:px-24">
       {/* Header: title + lihat semua */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="font-poppins font-bold text-[20px] md:text-[24px] text-black">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="flex gap-2 md:gap-3 font-poppins font-bold text-[20px] md:text-[24px] text-black">
+          <div className="border-4 border-pink-500"></div>
           {title}
         </h3>
 
@@ -81,21 +129,41 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
         )}
       </div>
 
+      {/* Divider line - width can be adjusted (e.g., w-32, w-1/2, w-full) */}
+      <div className="border-3 border-t border-gray-300"></div>
+
       {/* Scrollable cards */}
-      <div className="relative">
+      <div className="relative group/carousel">
         {/* Left arrow (desktop) */}
         <button
+          disabled={!canScrollLeft}
           onClick={() => scroll("left")}
-          className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-90 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
+          className={`hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-90 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md transition-all border border-zinc-500 
+            ${
+              canScrollLeft
+                ? "cursor-pointer hover:bg-zinc-50 scale-100 opacity-100"
+                : "cursor-default opacity-0 scale-90 pointer-events-none"
+            }`}
           aria-label="Scroll left"
         >
-          <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-5 h-5 text-zinc-600"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 
         <div
           ref={scrollRef}
+          onScroll={checkScroll}
           className="py-4 flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 scroll-smooth"
           style={{
             scrollbarWidth: "none",
@@ -105,36 +173,65 @@ function SubCategoryRow({ title, linkUrl, items = [], cardType = "poster", platf
           }}
         >
           {displayedItems.map((item, i) => (
-            <div key={i} className={`flex-none ${cardWidth} snap-start`}>
-              <CardSwitch cardType={cardType} item={item} platformSlug={platformSlug} categorySlug={categorySlug} subSlug={subSlug} />
-            </div>
+            <LazyItem key={i} className={`flex-none ${cardWidth} snap-start`}>
+              <CardSwitch
+                cardType={cardType}
+                item={item}
+                platformSlug={platformSlug}
+                categorySlug={categorySlug}
+                subSlug={subSlug}
+              />
+            </LazyItem>
           ))}
         </div>
 
         {/* Right arrow (desktop) */}
         <button
+          disabled={!canScrollRight}
           onClick={() => scroll("right")}
-          className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md hover:shadow-lg transition border border-zinc-500"
+          className={`hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full items-center justify-center shadow-md transition-all border border-zinc-500 
+            ${
+              canScrollRight
+                ? "cursor-pointer hover:bg-zinc-50 scale-100 opacity-100"
+                : "cursor-default opacity-0 scale-90 pointer-events-none"
+            }`}
           aria-label="Scroll right"
         >
-          <svg className="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          <svg
+            className="w-5 h-5 text-zinc-600"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
 
       {/* Dot indicators */}
-      <DotIndicator count={displayedItems.length} />
+      {/* <DotIndicator count={displayedItems.length} /> */}
     </section>
   );
 }
 
 /* ---------- Card switcher ---------- */
 
-function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, subSlug = null }) {
+function CardSwitch({
+  cardType,
+  item,
+  platformSlug = null,
+  categorySlug = null,
+  subSlug = null,
+}) {
   if (cardType === "video") {
     return (
       <VideoCard
+        id={item.id}
         imageUrl={item.imageUrl || item.src}
         youtube={item.youtube}
         url={item.url}
@@ -150,11 +247,13 @@ function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, 
 
   if (cardType === "artist") {
     // prefer internal detail route when id available
-    const href = item.id && platformSlug && categorySlug && subSlug
-      ? `/platform/${platformSlug}/${categorySlug}/${subSlug}/${item.id}`
-      : item.url || undefined;
+    const href =
+      item.id && platformSlug && categorySlug && subSlug
+        ? `/platform/${platformSlug}/${categorySlug}/${subSlug}/${item.id}`
+        : item.url || undefined;
     return (
       <ArtistCard
+        id={item.id}
         imageUrl={item.imageUrl || item.src}
         alt={item.alt}
         title={item.title}
@@ -171,6 +270,7 @@ function CardSwitch({ cardType, item, platformSlug = null, categorySlug = null, 
   // default: poster
   return (
     <PosterCard
+      id={item.id}
       imageUrl={item.imageUrl || item.src}
       alt={item.alt}
       title={item.title}
@@ -191,11 +291,39 @@ function DotIndicator({ count }) {
   return (
     <div className="flex justify-center gap-2 mt-4">
       {Array.from({ length: Math.min(count, 6) }).map((_, i) => (
-        <span
-          key={i}
-          className="w-2 h-2 rounded-full bg-pink-300"
-        />
+        <span key={i} className="w-2 h-2 rounded-full bg-pink-300" />
       ))}
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div
+      ref={ref}
+      className={`${className} transition-all duration-500`}
+      style={{ minHeight: 1 }}
+    >
+      {visible ? children : null}
     </div>
   );
 }

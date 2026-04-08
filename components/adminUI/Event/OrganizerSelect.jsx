@@ -1,4 +1,5 @@
 "use client";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function OrganizerSelect({
   organizerItems,
@@ -34,11 +35,18 @@ export default function OrganizerSelect({
       <button
         type="button"
         onClick={() => setOrganizerOpen(!organizerOpen)}
-        className={`${inputClass} flex justify-between`}
+        className={`${inputClass} flex items-center justify-between`}
       >
-        {organizerIds.length > 0
+        <span>
+          {organizerIds.length > 0
           ? `${organizerIds.length} penyelenggara dipilih`
           : "Pilih penyelenggara"}
+        </span>    
+        {organizerOpen ? (
+          <ChevronUp size={16} />
+        ) : (
+          <ChevronDown size={16} />
+        )}
       </button>
 
       {organizerOpen && (

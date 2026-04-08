@@ -32,6 +32,8 @@ const getHandler = async (request) => {
     const categoryItemSlug = searchParams.get("categoryItemSlug") ?? null;
     const minimalParam     = (searchParams.get('minimal') || '').toLowerCase();
     const minimal = minimalParam === '1' || minimalParam === 'true' || minimalParam === 'yes';
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit'), 10) : null;
+    const cursor = searchParams.get('cursor');
 
     if (!platformId && !platformSlug) {
       return respondError(new AppError("Query parameter 'platformSlug' atau 'platformId' wajib diisi", 400, "VALIDATION_ERROR"));
@@ -40,12 +42,12 @@ const getHandler = async (request) => {
     let contents;
     if (platformSlug) {
       // Gunakan slug — tidak perlu lookup platformId di frontend
-      contents = await listPlatformContentsBySlug(platformSlug, categoryItemSlug, minimal);
+      contents = await listPlatformContentsBySlug(platformSlug, categoryItemSlug, minimal, limit, cursor);
     } else {
-      contents = await listPlatformContents(platformId, categoryItemId, minimal);
+      contents = await listPlatformContents(platformId, categoryItemId, minimal, limit, cursor);
     }
 
-    logInfo("[PlatformContent][Admin][LIST] Success", { platformId, platformSlug, count: contents.length });
+    logInfo("[PlatformContent][Admin][LIST] Success", { platformId, platformSlug, count: contents.data.length, nextCursor: contents.nextCursor });
     return respondSuccess(contents, 200);
   } catch (error) {
     logError("[PlatformContent][Admin][LIST] Error", error);
@@ -61,7 +63,7 @@ export const GET = withApiLogging(getHandler, "api/admin/platform-content");
 const postHandler = async (request) => {
   try {
     logInfo("[PlatformContent][Admin][CREATE] Start");
-    await requireAuthWithPermission(request, ["platform.update"]);
+    await requireAuthWithPermission(request, ["platform.create"]);
 
     // Terima multipart (ada gambar) atau JSON biasa
     const isMultipart = request.headers.get("content-type")?.includes("multipart/form-data");

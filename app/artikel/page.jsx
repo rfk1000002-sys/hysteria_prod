@@ -204,268 +204,272 @@ export default function ArtikelPage() {
   );
 
   return (
-    <div className="bg-[var(--background)] text-[var(--foreground)] pt-12">
-      <div className="min-h-screen max-w-7xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="py-7 w-4xl">
-          <h1 className="text-5xl font-bold mb-7">Artikel</h1>
-          <p className="text-base">
-            Kumpulan tulisan untuk memperkaya wawasan tentang seni, budaya, dan
-            kreativitas. Bacaan yang menginspirasi dan mendidik untuk semua
-            kalangan.
-          </p>
-        </div>
+    <div className="bg-[var(--Color-1)] pt-19">
+      <div className="bg-[var(--background)] text-[var(--foreground)]">
+        <div className="min-h-screen mx-auto px-6 md:px-23 py-12">
+          {/* Header */}
+          <div className="py-7 max-w-4xl">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">Artikel</h1>
+            <p className="text-sm md:text-base lg:text-lg">
+              Kumpulan tulisan untuk memperkaya wawasan tentang seni, budaya,
+              dan kreativitas. Bacaan yang menginspirasi dan mendidik untuk
+              semua kalangan.
+            </p>
+          </div>
 
-        {/* Search */}
-        <div className="max-w-3xl mx-auto w-full mb-10">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari Judul Artikel/Penulis Artikel"
-                className="w-full border border-pink-400 rounded-full px-6 py-4 pr-14 
+          {/* Search */}
+          <div className="max-w-3xl mx-auto w-full mb-10">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari Judul Artikel/Penulis Artikel"
+                  className="w-full border border-pink-400 rounded-full px-4 md:px-6 py-3 md:py-4 pr-12
               focus:outline-none focus:ring-2 focus:ring-pink-400 
-              transition-all duration-300 placeholder:text-pink-400 text-base text-pink-400"
-              />
+              transition-all duration-300 placeholder:text-pink-400 text-sm md:text-base text-pink-400"
+                />
 
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 
               text-pink-500 hover:scale-110 transition-transform duration-200"
-              >
-                <Search />
-              </button>
-            </div>
+                >
+                  <Search />
+                </button>
+              </div>
 
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowSort(!showSort)}
-                className="w-14 h-14 flex items-center justify-center 
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowSort(!showSort)}
+                  className="w-14 h-14 flex items-center justify-center 
     border border-pink-400 rounded-full 
     text-pink-500 hover:bg-pink-500 hover:text-white 
     transition-all duration-300"
-              >
-                <Tune />
-              </button>
+                >
+                  <Tune />
+                </button>
 
-              {showSort && (
-                <div className="absolute right-0 mt-3 w-56 bg-white shadow-xl rounded-xl p-4 z-50 animate-fade-in">
-                  <p className="text-sm font-semibold mb-3">Sort by</p>
+                {showSort && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white shadow-xl rounded-xl p-4 z-50 animate-fade-in">
+                    <p className="text-sm font-semibold mb-3">Sort by</p>
 
-                  <div className="flex flex-col gap-3 text-sm">
-                    <button
-                      onClick={() => handleSort("popular")}
-                      className="text-left hover:text-pink-500"
-                    >
-                      Terpopuler
-                    </button>
-                    <button
-                      onClick={() => handleSort("newest")}
-                      className="text-left hover:text-pink-500"
-                    >
-                      Terbaru
-                    </button>
+                    <div className="flex flex-col gap-3 text-sm">
+                      <button
+                        onClick={() => handleSort("popular")}
+                        className="text-left hover:text-pink-500"
+                      >
+                        Terpopuler
+                      </button>
+                      <button
+                        onClick={() => handleSort("newest")}
+                        className="text-left hover:text-pink-500"
+                      >
+                        Terbaru
+                      </button>
 
-                    <button
-                      onClick={() => handleSort("oldest")}
-                      className="text-left hover:text-pink-500"
-                    >
-                      Terlama
-                    </button>
+                      <button
+                        onClick={() => handleSort("oldest")}
+                        className="text-left hover:text-pink-500"
+                      >
+                        Terlama
+                      </button>
 
-                    <button
-                      onClick={() => handleSort("az")}
-                      className="text-left hover:text-pink-500"
-                    >
-                      Judul, A – Z
-                    </button>
+                      <button
+                        onClick={() => handleSort("az")}
+                        className="text-left hover:text-pink-500"
+                      >
+                        Judul, A – Z
+                      </button>
 
-                    <button
-                      onClick={() => handleSort("za")}
-                      className="text-left hover:text-pink-500"
-                    >
-                      Judul, Z – A
-                    </button>
+                      <button
+                        onClick={() => handleSort("za")}
+                        className="text-left hover:text-pink-500"
+                      >
+                        Judul, Z – A
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* CATEGORY TABS */}
-        <div className="relative mb-10">
-          {/* MOBILE: Horizontal Scroll */}
-          <div className="flex lg:hidden overflow-x-auto gap-6 px-2 pb-2 no-scrollbar text-sm">
-            <button
-              ref={(el) => (tabRefs.current["all"] = el)}
-              onClick={() => handleCategoryClick("all")}
-              className={`whitespace-nowrap px-4 py-2 rounded-full font-medium transition-all duration-300
+          {/* CATEGORY TABS */}
+          <div className="relative mb-10">
+            {/* MOBILE: Horizontal Scroll */}
+            <div className="flex lg:hidden overflow-x-auto gap-6 px-2 pb-2 no-scrollbar text-sm">
+              <button
+                ref={(el) => (tabRefs.current["all"] = el)}
+                onClick={() => handleCategoryClick("all")}
+                className={`whitespace-nowrap px-4 py-2 rounded-full font-medium transition-all duration-300
         ${
           activeCategory === "all"
             ? "bg-pink-500 text-white shadow-md"
             : "bg-pink-50 text-pink-500 hover:bg-pink-100"
         }`}
-            >
-              Semua Artikel
-            </button>
+              >
+                Semua Artikel
+              </button>
 
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                ref={(el) => (tabRefs.current[cat.title] = el)}
-                onClick={() => handleCategoryClick(cat.title)}
-                className={`whitespace-nowrap px-4 py-2 rounded-full font-medium transition-all duration-300
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  ref={(el) => (tabRefs.current[cat.title] = el)}
+                  onClick={() => handleCategoryClick(cat.title)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full font-medium transition-all duration-300
           ${
             activeCategory === cat.title
               ? "bg-pink-500 text-white shadow-md"
               : "bg-pink-50 text-pink-500 hover:bg-pink-100"
           }`}
-              >
-                {cat.title}
-              </button>
-            ))}
-          </div>
+                >
+                  {cat.title}
+                </button>
+              ))}
+            </div>
 
-          {/* DESKTOP: Grid */}
-          <div
-            className="hidden lg:grid gap-4 px-5"
-            style={{
-              gridTemplateColumns: `repeat(${categories.length + 1}, minmax(0, 1fr))`,
-            }}
-          >
-            <button
-              ref={(el) => (tabRefs.current["all"] = el)}
-              onClick={() => handleCategoryClick("all")}
-              className={`pb-3 text-center font-medium transition-colors duration-300
+            {/* DESKTOP: Grid */}
+            <div
+              className="hidden lg:grid gap-4 px-5"
+              style={{
+                gridTemplateColumns: `repeat(${categories.length + 1}, minmax(0, 1fr))`,
+              }}
+            >
+              <button
+                ref={(el) => (tabRefs.current["all"] = el)}
+                onClick={() => handleCategoryClick("all")}
+                className={`pb-3 text-center font-medium transition-colors duration-300
       ${
         activeCategory === "all"
           ? "text-black"
           : "text-gray-500 hover:text-black"
       }`}
-            >
-              Semua Artikel
-            </button>
+              >
+                Semua Artikel
+              </button>
 
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                ref={(el) => (tabRefs.current[cat.title] = el)}
-                onClick={() => handleCategoryClick(cat.title)}
-                className={`pb-3 text-center font-medium transition-colors duration-300
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  ref={(el) => (tabRefs.current[cat.title] = el)}
+                  onClick={() => handleCategoryClick(cat.title)}
+                  className={`pb-3 text-center font-medium transition-colors duration-300
         ${
           activeCategory === cat.title
             ? "text-black"
             : "text-gray-500 hover:text-black"
         }`}
-              >
-                {cat.title}
-              </button>
-            ))}
+                >
+                  {cat.title}
+                </button>
+              ))}
+            </div>
+
+            {/* Sliding Indicator */}
+            <span
+              className="absolute bottom-0 h-1 bg-pink-500 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={indicatorStyle}
+            />
           </div>
 
-          {/* Sliding Indicator */}
-          <span
-            className="absolute bottom-0 h-1 bg-pink-500 rounded-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={indicatorStyle}
-          />
-        </div>
+          {/* ARTICLES GRID */}
+          {/* ================= ARTICLES GRID ================= */}
 
-        {/* ARTICLES GRID */}
-        {/* ================= ARTICLES GRID ================= */}
-
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : articles.length === 0 &&
-          search === "" &&
-          activeCategory === "all" ? (
-          <EmptyInitial />
-        ) : paginatedArticles.length === 0 && search !== "" ? (
-          <EmptySearch keyword={search} />
-        ) : paginatedArticles.length === 0 && activeCategory !== "all" ? (
-          <EmptyCategory category={activeCategory} />
-        ) : (
-          <div
-            className={`grid grid-cols-2 lg:grid-cols-4 gap-8
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : articles.length === 0 &&
+            search === "" &&
+            activeCategory === "all" ? (
+            <EmptyInitial />
+          ) : paginatedArticles.length === 0 && search !== "" ? (
+            <EmptySearch keyword={search} />
+          ) : paginatedArticles.length === 0 && activeCategory !== "all" ? (
+            <EmptyCategory category={activeCategory} />
+          ) : (
+            <div
+              className={`grid grid-cols-2 lg:grid-cols-4 gap-8
     ${isAnimating ? "animate-fade-out" : "animate-fade-in"}
     `}
-          >
-            {paginatedArticles.map((article, index) => {
-              const position = index % 5;
+            >
+              {paginatedArticles.map((article, index) => {
+                const position = index % 5;
 
-              let variant = "small";
-              let spanClass = "";
+                let variant = "small";
+                let spanClass = "";
 
-              if (position === 2) {
-                variant = "large";
-                spanClass = "lg:col-span-2";
-              }
+                if (position === 2) {
+                  variant = "large";
+                  spanClass = "lg:col-span-2";
+                }
 
-              if (position === 8) {
-                variant = "large";
-                spanClass = "lg:col-span-2";
-              }
+                if (position === 8) {
+                  variant = "large";
+                  spanClass = "lg:col-span-2";
+                }
 
-              return (
-                <div key={article.id} className={spanClass}>
-                  <ArticleCard article={article} variant={variant} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {/* ================= PAGINATION ================= */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-16">
-            <div className="flex items-center gap-3 bg-pink-500 px-2 py-2 rounded-full shadow-lg">
-              {/* PREV BUTTON */}
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-pink-500 
+                return (
+                  <div key={article.id} className={spanClass}>
+                    <ArticleCard article={article} variant={variant} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {/* ================= PAGINATION ================= */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-16">
+              <div className="flex items-center gap-3 bg-pink-500 px-2 py-2 rounded-full shadow-lg">
+                {/* PREV BUTTON */}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-pink-500 
               disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-transform text-xl"
-              >
-                ‹
-              </button>
+                >
+                  ‹
+                </button>
 
-              {/* PAGE NUMBERS */}
-              <div className="flex gap-6 text-white font-medium">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`transition-all duration-300
+                {/* PAGE NUMBERS */}
+                <div className="flex gap-6 text-white font-medium">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`transition-all duration-300
               ${
                 currentPage === page
                   ? "scale-125 font-bold"
                   : "opacity-80 hover:opacity-100"
               }`}
-                    >
-                      {page}
-                    </button>
-                  ),
-                )}
-              </div>
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
+                </div>
 
-              {/* NEXT BUTTON */}
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-pink-500 
+                {/* NEXT BUTTON */}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-pink-500 
               disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-transform text-xl"
-              >
-                ›
-              </button>
+                >
+                  ›
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PermissionGate from '@/components/adminUI/PermissionGate';
 
 const FALLBACK_ITEMS = [
   { id: 1, no: 1, title: 'example', year: 2026, url: 'https://example.com' },
@@ -62,18 +63,25 @@ export default function PlatformIndex({
   showDescription = false,
   showHost = false,
   showGuests = false,
+  showViews = false,
+  showPreview = false,
+  PreviewComponent = null,
 }) {
   const [searchQuery, setSearchQuery]   = useState('');
   const [perPage, setPerPage]           = useState(10);
+  const [page, setPage]                 = useState(1);
   const [isFormOpen, setIsFormOpen]     = useState(false);
   const [formMode, setFormMode]         = useState('add');   // 'add' | 'edit'
   const [selectedRow, setSelectedRow]   = useState(null);
 
   // ─── API state (aktif hanya jika platformId tersedia) ───────────────────────
-  const [apiRows, setApiRows]     = useState([]);
-  const [loading, setLoading]     = useState(false);
-  const [apiError, setApiError]   = useState(null);
-  const [saving, setSaving]       = useState(false);
+  const [apiRows, setApiRows]         = useState([]);
+  const [nextCursor, setNextCursor]   = useState(null);
+  const [cursorHistory, setCursorHistory] = useState([null]);
+  const [totalCount, setTotalCount]   = useState(0);
+  const [loading, setLoading]         = useState(false);
+  const [apiError, setApiError]       = useState(null);
+  const [saving, setSaving]           = useState(false);
 
   const debouncedSearch = useDebounce(searchQuery);
 
@@ -81,13 +89,16 @@ export default function PlatformIndex({
   const hasApi = !!(platformSlug || platformId);
 
   // ─── Fetch list dari API ─────────────────────────────────────────────────────
-  const fetchContents = useCallback(async () => {
+  const fetchContents = useCallback(async (cursor = null) => {
     if (!hasApi) return;
     try {
       setLoading(true);
       setApiError(null);
       const params = new URLSearchParams();
       params.set('minimal', 'true');
+      params.set('limit', String(perPage));
+      if (cursor) params.set('cursor', String(cursor));
+
       if (platformSlug) {
         params.set('platformSlug', platformSlug);
         if (categoryItemSlug) params.set('categoryItemSlug', categoryItemSlug);
@@ -101,23 +112,40 @@ export default function PlatformIndex({
 
       if (!res.ok) throw new Error(json?.message ?? 'Gagal mengambil data');
 
-      // normalize: tambahkan field `no` untuk nomor urut
-      const data = (json.data ?? []).map((row, idx) => ({ ...row, no: idx + 1 }));
+      const data = json.data?.data ?? [];
+      const next = json.data?.nextCursor ?? null;
+      const total = json.data?.total ?? 0;
+
       setApiRows(data);
+      setNextCursor(next);
+      setTotalCount(total);
     } catch (err) {
       setApiError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [hasApi, platformSlug, categoryItemSlug, platformId, categoryItemId]);
+  }, [hasApi, platformSlug, categoryItemSlug, platformId, categoryItemId, perPage]);
 
+  // reset pagination saat mencari atau mengubah perPage
   useEffect(() => {
-    fetchContents();
-  }, [fetchContents]);
+    setCursorHistory([null]);
+    setPage(1);
+    fetchContents(null);
+  }, [debouncedSearch, perPage, fetchContents]);
+
+  // initial fetch dilewati karena useEffect di atas
+  useEffect(() => {
+    // skip initial fetch here because it's handled by search/perPage effect
+  }, []);
 
   // ─── Sumber data baris ───────────────────────────────────────────────────────
-  // Jika ada platform info → gunakan apiRows, jika tidak → gunakan prop items / fallback
-  const baseRows = hasApi ? apiRows : (Array.isArray(items) ? items : FALLBACK_ITEMS);
+  // Tentukan sumber data baris
+  const baseRows = useMemo(() => {
+    if (hasApi) {
+      return Array.isArray(apiRows) ? apiRows : [];
+    }
+    return Array.isArray(items) ? items : FALLBACK_ITEMS;
+  }, [hasApi, apiRows, items]);
 
   // ─── Handlers CRUD ──────────────────────────────────────────────────────────
   async function handleApiAdd(data) {
@@ -140,6 +168,7 @@ export default function PlatformIndex({
       else if (categoryItemId) fd.append('categoryItemId', String(categoryItemId));
       if (rest.host != null) fd.append('host', rest.host);
       if (rest.guests != null) fd.append('guests', JSON.stringify(rest.guests));
+      if (rest.views != null) fd.append('views', String(rest.views));
       for (const file of imageFiles) fd.append('images', file);
 
       const res  = await fetch('/api/admin/platform-content/content', { method: 'POST', body: fd });
@@ -172,6 +201,7 @@ export default function PlatformIndex({
       if (rest.tags != null) fd.append('tags', JSON.stringify(rest.tags));
       if (rest.host != null) fd.append('host', rest.host);
       if (rest.guests != null) fd.append('guests', JSON.stringify(rest.guests));
+      if (rest.views != null) fd.append('views', String(rest.views));
       for (const file of imageFiles) fd.append('images', file);
 
       const res  = await fetch(`/api/admin/platform-content/${id}`, { method: 'PATCH', body: fd });
@@ -207,23 +237,25 @@ export default function PlatformIndex({
 
   // build default columns inside component so handlers are in scope
   const defaultColumns = [
-    { field: 'no', headerName: 'No.', width: 60, freeze:true},
+    { field: 'id', headerName: 'ID', width: 60, freeze:true},
     { field: 'title', headerName: 'Judul', width: 250, freeze:true },
-    ...(showImageUpload ? [{
+      ...(showImageUpload ? [{
       field: 'image',
       headerName: 'Gambar',
       width: 120,
       freeze: true,
       render: (row) => (
         row?.images && row.images.length > 0 ? (
-          <Image
-            src={row.images[0].imageUrl}
-            alt={row.images[0].alt || row.title || 'gambar'}
-            width={160}
-            height={120}
-            className="w-20 h-15 object-cover rounded"
-            style={{ objectFit: 'cover' }}
-          />
+          <LazyItem className="w-20 h-15">
+            <Image
+              src={row.images[0].imageUrl}
+              alt={row.images[0].alt || row.title || 'gambar'}
+              width={160}
+              height={120}
+              className="w-20 h-15 object-cover rounded"
+              style={{ objectFit: 'cover' }}
+            />
+          </LazyItem>
         ) : (
           <span className="text-gray-400">—</span>
         )
@@ -323,6 +355,10 @@ export default function PlatformIndex({
         row?.meta ? <span className="text-zinc-700 text-sm line-clamp-2">{typeof row.meta === 'string' ? row.meta : JSON.stringify(row.meta)}</span> : <span className="text-gray-400">—</span>
       ),
     }] : []),
+    ...(showViews ? [{
+      field: 'views', headerName: 'Views', width: 100, align: 'center', headerAlign: 'center',
+      render: (row) => <span className="text-zinc-700 text-sm">{row.views?.toLocaleString() ?? 0}</span>
+    }] : []),
     { field: 'year', headerName: 'Tahun', width: 100, align: 'center', headerAlign: 'center' },
     {
       field: 'aksi',
@@ -332,16 +368,20 @@ export default function PlatformIndex({
       headerAlign: 'justify-center',
       render: (row) => (
         <div className="flex gap-1 justify-start items-center">
-          <Tooltip title="Edit" arrow>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} sx={{ color: '#ec4899', '&:hover': { color: '#db2777' } }}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Hapus" arrow>
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); effectiveDelete?.(row); }} sx={{ color: '#43334C', '&:hover': { color: '#ef4444' } }}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <PermissionGate requiredPermissions="platform.update" hideOnDenied>
+            <Tooltip title="Edit" arrow>
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} sx={{ color: '#ec4899', '&:hover': { color: '#db2777' } }}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
+          <PermissionGate requiredPermissions="platform.delete" hideOnDenied>
+            <Tooltip title="Hapus" arrow>
+              <IconButton size="small" onClick={(e) => { e.stopPropagation(); effectiveDelete?.(row); }} sx={{ color: '#43334C', '&:hover': { color: '#ef4444' } }}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </PermissionGate>
         </div>
       ),
     },
@@ -357,6 +397,21 @@ export default function PlatformIndex({
       Object.values(r).some((v) => String(v ?? '').toLowerCase().includes(q))
     );
   }, [baseRows, debouncedSearch]);
+
+  const handleNext = () => {
+    if (!nextCursor || loading) return;
+    setCursorHistory([...cursorHistory, nextCursor]);
+    setPage(p => p + 1);
+    fetchContents(nextCursor);
+  };
+
+  const handlePrev = () => {
+    if (page <= 1 || loading) return;
+    const prevCursor = cursorHistory[page - 2];
+    setCursorHistory(cursorHistory.slice(0, -1));
+    setPage(p => p - 1);
+    fetchContents(prevCursor);
+  };
 
   function handleAdd() {
     setFormMode('add');
@@ -391,18 +446,20 @@ export default function PlatformIndex({
           <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
         </div>
         <div className="ml-auto flex flex-end items-end md:flex-row md:items-start gap-2">
-          <Tooltip title="tambah postingan" arrow>
-            <span>
-              <button
-                type="button"
-                onClick={() => handleAdd()}
-                disabled={saving}
-                className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
-              >
-                {actionLabel}
-              </button>
-            </span>
-          </Tooltip>
+          <PermissionGate requiredPermissions="platform.create" hideOnDenied>
+            <Tooltip title="tambah postingan" arrow>
+              <span>
+                <button
+                  type="button"
+                  onClick={() => handleAdd()}
+                  disabled={saving}
+                  className="px-3 py-2 bg-[#43334C] hover:bg-[#2e2237] text-white rounded-md shadow-md font-semibold cursor-pointer disabled:opacity-60"
+                >
+                  {actionLabel}
+                </button>
+              </span>
+            </Tooltip>
+          </PermissionGate>
 
           <Tooltip title="close" arrow>
             <span>
@@ -460,6 +517,42 @@ export default function PlatformIndex({
         getRowId={(r) => r.id}
       />
 
+      {/* Pagination Controls */}
+      {hasApi && (
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-200 pt-4 gap-4">
+          <div className="text-sm text-gray-500">
+            Total {totalCount} data
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handlePrev}
+              disabled={page === 1 || loading}
+              className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Previous
+            </button>
+            <div className="flex items-center px-2 text-sm font-medium text-gray-700">
+              Halaman {page} dari {Math.ceil(totalCount / perPage) || 1}
+            </div>
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!nextCursor || loading}
+              className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!hasApi && baseRows.length > perPage && (
+        <div className="mt-4 flex flex-col items-center justify-center border-t border-zinc-200 pt-4">
+           <p className="text-sm text-gray-400 italic">Hanya menampilkan {perPage} data pertama</p>
+        </div>
+      )}
+
       <SubForm
         key={selectedRow?.id ?? '__new__'}
         open={isFormOpen}
@@ -478,8 +571,38 @@ export default function PlatformIndex({
         showDescription={showDescription}
         showHost={showHost}
         showGuests={showGuests}
+        showViews={showViews}
         showMeta={showMeta}
+        showPreview={showPreview}
+        PreviewComponent={PreviewComponent}
       />
+    </div>
+  );
+}
+
+function LazyItem({ children, className = "", rootMargin = "200px" }) {
+  const ref = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} className={`${className} transition-all duration-200`} style={{ minHeight: 1 }}>
+      {visible ? children : null}
     </div>
   );
 }

@@ -9,19 +9,29 @@ import { extractMapSrc, getPreviewSrc } from "@/lib/maps";
 import OrganizerSelect from "./OrganizerSelect";
 import CategorySelect from "./CategorySelect";
 import EventDuration from "./EventDuration";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 function Card({ title, children }) {
   return (
-    <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl shadow-sm p-5">
+    <div className="bg-(--card) border border-(--border) rounded-xl shadow-sm p-5">
       {title && (
-        <h3 className="font-medium text-[var(--foreground)] mb-3">{title}</h3>
+        <h3 className="font-medium text-(--foreground) mb-3">{title}</h3>
       )}
       {children}
     </div>
   );
 }
 
-export default function EventForm({ initialData = null, isEdit = false, eventId = null }) {
+const collectSubs = (children, source, target) => {
+  for (const child of children || []) {
+    if (child.isIndependent) continue;
+    target.push({ id: child.id, title: child.title, source });
+    collectSubs(child.children, source, target);
+  }
+};
+
+export default function EventForm({ initialData = null, isEdit = false, eventId = null, onClose, ...props }) {
   const router = useRouter();
 
   const [organizerItems, setOrganizerItems] = useState([]);
@@ -45,7 +55,9 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       (c) => Number(c.id) === Number(id)
     )?.title || id;
 
-  const [description, setDescription] = useState(undefined);
+  const [description, setDescription] = useState("");
+  const [prevInitialDataId, setPrevInitialDataId] = useState(null);
+  const [prevOrgIdsSerialized, setPrevOrgIdsSerialized] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -71,37 +83,28 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     isFlexibleTime : false,
   });
 
-  // PREFILL EDIT
-  useEffect(() => {
-    if (!initialData) return;
-
+  // PREFILL EDIT - Synchronize during render to avoid cascading renders
+  if (initialData && initialData.id !== prevInitialDataId) {
+    setPrevInitialDataId(initialData.id);
+    
     const start = new Date(initialData.startAt);
     const end = initialData.endAt ? new Date(initialData.endAt) : null;
     const isFlexible = Boolean(initialData.isFlexibleTime);
-    setDescription(initialData.description || "");
+    const nextDescription = initialData.description || "";
+
+    if (nextDescription !== description) {
+      setDescription(nextDescription);
+    }
 
     setForm((prev) => ({
       ...prev,
-
       title: initialData.title || "",
-
-      categoryItemIds:
-        initialData.eventCategories?.map(ec =>
-          Number(ec.categoryItemId)
-        ) || [],
-
-      organizerIds:
-        initialData.organizers?.map(o =>
-          Number(o.categoryItemId)
-        ) || [],
-
+      categoryItemIds: initialData.eventCategories?.map(ec => Number(ec.categoryItemId)) || [],
+      organizerIds: initialData.organizers?.map(o => Number(o.categoryItemId)) || [],
       startDate: start.toISOString().slice(0, 10),
       startTime: isFlexible ? "" : start.toTimeString().slice(0, 5),
       endDate: end ? end.toISOString().slice(0, 10) : "",
-      endTime: isFlexible
-        ? ""
-        : (end ? end.toTimeString().slice(0, 5) : ""),
-
+      endTime: isFlexible ? "" : (end ? end.toTimeString().slice(0, 5) : ""),
       location: initialData.location || "",
       registerLink: initialData.registerLink || "",
       poster: initialData.poster || "",
@@ -113,26 +116,11 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
       youtubeLiveLink: initialData.youtubeLiveLink || "",
       instagramLiveLink: initialData.instagramLiveLink || "",
       tiktokLiveLink: initialData.tiktokLiveLink || "",
-
-      tags:
-        initialData.tags?.map(t =>
-          t.tag?.name
-        ).filter(Boolean) || [],
-
+      tags: initialData.tags?.map(t => t.tag?.name).filter(Boolean) || [],
       mapsEmbed: initialData.mapsEmbedSrc || "",
       isFlexibleTime: isFlexible,
     }));
-  }, [initialData]);
-
-  useEffect(() => {
-    if (form.isFlexibleTime) {
-      setForm(prev => ({
-        ...prev,
-        startTime: "",
-        endTime: "",
-      }));
-    }
-  }, [form.isFlexibleTime]);
+  }
 
   // CLOSE DROPDOWN ON OUTSIDE CLICK
   useEffect(() => {
@@ -196,64 +184,44 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
   
   // SUB CATEGORY LOGIC
-  const getPlatformSubCategories = () => {
-    const subs = [];
+  const platformSubs = [];
+  for (const organizer of platformTree) {
+    if (!form.organizerIds.includes(Number(organizer.id))) continue;
+    collectSubs(organizer.children, organizer.title, platformSubs);
+  }
 
-    const collectSubs = (children, source) => {
-      for (const child of children || []) {
-        if (child.isIndependent) continue;
-        subs.push({ id: child.id, title: child.title, source });
-        collectSubs(child.children, source);
-      }
-    };
-
-    for (const organizer of platformTree) {
-      if (!form.organizerIds.includes(Number(organizer.id))) continue;
-      collectSubs(organizer.children, organizer.title);
-    }
-    return subs;
-  };
-
-  const getHysteriaSubCategories = () => {
-    if (!programTree.length) return [];
-    if (!form.organizerIds.includes(programTree[0].id)) return [];
-
-    const result = [];
-
+  const hysteriaSubs = [];
+  if (programTree.length && form.organizerIds.includes(programTree[0].id)) {
     for (const group of programTree) {
       for (const child of group.children || []) {
         if (child.isIndependent) continue;
-        result.push({
-          id: child.id,
-          title: child.title,
-          source: "Hysteria",
-        });
+        hysteriaSubs.push({ id: child.id, title: child.title, source: "Hysteria" });
       }
     }
-    return result;
-  };
-  
-  const filteredCategoryItems = useMemo(() => {
-    return [
-      ...getPlatformSubCategories(),
-      ...getHysteriaSubCategories(),
-    ];
-  }, [form.organizerIds, platformTree, programTree]);
-  
-  // CLEAN CATEGORY WHEN ORGANIZER CHANGES
-  useEffect(() => {
-    if (!form.organizerIds.length) return;
-    if (!filteredCategoryItems.length) return;
+  }
 
-    setForm((prev) => ({
-      ...prev,
-      categoryItemIds: prev.categoryItemIds.filter((id) =>
-        filteredCategoryItems.some(
-          (c) => Number(c.id) === Number(id)
-        )
-      ),
-    }));
-  }, [form.organizerIds, filteredCategoryItems]);
+  const filteredCategoryItems = [...platformSubs, ...hysteriaSubs];
+  
+  // CLEAN CATEGORY WHEN ORGANIZER CHANGES - Synchronize during render
+  const currentOrgIdsSerialized = form.organizerIds.join(",");
+  if (currentOrgIdsSerialized !== prevOrgIdsSerialized) {
+    setPrevOrgIdsSerialized(currentOrgIdsSerialized);
+    
+    if (form.organizerIds.length && filteredCategoryItems.length) {
+      const hasInvalidCategories = form.categoryItemIds.some(id => 
+        !filteredCategoryItems.some(c => Number(c.id) === Number(id))
+      );
+
+      if (hasInvalidCategories) {
+        setForm((prev) => ({
+          ...prev,
+          categoryItemIds: prev.categoryItemIds.filter((id) =>
+            filteredCategoryItems.some((c) => Number(c.id) === Number(id))
+          ),
+        }));
+      }
+    }
+  }
 
   const normalizeId = (id) => Number(id);
 
@@ -282,6 +250,18 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // KHUSUS MAPS
+    if (name === "mapsEmbed") {
+      setForm((prev) => ({
+        ...prev,
+        mapsEmbed: extractMapSrc(value), 
+      }));
+
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+      return;
+    }
+
+    // default
     setForm((prev) => ({
       ...prev,
       [name]: value,
@@ -309,7 +289,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
     if (!form.location) missingFields.push("Lokasi");
 
     if (missingFields.length > 0) {
-      alert("Field berikut belum diisi:\n- " + missingFields.join("\n- "));
+      toast.error(`Field berikut belum diisi: ${missingFields.join(", ")}`);
       setLoading(false);
       return;
     }
@@ -359,29 +339,51 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
     if (!res.ok) {
       const err = await res.json();
-      alert(err.message);
+      toast.error(err.message || "Gagal menyimpan data");
+      setLoading(false);
       return;
     }
+
+    toast.success(isEdit ? "Event berhasil diupdate" : "Event berhasil ditambahkan");
     setLoading(false);
-    router.push("/admin/events");
+    
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
-  const inputClass = "w-full border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--Color-1)] disabled:bg-[var(--muted)]";
-  const errorClass = "text-[var(--destructive)] text-sm mt-1";
+  const inputClass = "w-full border border-(--border) bg-(--background) text-(--foreground) placeholder-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-(--Color-1) disabled:bg-(--muted)";
+  const errorClass = "text-(--destructive) text-sm mt-1";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* HEADER */}
-      <div className="right items-right justify-between">
+      <div className="flex items-center justify-between mt-2">
+        {/* BACK BUTTON */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onClose) {
+              onClose();
+            } else {
+              router.back();
+            }
+          }}
+          className="flex items-center gap-2 border border-black text-black px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+        >
+          <ArrowLeft size={16} />
+          Kembali
+        </button>
+
         {/* ACTION */}
-        <div className="flex justify-end">
-          <button 
-            type="submit"
-            className="bg-[var(--btn-normal)] hover:bg-[var(--btn-normal-hover)] active:bg-[var(--btn-normal-active)] text-white px-6 py-2 rounded-lg transition"
-          >
-            {loading ? "Menyimpan..." : "Simpan Event"}
-          </button>
-        </div>
+        <button 
+          type="submit"
+          className="bg-(--btn-normal) hover:bg-(--btn-normal-hover) active:bg-(--btn-normal-active) text-white px-6 py-2 rounded-lg transition"
+        >
+          {loading ? "Menyimpan..." : "Simpan Event"}
+        </button>
       </div>
 
       {/* GRID */}
@@ -391,19 +393,17 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           {/* TITLE */}
           <Card title="Judul Postingan *">
             <input name="title" value={form.title} onChange={handleChange} className={inputClass} required />
-            <p className="text-xs text-[var(--muted-foreground)] mt-2">Masukkan judul yang jelas dan deskriptif</p>
+            <p className="text-xs text-(--muted-foreground) mt-2">Masukkan judul yang jelas dan deskriptif</p>
           </Card>
 
           {/* DESCRIPTION */}
           <Card title="Deskripsi *">
-            {description !== undefined && (
-              <EventDescriptionEditor
-                key={eventId || "new"}
-                value={description}
-                onChange={setDescription}
-              />
-            )}
-            <p className="text-xs text-[var(--muted-foreground)] mt-2">
+            <EventDescriptionEditor
+              key={eventId || "new"}
+              value={description}
+              onChange={setDescription}
+            />
+            <p className="text-xs text-(--muted-foreground) mt-2">
               Isi deskripsi disarankan lebih dari 300 kata
             </p>
           </Card>
@@ -420,7 +420,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           </Card>
 
           <Card title="Lokasi">
-            <p className="text-xs text-[var(--muted-foreground)] mt-2">Tulis alamat pelaksanaan acara secara lengkap</p>
+            <p className="text-xs text-(--muted-foreground) mt-2">Tulis alamat pelaksanaan acara secara lengkap</p>
             <input
               name="location"
               value={form.location}
@@ -428,7 +428,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               className={inputClass}
             />
             
-            <p className="text-xs text-[var(--muted-foreground)] mt-2">Tambahkan detail lokasi mengguanakan Google Maps</p>
+            <p className="text-xs text-(--muted-foreground) mt-2">Tambahkan detail lokasi mengguanakan Google Maps</p>
             <textarea
               name="mapsEmbed"
               value={form.mapsEmbed}
@@ -451,11 +451,11 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
 
           <Card title="Live Streaming">
             <div className="space-y-3">
-              <p className="text-xs text-[var(--Color-1)]">
+              <p className="text-xs text-(--Color-1)">
                 Isi jika acara memiliki siaran langsung
               </p>
 
-              <p className="text-xs text-[var(--muted-foreground)]">
+              <p className="text-xs text-(--muted-foreground)">
                 YouTube Live
               </p>
               <input
@@ -467,7 +467,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--muted-foreground)]">
+              <p className="text-xs text-(--muted-foreground)">
                 Instagram Live
               </p>
               <input
@@ -479,7 +479,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--muted-foreground)]">
+              <p className="text-xs text-(--muted-foreground)">
                 TikTok Live
               </p>
               <input
@@ -495,7 +495,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
           </Card>
           <Card title="Arsip Kegiatan">
             <div className="space-y-3">
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Drive Dokumentasi</p>
+              <p className="text-xs text-(--muted-foreground) mt-2">Link Drive Dokumentasi</p>
               <input
                 type="url"
                 name="driveLink"
@@ -505,7 +505,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Dokumentasi YouTube</p>
+              <p className="text-xs text-(--muted-foreground) mt-2">Link Dokumentasi YouTube</p>
               <input
                 type="url"
                 name="youtubeLink"
@@ -515,7 +515,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Dokumentasi Instagram</p>
+              <p className="text-xs text-(--muted-foreground) mt-2">Link Dokumentasi Instagram</p>
               <input
                 type="url"
                 name="instagramLink"
@@ -525,7 +525,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">Link Drive Buku</p>
+              <p className="text-xs text-(--muted-foreground) mt-2">Link Drive Buku</p>
               <input
                 type="url"
                 name="drivebukuLink"
@@ -535,7 +535,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
                 className={inputClass}
               />
 
-              <p className="text-xs text-[var(--Color-1)]">
+              <p className="text-xs text-(--Color-1)">
                 Lakukan pengisian link sesuai dengan kebutuhan
               </p>
             </div>
@@ -581,7 +581,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               }
             />
 
-            <p className="text-xs text-[var(--Color-1)] mt-2">
+            <p className="text-xs text-(--Color-1) mt-2">
               Recommended: 800 × 1000px (Ratio 4:5)
               <br />
               Maksimal Size: 3 MB
@@ -617,7 +617,7 @@ export default function EventForm({ initialData = null, isEdit = false, eventId 
               <option value="PUBLISHED">Publish</option>
             </select>
 
-            <p className="text-xs text-[var(--Color-1)] mt-2">
+            <p className="text-xs text-(--Color-1) mt-2">
               Draft tidak akan tampil di halaman publik
             </p>
           </Card>

@@ -32,9 +32,12 @@ export default function SubForm({
   showDescription = false,
   showHost = false,
   showGuests = false,
+  showViews = false,
   showMeta = false,
   metaOptions = META_OPTIONS,
   categoryItemSlug = null,
+  showPreview = false,
+  PreviewComponent = null,
 }) {
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [year, setYear] = useState(initialData?.year ?? "");
@@ -71,6 +74,7 @@ export default function SubForm({
   const [guests, setGuests] = useState(
     Array.isArray(initialData?.guests) ? initialData.guests : [],
   );
+  const [views, setViews] = useState(initialData?.views ?? 0);
   const EMPTY_ERRORS = {
     title: "",
     year: "",
@@ -81,12 +85,14 @@ export default function SubForm({
     description: "",
     host: "",
     guests: "",
+    views: "",
     tags: "",
     meta: "",
     image: "",
   };
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [files, setFiles] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Character limits (sync with frontend validator)
   const MAX_TITLE = 500;
@@ -135,6 +141,7 @@ export default function SubForm({
       ...(showMeta ? { meta: meta } : {}),
       ...(showHost ? { host } : {}),
       ...(showGuests ? { guests } : {}),
+      views: Number(views),
       ...(showImageUpload && files.length > 0 ? { files } : {}),
     };
 
@@ -160,24 +167,42 @@ export default function SubForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto p-4">
       <div className="absolute inset-0 bg-black opacity-40" onClick={onClose} />
-      <form
-        onSubmit={handleSubmit}
-        className="relative bg-white rounded-md shadow-lg w-full max-w-lg md:max-w-2xl mx-4 p-6 z-10 max-h-[90vh] overflow-auto"
-      >
-        <div className="flex  items-center justify-between mb-4">
-          <h3 className="text-lg text-black font-semibold">
-            {mode === "add" ? "Create | Post " : "Edit Item"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-lg text-gray-600 hover:text-red-500 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
+      <div className={`relative z-10 flex items-start gap-3 w-full ${previewOpen ? "max-w-7xl" : "max-w-lg md:max-w-2xl justify-center"}`}>
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-md shadow-lg w-full p-6 max-h-[90vh] overflow-auto"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg text-black font-semibold">
+              {mode === "add" ? "Create | Post " : "Edit Item"}
+            </h3>
+            <div className="flex items-center gap-2">
+              {showPreview && PreviewComponent && (
+                <div className="hidden md:inline-block">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewOpen((p) => !p)}
+                    className={`text-xs px-3 py-1.5 rounded-md border transition ${
+                      previewOpen
+                        ? "bg-[#E83C91] text-white border-[#E83C91]"
+                        : "border-pink-400 text-pink-500 hover:bg-pink-50"
+                    }`}
+                  >
+                    {previewOpen ? "✕ Preview" : "👁 Preview"}
+                  </button>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-lg text-gray-600 hover:text-red-500 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
 
         <div className="mb-3">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -461,6 +486,25 @@ export default function SubForm({
           </div>
         )}
 
+        {showViews && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Views
+            </label>
+            <input
+              type="number"
+              value={views}
+              onChange={(e) => setViews(e.target.value)}
+              className="w-full text-black border border-gray-300 rounded-md px-3 py-2"
+              placeholder="Jumlah views"
+              min="0"
+            />
+            {errors.views ? (
+              <p className="text-sm text-red-600 mt-1">{errors.views}</p>
+            ) : null}
+          </div>
+        )}
+
         {showImageUpload && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -508,7 +552,26 @@ export default function SubForm({
             {saving ? "Menyimpan..." : "Save"}
           </button>
         </div>
-      </form>
+        </form>
+        {showPreview && PreviewComponent && previewOpen && (
+          <div className="hidden md:flex flex-col bg-white rounded-md shadow-lg p-4 w-full max-w-lg shrink-0 max-h-[90vh] overflow-auto">
+            <PreviewComponent
+              title={title}
+              prevdescription={prevdescription}
+              description={description}
+              host={host}
+              guests={guests}
+              tags={tags}
+              instagram={instagram}
+              youtube={youtube}
+              url={url}
+              year={year}
+              imageFile={files[0] ?? null}
+              imageUrl={initialData?.images?.[0]?.imageUrl ?? initialData?.imageUrl ?? ""}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

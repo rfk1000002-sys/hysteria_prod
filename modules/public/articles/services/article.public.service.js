@@ -2,6 +2,7 @@ import {
   findPublishedArticles,
   findPublishedBySlug,
   findRecommendedArticles,
+  findLatestArticles,
 } from "../repositories/article.public.repository";
 
 import { incrementArticleViews } from "../repositories/article.public.repository";
@@ -39,10 +40,14 @@ export async function getPublicArticleDetail(slug) {
     slug: article.slug,
     title: article.title,
 
-    content:
-      typeof article.content === "string"
-        ? JSON.parse(article.content)
-        : article.content,
+    content: (() => {
+      if (typeof article.content !== "string") return article.content;
+      try {
+        return JSON.parse(article.content);
+      } catch (e) {
+        return article.content;
+      }
+    })(),
 
     excerpt: article.excerpt,
 
@@ -93,4 +98,25 @@ export async function getRecommendedArticles({ slug, categoryIds }) {
 
 export async function addArticleView(slug) {
   return incrementArticleViews(slug);
+}
+
+// service article untuk tampilan data article di halaman Home
+export async function getLatestArticles(limit = 3) {
+  const articles = await findLatestArticles(limit);
+
+  return articles.map((a) => ({
+    id: a.id,
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt,
+    featuredImage: a.featuredImage,
+    authorName: a.authorName,
+    publishedAt: a.publishedAt,
+    createdAt: a.createdAt,
+
+    categories: a.categories.map((c) => ({
+      id: c.category.id,
+      title: c.category.title,
+    })),
+  }));
 }

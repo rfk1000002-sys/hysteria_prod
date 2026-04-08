@@ -53,6 +53,7 @@ function formatEvent(event) {
     })),
     tags: (event.tags ?? []).map((t) => t.tag),
     // createdAt: event.createdAt,
+    createdAt: event.createdAt,
     // updatedAt: event.updatedAt,
   };
 }
@@ -101,16 +102,18 @@ export async function findEventsByOrganizer(organizerSlug, filters = {}) {
   const events = await prisma.event.findMany({
     where,
     include: EVENT_INCLUDE,
-    orderBy: { startAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
+  const totalCount = await prisma.event.count({ where });
   const hasMore = events.length > limit;
   const items = hasMore ? events.slice(0, limit) : events;
   return {
     data: items.map(formatEvent),
     nextCursor: hasMore ? items[items.length - 1].id : null,
+    totalCount,
   };
 }
 
@@ -139,15 +142,17 @@ export async function findEventsByCategory(categorySlug, filters = {}) {
   const events = await prisma.event.findMany({
     where,
     include: EVENT_INCLUDE,
-    orderBy: { startAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
+  const totalCount = await prisma.event.count({ where });
   const hasMore = events.length > limit;
   const items = hasMore ? events.slice(0, limit) : events;
   return {
     data: items.map(formatEvent),
     nextCursor: hasMore ? items[items.length - 1].id : null,
+    totalCount,
   };
 }

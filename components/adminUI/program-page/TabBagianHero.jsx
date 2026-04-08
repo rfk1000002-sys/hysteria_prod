@@ -79,7 +79,8 @@ export default function TabBagianHero({ slugHeros, setSlugHeros }) {
       <div className="space-y-2">
         {categoryList.map((cat) => {
           const isOpen = openKey === cat.key;
-          const data = slugHeros[cat.key] || { title: "", subtitle: "", image: { files: [], existingUrl: null, pendingClear: false } };
+          // 👉 PERUBAHAN: Fallback diganti menjadi instagramLink (bukan driveLink)
+          const data = slugHeros[cat.key] || { title: "", subtitle: "", instagramLink: "", image: { files: [], existingUrl: null, pendingClear: false } };
           
           return (
             <div key={cat.key} className="border border-gray-300 rounded-lg overflow-hidden">
@@ -95,12 +96,26 @@ export default function TabBagianHero({ slugHeros, setSlugHeros }) {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Title</label>
-                      <input type="text" value={data.title} onChange={(e) => handleHeroChange(cat.key, "title", e.target.value)} className={inputClass} placeholder="Masukkan judul hero..." />
+                      <input type="text" value={data.title || ""} onChange={(e) => handleHeroChange(cat.key, "title", e.target.value)} className={inputClass} placeholder="Masukkan judul hero..." />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Subtitle</label>
-                      <input type="text" value={data.subtitle} onChange={(e) => handleHeroChange(cat.key, "subtitle", e.target.value)} className={inputClass} placeholder="Subtitle / deskripsi singkat..." />
+                      <input type="text" value={data.subtitle || ""} onChange={(e) => handleHeroChange(cat.key, "subtitle", e.target.value)} className={inputClass} placeholder="Subtitle / deskripsi singkat..." />
                     </div>
+
+                    {/* 👉 PERUBAHAN KHUSUS UNTUK BIENNALE: Form Link Instagram */}
+                    {cat.key === "biennale" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Link Instagram Penta K Labs</label>
+                        <input 
+                           type="url" 
+                           value={data.instagramLink || ""} 
+                           onChange={(e) => handleHeroChange(cat.key, "instagramLink", e.target.value)} 
+                           className={inputClass} 
+                           placeholder="https://instagram.com/..." 
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="pt-2">
                     <ProgramUploadBox label="Upload Gambar" sizeText="ukuran 1920 x 850 px" state={data.image} onChange={(val) => handleHeroChange(cat.key, "image", val)} />

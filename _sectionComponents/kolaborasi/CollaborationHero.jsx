@@ -10,7 +10,7 @@ export default function CollaborationHero({
 }) {
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-6xl px-6 pt-20">
+      <div className="mx-auto max-w-6xl px-6 pt-28 sm:pt-32 lg:pt-36">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
 

@@ -1,4 +1,5 @@
 "use client";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function CategorySelect({
   categoryItems,
@@ -34,11 +35,18 @@ export default function CategorySelect({
       <button
         type="button"
         onClick={() => setCategoryOpen(!categoryOpen)}
-        className={`${inputClass} flex justify-between`}
+        className={`${inputClass} flex items-center justify-between`}
       >
-        {categoryIds.length > 0
-          ? `${categoryIds.length} kategori dipilih`
-          : "Pilih kategori"}
+        <span>
+          {categoryIds.length > 0
+            ? `${categoryIds.length} kategori dipilih`
+            : "Pilih kategori"}
+        </span>
+        {categoryOpen ? (
+          <ChevronUp size={16} />
+        ) : (
+          <ChevronDown size={16} />
+        )}
       </button>
 
       {categoryOpen && (

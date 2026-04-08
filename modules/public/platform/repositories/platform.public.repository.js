@@ -5,6 +5,7 @@
  * Hanya berisi operasi Prisma read-only — tidak ada mutasi di sini.
  */
 import { prisma } from "@/lib/prisma.js";
+import { incrementDailyStats } from "@/modules/admin/dashboard/repositories/visitor-stats.repository";
 
 // ─── SELECT SHAPES ──────────────────────────────────────────────────────────
 
@@ -28,10 +29,10 @@ const PLATFORM_SELECT = {
     orderBy: [{ order: "asc" }, { id: "asc" }],
     select: {
       layout: true,
-    //   description: true,
-    //   filters: true,
-    //   order: true,
-    //   isActive: true,
+      //   description: true,
+      //   filters: true,
+      //   order: true,
+      //   isActive: true,
       categoryItem: {
         select: { id: true, title: true, slug: true, url: true, meta: true },
       },
@@ -51,6 +52,7 @@ const CONTENT_SELECT = {
   year: true,
   meta: true,
   tags: true,
+  createdAt: true,
   images: {
     orderBy: [{ order: "asc" }, { id: "asc" }],
     take: 1,
@@ -105,7 +107,7 @@ export async function findPublicPlatformBySlug(slug) {
 export async function findGridContents(platformId, categoryItemId) {
   return prisma.platformContent.findMany({
     where: { platformId, categoryItemId, isActive: true },
-    orderBy: [{ order: "asc" }, { id: "asc" }],
+    orderBy: [{ createdAt: "desc" }],
     select: CONTENT_SELECT,
   });
 }
@@ -139,7 +141,7 @@ export async function findContentById(id) {
 export async function findRelatedContents(platformId, categoryItemId, excludeId) {
   return prisma.platformContent.findMany({
     where: { platformId, categoryItemId, isActive: true, id: { not: excludeId } },
-    orderBy: [{ order: "asc" }, { id: "asc" }],
+    orderBy: [{ createdAt: "desc" }],
     take: 4,
     select: CONTENT_SELECT,
   });
@@ -158,7 +160,7 @@ export async function findPublicEventsByOrganizerSlug(organizerSlug) {
         some: { categoryItem: { slug: organizerSlug } },
       },
     },
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       title: true,
@@ -167,6 +169,7 @@ export async function findPublicEventsByOrganizerSlug(organizerSlug) {
       description: true,
       startAt: true,
       endAt: true,
+      createdAt: true,
       tags: {
         include: { tag: { select: { id: true, name: true } } },
       },
@@ -188,7 +191,7 @@ export async function findPublicEventsByCategorySlug(categorySlug) {
         some: { categoryItem: { slug: categorySlug } },
       },
     },
-    orderBy: { startAt: "desc" },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       title: true,
@@ -197,6 +200,7 @@ export async function findPublicEventsByCategorySlug(categorySlug) {
       description: true,
       startAt: true,
       endAt: true,
+      createdAt: true,
       tags: {
         include: { tag: { select: { id: true, name: true } } },
       },
@@ -226,9 +230,45 @@ export async function findCarouselSubCategories(platformId, parentCategoryItemId
       meta: true, // { cardType: 'poster' | 'video' | 'artist' }
       platformContents: {
         where: { platformId, isActive: true },
-        orderBy: [{ order: "asc" }, { id: "asc" }],
+        orderBy: [{ createdAt: "desc" }],
         select: CONTENT_SELECT,
       },
     },
   });
+}
+
+/**
+ * Mengambil konfigurasi kartu platform untuk homepage.
+ */
+export async function findActiveHomepagePlatformCards() {
+  return prisma.homepagePlatformCard.findMany({
+    where: { isActive: true },
+    orderBy: [{ order: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      linkUrl: true,
+      slotType: true,
+      order: true,
+      isActive: true,
+    },
+  });
+}
+
+/**
+ * Atomic increment views untuk konten platform.
+ * Digunakan oleh tracker publik.
+ * @param {number} id
+ */
+export async function incrementContentView(id) {
+  const [updatedContent] = await Promise.all([
+    prisma.platformContent.update({
+      where: { id: Number(id) },
+      data: { views: { increment: 1 } },
+    }),
+    incrementDailyStats("platform"),
+  ]);
+
+  return updatedContent;
 }

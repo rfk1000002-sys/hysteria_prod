@@ -14,16 +14,16 @@ import {
 // Kategori yang datanya bersumber dari model Event (bukan PlatformContent).
 // value: { type: 'category' | 'organizer', slug: string }
 const EVENT_DRIVEN_CATEGORIES = {
-  "workshop":         { type: "category",  slug: "workshop" },
-  "screening-film":   { type: "category",  slug: "screening-film" },
-  "untuk-perhatian":  { type: "category",  slug: "untuk-perhatian" },
-  "meramu":           { type: "category",  slug: "meramu" },
-  "event-ditampart":  { type: "organizer", slug: "ditampart" },
+  workshop: { type: "category", slug: "workshop" },
+  "screening-film": { type: "category", slug: "screening-film" },
+  "untuk-perhatian": { type: "category", slug: "untuk-perhatian" },
+  meramu: { type: "category", slug: "meramu" },
+  "event-ditampart": { type: "organizer", slug: "ditampart" },
 };
 
 // Filter tag statis per kategori (untuk event-driven category yang tidak punya filters dari DB).
 const CATEGORY_FILTERS = {
-  "workshop":       ["having-fun-artlab", "peltoe"],
+  workshop: ["having-fun-artlab", "peltoe"],
   "screening-film": ["making-artist", "usil"],
 };
 
@@ -36,12 +36,13 @@ export async function generateMetadata({ params }) {
       getPublicPlatform(slug),
     ]);
     if (!item) return {};
-    const logoPath = '/svg/Logo-hysteria.svg';
+    const logoPath = "/svg/Logo-hysteria.svg";
     const ogImage = item.image || platform?.head?.images?.[0]?.src || logoPath;
 
     return {
       title: item.title || platform?.head?.title || slug,
-      description: item.imageSubtitle || platform?.head?.description || undefined,
+      description:
+        item.imageSubtitle || platform?.head?.description || undefined,
       icons: {
         icon: logoPath,
         shortcut: logoPath,
@@ -49,8 +50,14 @@ export async function generateMetadata({ params }) {
       },
       openGraph: {
         title: item.title || platform?.head?.title || slug,
-        description: item.imageSubtitle || platform?.head?.description || undefined,
-        images: [{ url: ogImage, alt: item.title || platform?.head?.title || 'Hysteria' }],
+        description:
+          item.imageSubtitle || platform?.head?.description || undefined,
+        images: [
+          {
+            url: ogImage,
+            alt: item.title || platform?.head?.title || "Hysteria",
+          },
+        ],
       },
       twitter: {
         images: [ogImage],
@@ -67,8 +74,9 @@ export async function generateStaticParams() {
     return platforms.flatMap(({ slug, categories }) =>
       (categories || []).map((c) => ({
         slug,
-        categories: c.slug || (c.title || "").toLowerCase().replace(/\s+/g, "-"),
-      }))
+        categories:
+          c.slug || (c.title || "").toLowerCase().replace(/\s+/g, "-"),
+      })),
     );
   } catch {
     return [];
@@ -92,10 +100,15 @@ export default async function Page({ params }) {
   ]);
   if (!platform || !item) return notFound();
 
-  const resolvedItems = (eventDriven && eventItems) ? eventItems : (item.items || []);
-  const resolvedFilters = (eventDriven && (categories === "untuk-perhatian" || categories === "event-ditampart" || categories === "workshop" || categories === "meramu"))
-    ? []
-    : (CATEGORY_FILTERS[categories] || item.filters || []);
+  const resolvedItems =
+    eventDriven && eventItems ? eventItems : item.items || [];
+  const resolvedFilters =
+    eventDriven &&
+    (categories === "untuk-perhatian" ||
+      categories === "event-ditampart" ||
+      categories === "meramu")
+      ? []
+      : CATEGORY_FILTERS[categories] || item.filters || [];
 
   // Determine layout — default to 'grid' when not specified
   const layout = item.layout || "grid";
@@ -106,21 +119,50 @@ export default async function Page({ params }) {
         {/* Shared hero section — same component, different metadata */}
         <HeroSection
           imageUrl={item.image || "/image/ilustrasi-menu.png"}
-          title={item.imageTitle || item.title || platform.head?.title || "Platform"}
+          title={
+            item.imageTitle || item.title || platform.head?.title || "Platform"
+          }
           description={item.imageSubtitle || "Explore our platform categories"}
         />
 
         {/* Dynamic body based on layout type */}
         {layout === "carousel" ? (
-          <CarouselBody subCategories={item.subCategories || []} platformSlug={slug} categorySlug={categories} />
+          <CarouselBody
+            subCategories={item.subCategories || []}
+            platformSlug={slug}
+            categorySlug={categories}
+          />
         ) : (
           <GridBody
             items={resolvedItems}
             filters={resolvedFilters}
             cardType={item.cardType || "poster"}
-            showFilterIcon={categories !== 'event-ditampart' && categories !== 'untuk-perhatian'}
-            itemsPerPageOverride={categories === 'event-ditampart' || categories === 'untuk-perhatian' ? 18 : undefined}
-            gridCols={categories === 'event-ditampart' || categories === 'untuk-perhatian' ? 6 : undefined}
+            showFilterIcon={
+              categories !== "event-ditampart" &&
+              categories !== "untuk-perhatian" &&
+              categories !== "meramu"
+            }
+            showStatusFilter={[
+              "workshop",
+              "screening-film",
+              "untuk-perhatian",
+              "event-ditampart",
+              "meramu",
+            ].includes(categories)}
+            itemsPerPageOverride={
+              categories === "event-ditampart" ||
+              categories === "untuk-perhatian" ||
+              categories === "meramu"
+                ? 18
+                : undefined
+            }
+            gridCols={
+              categories === "event-ditampart" ||
+              categories === "untuk-perhatian" ||
+              categories === "meramu"
+                ? 6
+                : undefined
+            }
           />
         )}
       </main>

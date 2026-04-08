@@ -37,9 +37,21 @@ module.exports = async function seed() {
         groupId,
       },
       {
+        key: "platform.create",
+        name: "Create Platform Content",
+        description: "Create new platform content",
+        groupId,
+      },
+      {
         key: "platform.update",
         name: "Update Platform",
         description: "Update platform pages, cover images and hero images",
+        groupId,
+      },
+      {
+        key: "platform.delete",
+        name: "Delete Platform Content",
+        description: "Delete platform content",
         groupId,
       },
     ];
