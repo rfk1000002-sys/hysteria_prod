@@ -10,6 +10,8 @@ import Toast from "../../../../components/ui/Toast";
 import PermissionGate from "../../../../components/adminUI/PermissionGate";
 import { useAuth } from "../../../../lib/context/auth-context";
 
+const panduan_drive_link = "https://drive.google.com/drive/folders/1piMw-AAs-MTxHFeeCT8xXHz9aMpfWrCH?usp=sharing";
+
 const buildId = (id) => `sejarah-${id}`;
 
 function SortableRow({ item, onEdit, onDelete, onToggleActive }) {
