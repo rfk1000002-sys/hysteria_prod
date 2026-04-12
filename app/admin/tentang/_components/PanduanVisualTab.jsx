@@ -277,7 +277,7 @@ export default function PanduanVisualTab() {
                         type="button"
                         onClick={handleUpdate}
                         disabled={saving || !editForm.title.trim()}
-                        className="px-3 py-1.5 rounded bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-60">
+                        className="px-3 py-1.5 rounded-md bg-pink-600 text-white text-sm hover:bg-pink-700 disabled:opacity-60">
                         Simpan Perubahan
                       </button>
                     </PermissionGate>
