@@ -273,6 +273,17 @@ export default function SejarahTab() {
           title="Sejarah Hysteria"
           subtitle="Kelola judul + gambar, dan urutkan dengan drag & drop.">
           <div className="space-y-5">
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-xs text-zinc-700">
+              <p className="font-semibold text-zinc-800">Panduan singkat</p>
+              <p className="mt-1">Template gambar sejarah gunakan template berikut</p>
+              <a
+                href={panduan_drive_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-pink-600 hover:text-pink-700 underline">
+                Lihat template di Google Drive
+              </a>
+            </div>
             <div className="rounded-lg border border-zinc-200 p-3 space-y-3">
               <h3 className="text-sm font-semibold text-zinc-900">Tambah Item</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
