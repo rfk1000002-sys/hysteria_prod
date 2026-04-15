@@ -23,9 +23,10 @@ const seeds = [
   // require("./017-platform-events-seed.js"),
   // require("./018-homepage-platform-seed.js"),
   // require("./019-article-seed.js"),
-  require("./020-visitor-stats.js"),
+  // require("./020-visitor-stats.js"),
   // require("./021-program-events-seed.js"),
-];
+   require("./022-data-hysteria-slug.js")
+];./022-data-hysteria-slug.js
 
 async function main() {
   for (const mod of seeds) {
