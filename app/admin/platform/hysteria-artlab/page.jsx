@@ -203,7 +203,7 @@ export default function HysteriaArtlabPage() {
 
   return (
     <PermissionGate requiredPermissions="platform.read">
-      <div className="p-2 md:p-6 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
+      <div className="p-1 md:py-4 bg-white border border-gray-200 rounded-lg shadow min-h-screen">
         {view === "list" && (
           <>
             {/* Bagian atas  */}

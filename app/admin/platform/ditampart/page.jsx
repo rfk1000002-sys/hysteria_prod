@@ -257,7 +257,7 @@ export default function DitampartPage() {
 
   return (
     <PermissionGate requiredPermissions="platform.read">
-      <div className="p-4 md:p-10 bg-white rounded-md min-h-screen">
+      <div className="p-5 md:p-5 bg-white rounded-md min-h-screen">
         {view === "list" && (
           <>
             {/* ── Bagian Atas: kategori cards ─────────────────────────────────── */}
