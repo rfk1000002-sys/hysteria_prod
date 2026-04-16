@@ -179,7 +179,7 @@ export default function ProfileSheet({ open, onClose }) {
         <div className="flex flex-col items-center gap-2 mb-6">
           <div className="relative group">
             {/* avatar */}
-            <div className="rounded-full ring overflow-visible">
+            <div className="rounded-full ring hover:ring-0 overflow-visible">
               <Avatar
                 size={80}
                 className="rounded-full shadow-sm"

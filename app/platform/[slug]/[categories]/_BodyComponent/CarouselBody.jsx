@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PosterCard from "./cards/PosterCard";
 import VideoCard from "./cards/VideoCard";

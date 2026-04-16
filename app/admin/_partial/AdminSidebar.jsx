@@ -2,9 +2,37 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { IconDashboard, IconUsers, IconSettings, IconSection, IconPlatform, IconEvent, IconPost, IconSocial, IconUserManagement, IconPermission, IconStatus, IconHero, IconCategorySmall, IconDiversity, IconBusiness, IconProgram, IconInfo, IconTelephone } from "../../../components/ui/icon";
+import { useAuth } from "../../../lib/context/auth-context";
+import { ROLE_KEYS } from "../../../modules/auth/domain/role.constants";
+import {
+  IconDashboard,
+  IconUsers,
+  IconSettings,
+  IconSection,
+  IconPlatform,
+  IconEvent,
+  IconPost,
+  IconSocial,
+  IconUserManagement,
+  IconPermission,
+  IconStatus,
+  IconHero,
+  IconCategorySmall,
+  IconDiversity,
+  IconBusiness,
+  IconProgram,
+  IconInfo,
+  IconTelephone,
+} from "../../../components/ui/icon";
 
-export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onNavigate, currentView }) {
+export default function AdminSidebar({
+  collapsed,
+  onClose,
+  onToggleCollapse,
+  onNavigate,
+  currentView,
+}) {
+  const { user } = useAuth();
   const [openKeys, setOpenKeys] = useState({});
   const [logoSrc, setLogoSrc] = useState("/image/Logo-hysteria.svg");
 
@@ -27,7 +55,13 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
   }, []);
 
   const menus = [
-    { key: "dashboard", label: "Dashboard", view: "dashboard", icon: IconDashboard, enabled: true },
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      view: "dashboard",
+      icon: IconDashboard,
+      enabled: true,
+    },
     {
       key: "users",
       label: "Users",
@@ -35,12 +69,36 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       icon: IconUsers,
       enabled: true,
       children: [
-        { key: "user_management", label: "User Management", view: "users.user_management", icon: IconUserManagement, enabled: true },
-        { key: "permission", label: "Permission", view: "users.permission", icon: IconPermission, enabled: true },
-        { key: "status_management", label: "Status", view: "users.status_management", icon: IconStatus, enabled: true },
+        {
+          key: "user_management",
+          label: "User Management",
+          view: "users.user_management",
+          icon: IconUserManagement,
+          enabled: true,
+        },
+        {
+          key: "permission",
+          label: "Permission",
+          view: "users.permission",
+          icon: IconPermission,
+          enabled: true,
+        },
+        {
+          key: "status_management",
+          label: "Status",
+          view: "users.status_management",
+          icon: IconStatus,
+          enabled: true,
+        },
       ],
     },
-    { key: "category", label: "Category", view: "category", icon: IconCategorySmall, enabled: true },
+    {
+      key: "category",
+      label: "Category",
+      view: "category",
+      icon: IconCategorySmall,
+      enabled: user?.roles?.includes(ROLE_KEYS.SUPERADMIN),
+    },
 
     {
       key: "page",
@@ -49,11 +107,41 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       icon: IconSection,
       enabled: true,
       children: [
-        { key: "home", label: "Page Home", view: "page.home", icon: IconHero, enabled: true },
-        { key: "program", label: "Page Program", view: "page.program", icon: IconHero, enabled: true },
-        { key: "artlab", label: "Page Artlab", view: "page.artlab", icon: IconHero, enabled: true },
-        { key: "ditampart", label: "Page Ditampart", view: "page.ditampart", icon: IconHero, enabled: true },
-        { key: "laki-masak", label: "Page Laki Masak", view: "page.laki-masak", icon: IconHero, enabled: true },
+        {
+          key: "home",
+          label: "Page Home",
+          view: "page.home",
+          icon: IconHero,
+          enabled: true,
+        },
+        {
+          key: "program",
+          label: "Page Program",
+          view: "page.program",
+          icon: IconHero,
+          enabled: true,
+        },
+        {
+          key: "artlab",
+          label: "Page Artlab",
+          view: "page.artlab",
+          icon: IconHero,
+          enabled: true,
+        },
+        {
+          key: "ditampart",
+          label: "Page Ditampart",
+          view: "page.ditampart",
+          icon: IconHero,
+          enabled: true,
+        },
+        {
+          key: "laki-masak",
+          label: "Page Laki Masak",
+          view: "page.laki-masak",
+          icon: IconHero,
+          enabled: true,
+        },
       ],
     },
 
@@ -61,40 +149,46 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       key: "program_menu",
       label: "Program",
       view: "program_menu",
-      icon: IconProgram, 
+      icon: IconProgram,
       enabled: true,
       children: [
-        { 
-          key: "semua_postingan", 
-          label: "Semua Postingan", 
-          view: "program.semua_postingan", 
-          path: "/admin/programs",           
-          icon: IconPost, 
-          enabled: true 
+        {
+          key: "semua_postingan",
+          label: "Semua Postingan",
+          view: "program.semua_postingan",
+          path: "/admin/programs",
+          icon: IconPost,
+          enabled: true,
         },
-        { 
-          key: "tambah_postingan", 
-          label: "Tambah Postingan", 
-          view: "program.tambah_postingan", 
-          path: "/admin/programs/create",    
-          icon: IconPost, 
-          enabled: true 
+        {
+          key: "tambah_postingan",
+          label: "Tambah Postingan",
+          view: "program.tambah_postingan",
+          path: "/admin/programs/create",
+          icon: IconPost,
+          enabled: true,
         },
-        { 
-          key: "tambah_hysteria", 
-          label: <span className="block text-left leading-tight">Tambah Hysteria<br/>Berkelana</span>, 
-          view: "program.tambah_hysteria_berkelana", 
-          path: "/admin/programs/create-hysteria", 
-          icon: IconPost, 
-          enabled: true 
+        {
+          key: "tambah_hysteria",
+          label: (
+            <span className="block text-left leading-tight">
+              Tambah Hysteria
+              <br />
+              Berkelana
+            </span>
+          ),
+          view: "program.tambah_hysteria_berkelana",
+          path: "/admin/programs/create-hysteria",
+          icon: IconPost,
+          enabled: true,
         },
-        { 
-          key: "edit_podcast", 
-          label: "Edit Podcast", 
-          view: "program.edit_podcast", 
-          path: "/admin/programs/podcast",   
-          icon: IconPost, 
-          enabled: true 
+        {
+          key: "edit_podcast",
+          label: "Edit Podcast",
+          view: "program.edit_podcast",
+          path: "/admin/programs/podcast",
+          icon: IconPost,
+          enabled: true,
         },
       ],
     },
@@ -106,14 +200,44 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       icon: IconPlatform,
       enabled: true,
       children: [
-        { key: "hysteria-artlab", label: "Hysteria Artlab", view: "platform.hysteria-artlab", icon: IconPlatform, enabled: true },
-        { key: "ditampart", label: "Ditampart", view: "platform.ditampart", icon: IconPlatform, enabled: true },
-        { key: "laki-masak", label: "Laki Masak", view: "platform.laki-masak", icon: IconPlatform, enabled: true },
+        {
+          key: "hysteria-artlab",
+          label: "Hysteria Artlab",
+          view: "platform.hysteria-artlab",
+          icon: IconPlatform,
+          enabled: true,
+        },
+        {
+          key: "ditampart",
+          label: "Ditampart",
+          view: "platform.ditampart",
+          icon: IconPlatform,
+          enabled: true,
+        },
+        {
+          key: "laki-masak",
+          label: "Laki Masak",
+          view: "platform.laki-masak",
+          icon: IconPlatform,
+          enabled: true,
+        },
       ],
     },
 
-    { key: "event", label: "Event", view: "event", icon: IconEvent, enabled: true },
-    { key: "article", label: "Artikel", view: "article", icon: IconPost, enabled: true },
+    {
+      key: "event",
+      label: "Event",
+      view: "event",
+      icon: IconEvent,
+      enabled: true,
+    },
+    {
+      key: "article",
+      label: "Artikel",
+      view: "article",
+      icon: IconPost,
+      enabled: true,
+    },
     {
       key: "settings",
       label: "Settings",
@@ -121,29 +245,67 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
       icon: IconSettings,
       enabled: true,
       children: [
-        { key: "team", label: "Team", view: "team", icon: IconDiversity, enabled: true },
-        { key: "tentang", label: "Tentang", view: "tentang", icon: IconBusiness, enabled: true },
-        { key: "website-info", label: "Website Info", view: "website-info", icon: IconInfo, enabled: true },
-        { key: "contact", label: "Contact", view: "contact", icon: IconTelephone, enabled: true },
-        { key: "collaboration", label: "Kolaborasi", view: "collaboration", icon: IconSocial, enabled: true },
+        {
+          key: "team",
+          label: "Team",
+          view: "team",
+          icon: IconDiversity,
+          enabled: true,
+        },
+        {
+          key: "tentang",
+          label: "Tentang",
+          view: "tentang",
+          icon: IconBusiness,
+          enabled: true,
+        },
+        {
+          key: "website-info",
+          label: "Website Info",
+          view: "website-info",
+          icon: IconInfo,
+          enabled: true,
+        },
+        {
+          key: "contact",
+          label: "Contact",
+          view: "contact",
+          icon: IconTelephone,
+          enabled: true,
+        },
+        {
+          key: "collaboration",
+          label: "Kolaborasi",
+          view: "collaboration",
+          icon: IconSocial,
+          enabled: true,
+        },
       ],
     },
   ];
 
-  const toggleOpen = (key) => setOpenKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleOpen = (key) =>
+    setOpenKeys((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     // wrapper sidebar
     <div className="h-full overflow-y-auto bg-[#E83C91] flex flex-col">
       {/* Logo dan tombol tutup */}
-      <div className={`px-4 py-4 flex items-center border-b border-zinc-100 ${collapsed ? "justify-center" : "justify-between"}`}>
-        <div className={`flex items-center gap-3 ${collapsed ? "w-full justify-center" : ""}`}>
+      <div
+        className={`px-4 py-4 flex items-center border-b border-zinc-100 ${collapsed ? "justify-center" : "justify-between"}`}
+      >
+        <div
+          className={`flex items-center gap-3 ${collapsed ? "w-full justify-center" : ""}`}
+        >
           <button
             onClick={onToggleCollapse}
             aria-pressed={collapsed}
             className="flex items-center gap-3 focus:outline-none cursor-pointer"
-            title={collapsed ? "Open sidebar" : "Collapse sidebar"}>
-            <div className={`rounded-full p-1 ${collapsed ? "bg-[#E83C91]" : "bg-[#E83C91]"}`}>
+            title={collapsed ? "Open sidebar" : "Collapse sidebar"}
+          >
+            <div
+              className={`rounded-full p-1 ${collapsed ? "bg-[#E83C91]" : "bg-[#E83C91]"}`}
+            >
               <Image
                 src="/image/Logo-hysteria.svg"
                 alt="Hysteria logo"
@@ -153,13 +315,16 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                 priority
               />
             </div>
-            {!collapsed && <span className="text-sm font-semibold text-white">Hysteria</span>}
+            {!collapsed && (
+              <span className="text-sm font-semibold text-white">Hysteria</span>
+            )}
           </button>
         </div>
         <div className={`flex items-center gap-2 ${collapsed ? "hidden" : ""}`}>
           <button
             onClick={onClose}
-            className="lg:hidden p-2 rounded-md text-white hover:bg-white/10">
+            className="lg:hidden p-2 rounded-md text-white hover:bg-white/10"
+          >
             Close
           </button>
         </div>
@@ -171,13 +336,23 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
           {menus.map((item) => {
             const Icon = item.icon;
             const enabled = !!item.enabled;
-            const hasChildren = Array.isArray(item.children) && item.children.length > 0;
-            const isActive = currentView === item.view || (hasChildren && item.children.some((c) => c.view === currentView));
+            const hasChildren =
+              Array.isArray(item.children) && item.children.length > 0;
+            const isActive =
+              currentView === item.view ||
+              (hasChildren &&
+                item.children.some((c) => c.view === currentView));
             const isOpen = !!openKeys[item.key];
             const baseClass = `group relative flex items-center gap-2 rounded-md text-sm font-medium ${collapsed ? "justify-center px-0 py-3" : "px-3 py-2"}`;
-            const enabledClass = isActive ? `bg-white border border-pink-500 text-pink-500` : `text-white hover:bg-white/10`;
+            const enabledClass = isActive
+              ? `bg-white border border-pink-500 text-pink-500`
+              : `text-white hover:bg-white/10`;
             const disabledClass = `text-white/60 cursor-not-allowed`;
-            const iconColor = !enabled ? "text-white/60" : isActive ? "text-pink-500" : "text-white";
+            const iconColor = !enabled
+              ? "text-white/60"
+              : isActive
+                ? "text-pink-500"
+                : "text-white";
 
             const handleClick = () => {
               if (!enabled) return;
@@ -201,7 +376,8 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                     aria-expanded={hasChildren ? isOpen : undefined}
                     tabIndex={enabled ? 0 : -1}
                     className={`${baseClass} ${enabled ? enabledClass : disabledClass} w-full`}
-                    aria-label={item.label}>
+                    aria-label={item.label}
+                  >
                     <Icon className={`h-5 w-5 ${iconColor}`} />
                     {!collapsed && (
                       <>
@@ -211,7 +387,8 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                             className={`ml-auto h-4 w-4 transform transition-transform ${isOpen ? "rotate-90" : ""}`}
                             viewBox="0 0 20 20"
                             fill="currentColor"
-                            aria-hidden="true">
+                            aria-hidden="true"
+                          >
                             <path
                               fillRule="evenodd"
                               d="M6 4a1 1 0 011.707-.707l6 6a1 1 0 010 1.414l-6 6A1 1 0 016 16.293L11.586 11 6 5.414A1 1 0 016 4z"
@@ -219,7 +396,11 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                             />
                           </svg>
                         )}
-                        {!enabled && <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-white/20 px-1 py-0.5 text-[10px] font-medium text-white">Coming soon</span>}
+                        {!enabled && (
+                          <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-white/20 px-1 py-0.5 text-[10px] font-medium text-white">
+                            Not Allowed
+                          </span>
+                        )}
                       </>
                     )}
                   </button>
@@ -234,25 +415,42 @@ export default function AdminSidebar({ collapsed, onClose, onToggleCollapse, onN
                         return (
                           <li key={child.key}>
                             {(() => {
-                              const childClassBase = "flex items-center gap-2 w-full rounded-md px-3 py-2 text-xs";
-                              const childEnabledClass = childActive ? "bg-white text-pink-500" : "text-white hover:bg-white/10";
-                              const childDisabledClass = "text-white/60 cursor-not-allowed";
+                              const childClassBase =
+                                "flex items-center gap-2 w-full rounded-md px-3 py-2 text-xs";
+                              const childEnabledClass = childActive
+                                ? "bg-white text-pink-500"
+                                : "text-white hover:bg-white/10";
+                              const childDisabledClass =
+                                "text-white/60 cursor-not-allowed";
                               return (
                                 <button
-                                  onClick={() => childEnabled && onNavigate(child.view)}
+                                  onClick={() =>
+                                    childEnabled && onNavigate(child.view)
+                                  }
                                   title={child.label}
                                   disabled={!childEnabled}
                                   aria-disabled={!childEnabled}
-                                  aria-current={childActive ? "page" : undefined}
+                                  aria-current={
+                                    childActive ? "page" : undefined
+                                  }
                                   tabIndex={childEnabled ? 0 : -1}
-                                  className={`${childClassBase} ${childEnabled ? childEnabledClass : childDisabledClass}`}>
+                                  className={`${childClassBase} ${childEnabled ? childEnabledClass : childDisabledClass}`}
+                                >
                                   {ChildIcon && (
                                     <ChildIcon
-                                      className={`h-4 w-4 ${!childEnabled ? 'text-white/60' : childActive ? 'text-pink-500' : 'text-white'}`}
+                                      className={`h-4 w-4 ${!childEnabled ? "text-white/60" : childActive ? "text-pink-500" : "text-white"}`}
                                     />
                                   )}
-                                  <span className={`${childActive ? 'text-pink-500' : childEnabled ? 'text-white' : 'text-white/60'}`}>{child.label}</span>
-                                  {!childEnabled && <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-white/20 px-1 py-0.5 text-[10px] font-medium text-white">Coming soon</span>}
+                                  <span
+                                    className={`${childActive ? "text-pink-500" : childEnabled ? "text-white" : "text-white/60"}`}
+                                  >
+                                    {child.label}
+                                  </span>
+                                  {!childEnabled && (
+                                    <span className="ml-auto mr-1 inline-flex items-center rounded-full bg-white/20 px-1 py-0.5 text-[10px] font-medium text-white">
+                                      Coming soon
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })()}
