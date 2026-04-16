@@ -4,30 +4,30 @@ import { notFound } from 'next/navigation'
 import HeadSection from '../../../_sectionComponents/halaman_platform/head.section'
 import ListCategorySection from '../../../_sectionComponents/halaman_platform/list_category.section'
 import MediaSection from '../../../_sectionComponents/halaman_platform/media.section'
-import { listPlatforms } from '../../../modules/admin/platform/services/platform.service'
-import { getPublicPlatform } from '../../../modules/public/platform/services/platform.public.service.js'
+import { getPlatformBySlug, listPlatforms } from '../../../modules/admin/platform/services/platform.service'
+import logger from '@/lib/logger'
 
 export async function generateMetadata({ params }) {
   const { slug } = (await params) || {};
   if (!slug) return {};
   try {
-    const platform = await getPublicPlatform(slug);
+    const platform = await getPlatformBySlug(slug);
     if (!platform) return {};
     const logoPath = '/svg/Logo-hysteria.svg';
-    const ogImage = platform.head?.images?.[0]?.src || logoPath;
+    const ogImage = platform.mainImageUrl || logoPath;
 
     return {
-      title: platform.head?.title || slug,
-      description: platform.head?.description || undefined,
+      title: platform.headline || slug,
+      description: platform.subHeadline || undefined,
       icons: {
         icon: logoPath,
         shortcut: logoPath,
         apple: logoPath,
       },
       openGraph: {
-        title: platform.head?.title || slug,
-        description: platform.head?.description || undefined,
-        images: [{ url: ogImage, alt: platform.head?.title || 'Hysteria' }],
+        title: platform.headline || slug,
+        description: platform.subHeadline || undefined,
+        images: [{ url: ogImage, alt: platform.name || 'Hysteria' }],
       },
       twitter: {
         images: [ogImage],
@@ -49,25 +49,61 @@ export async function generateStaticParams() {
   }
 }
 
+function transformPlatformData(slug, db) {
+  if (!db) return null;
+
+  const mainImages = (db.images || [])
+    .filter((img) => img.type === 'main' && img.imageUrl)
+    .sort((a, b) => a.order - b.order)
+    .map((img) => ({ src: img.imageUrl, alt: img.label || slug }))
+
+  const images =
+    mainImages.length > 0
+      ? mainImages
+      : db.mainImageUrl
+      ? [{ src: db.mainImageUrl, alt: db.name || slug }]
+      : []
+
+  const coverImages = (db.images || [])
+    .filter((img) => img.type === 'cover' && img.imageUrl)
+    .sort((a, b) => a.order - b.order)
+
+  const categories = (db.categories || [])
+    .sort((a, b) => a.order - b.order)
+    .map((cat, idx) => ({
+      title:       cat.title,
+      slug:        cat.slug,
+      url:         cat.url,
+      layout:      cat.layout || 'grid',
+      description: cat.description || '',
+      imageUrl:    coverImages[idx]?.imageUrl || '',
+    }))
+
+  return {
+    headline:       db.headline       || '',
+    subHeadline:    db.subHeadline    || '',
+    instagram:      db.instagram      || '',
+    youtube:        db.youtube        || '',
+    youtubeProfile: db.youtubeProfile || '',
+    multyImages:    images.length > 1,
+    images,
+    categories,
+  }
+}
+
 export default async function Page({ params }) {
   const { slug } = (await params) || {}
 
   if (!slug) return notFound()
 
-  // Build absolute URL required by fetch() in Server Components
-  const headersList = await headers()
-  const host = headersList.get('host') || 'localhost:3000'
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
-  const baseUrl = `${protocol}://${host}`
-
   let data = null
   try {
-    const res = await fetch(`${baseUrl}/api/platforms/${slug}`, { cache: 'no-store' })
-    if (res.ok) {
-      const json = await res.json()
-      data = json?.data ?? null
-    }
-  } catch {
+    logger.info(`[Page] Directly fetching platform data for: ${slug}`)
+    const db = await getPlatformBySlug(slug)
+    data = transformPlatformData(slug, db)
+    logger.info(`[Page] Data transformed: ${!!data}`)
+  } catch (err) {
+    logger.error(`[Page] Service call error: ${err.message}`)
     // silently fall back to maintenance view
   }
 
@@ -77,7 +113,7 @@ export default async function Page({ params }) {
         <div className="container mx-auto text-center">
           <h1 className="text-3xl text-zinc-900 font-bold mb-4">Platform: {slug}</h1>
           <p className="mt-4 text-zinc-700">
-            Sedang dalam tahap maintenance.
+            Sedang dalam tahap maintenance atau data tidak ditemukan.
           </p>
         </div>
       </main>

@@ -233,8 +233,6 @@ model CategoryItem {
   eventOrganizers    EventOrganizer[]
   platformCategories PlatformCategory[]
   platformContents   PlatformContent[]
-  programCategories  ProgramCategory[]
-  programOrganizers  ProgramOrganizer[]
 
   @@index([categoryId])
   @@index([parentId])
@@ -544,7 +542,6 @@ model Tag {
   slug        String       @unique @db.VarChar(100)
   articles    ArticleTag[]
   events      EventTag[]
-  programTags ProgramTag[]
 }
 
 model ArticleTag {
