@@ -17,7 +17,7 @@ const seeds = [
   // require("./011-platform-permissions.js"),
   // require("./012-platform-seed.js"),
   // require("./013-platform-categories-seed.js"),
-  // require("./014-event-seed.js"),
+   require("./014-event-seed.js"),
   // require("./015-tentang-default-seed.js"),
   // require("./016-platform-content-seed.js"),
   // require("./017-platform-events-seed.js"),
@@ -25,7 +25,7 @@ const seeds = [
   // require("./019-article-seed.js"),
   // require("./020-visitor-stats.js"),
   // require("./021-program-events-seed.js"),
-   require("./022-data-hysteria-slug.js")
+  // require("./022-data-hysteria-slug.js"),
 ];
 
 async function main() {

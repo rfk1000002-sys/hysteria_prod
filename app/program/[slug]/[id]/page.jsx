@@ -40,44 +40,35 @@ export default async function ProgramPostDetailPage({ params }) {
   // ==========================================================
   if (slug === 'hysteria-berkelana') {
     
-    const currentPost = await prisma.event.findUnique({
+    // 👉 KITA GANTI KE TABEL BERKELANA
+    const currentPost = await prisma.berkelanaPost.findUnique({
       where: { id: postId },
       include: { tags: { include: { tag: true } } }
     });
 
-    if (!currentPost) return notFound();
+    if (!currentPost || !currentPost.isPublished) return notFound();
 
-    const otherPostsFromDb = await prisma.event.findMany({
+    // 👉 KITA GANTI KE TABEL BERKELANA (Tanpa filter eventCategories)
+    const otherPostsFromDb = await prisma.berkelanaPost.findMany({
       where: {
         isPublished: true,
         id: { not: postId }, 
-        eventCategories: {
-          some: { categoryItem: { slug: 'hysteria-berkelana' } }
-        }
       },
       orderBy: { createdAt: "desc" },
       take: 8, 
     });
 
-    const formattedOtherReviews = otherPostsFromDb.map(event => {
-      let previewText = "";
-      if (event.description && event.description.includes("**Preview:**")) {
-        const match = event.description.match(/\*\*Preview:\*\*\s*(.*)/);
-        if (match && match[1] !== "-") previewText = match[1];
-      } else {
-        previewText = event.description ? event.description.substring(0, 80) + "..." : "";
-      }
-
+    // 👉 PARSING DATA LEBIH BERSIH (Tanpa Regex Split)
+    const formattedOtherReviews = otherPostsFromDb.map(post => {
       return {
-        id: event.id,
-        title: event.title,
-        thumbnailUrl: event.poster || "/image/default-placeholder.png",
-        shortText: previewText,
+        id: post.id,
+        title: post.title,
+        thumbnailUrl: post.poster || "/image/default-placeholder.png",
+        shortText: post.preview || (post.description ? post.description.substring(0, 80) + "..." : ""),
       };
     });
 
     return (
-      // 👉 PERUBAHAN: ProgramHero dihapus, ditambah pt-32 agar tidak nabrak navbar
       <main className="min-h-screen bg-white pt-32 pb-10">
         <PostDetailSection post={currentPost} />
         
@@ -94,6 +85,7 @@ export default async function ProgramPostDetailPage({ params }) {
   // ==========================================================
   // KONDISI 2: DEFAULT / SLUG LAINNYA 
   // ==========================================================
+  // 👉 Komponen temanmu aman tidak tersentuh
   return (
     <DefaultProgramPostDetailView 
       slug={slug} 

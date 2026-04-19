@@ -15,44 +15,24 @@ function Card({ title, children }) {
   );
 }
 
-// 👉 PERUBAHAN: Terima props initialData, isEdit, dan eventId
 export default function BerkelanaForm({ initialData = null, isEdit = false, eventId = null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [autoIds, setAutoIds] = useState({ organizerId: null, categoryId: null });
   const [description, setDescription] = useState("");
   const [form, setForm] = useState({
     title: "", preview: "", host: "", podcaster: "", poster: "",
     instagramLink: "", youtubeLink: "", status: "DRAFT", tags: [],
   });
 
-  // 👉 PERUBAHAN: PREFILL DATA JIKA MODE EDIT
+  // PREFILL DATA UNTUK MODE EDIT
   useEffect(() => {
     if (isEdit && initialData) {
-      // Trik Memecah Deskripsi Kembali ke Input Box (Preview, Host, Podcaster)
-      let parsedDesc = initialData.description || "";
-      let pPreview = "", pHost = "", pPodcaster = "";
-
-      if (parsedDesc.includes("---")) {
-        const parts = parsedDesc.split("---");
-        parsedDesc = parts[0].trim(); // Ambil deskripsi utama
-        const meta = parts[1]; // Ambil data sisipan
-
-        const prevMatch = meta.match(/\*\*Preview:\*\*\s*(.*)/);
-        const hostMatch = meta.match(/\*\*Host:\*\*\s*(.*)/);
-        const podMatch = meta.match(/\*\*Podcaster:\*\*\s*(.*)/);
-
-        if (prevMatch && prevMatch[1] !== "-") pPreview = prevMatch[1];
-        if (hostMatch && hostMatch[1] !== "-") pHost = hostMatch[1];
-        if (podMatch && podMatch[1] !== "-") pPodcaster = podMatch[1];
-      }
-
-      setDescription(parsedDesc);
+      setDescription(initialData.description || "");
       setForm({
         title: initialData.title || "",
-        preview: pPreview,
-        host: pHost,
-        podcaster: pPodcaster,
+        preview: initialData.preview || "",       
+        host: initialData.host || "",             
+        podcaster: initialData.podcaster || "",   
         poster: initialData.poster || "",
         instagramLink: initialData.instagramLink || "",
         youtubeLink: initialData.youtubeLink || "",
@@ -61,29 +41,6 @@ export default function BerkelanaForm({ initialData = null, isEdit = false, even
       });
     }
   }, [initialData, isEdit]);
-
-  // FETCH ID Hysteria (Hanya jika mode Create / POST)
-  useEffect(() => {
-    if (isEdit) return; // Kalau edit gak usah fetch ID lagi
-    const fetchCategoryIds = async () => {
-      try {
-        const res = await fetch("/api/categories/program-hysteria");
-        const json = await res.json();
-        const items = json?.data?.items || [];
-        if (items.length > 0) {
-          const orgId = items[0].id;
-          let catId = null;
-          items.forEach(group => {
-            group.children?.forEach(child => {
-              if (child.slug === 'hysteria-berkelana' || child.title.toLowerCase().includes('berkelana')) catId = child.id;
-            });
-          });
-          setAutoIds({ organizerId: Number(orgId), categoryId: Number(catId) });
-        }
-      } catch (error) { console.error(error); }
-    };
-    fetchCategoryIds();
-  }, [isEdit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,19 +54,12 @@ export default function BerkelanaForm({ initialData = null, isEdit = false, even
     }
     setLoading(true);
 
-    // GABUNGKAN LAGI DATA SAAT MAU DISIMPAN
-    const combinedDesc = `
-${description}
-
----
-**Preview:** ${form.preview || "-"}
-**Host:** ${form.host || "-"}
-**Podcaster:** ${form.podcaster || "-"}
-    `.trim();
-
     const payload = {
       title: form.title,
-      description: combinedDesc,
+      description: description, 
+      preview: form.preview,
+      host: form.host,
+      podcaster: form.podcaster,
       poster: form.poster,
       instagramLink: form.instagramLink,
       youtubeLink: form.youtubeLink,
@@ -117,18 +67,9 @@ ${description}
       tagNames: Array.isArray(form.tags) ? form.tags.filter(Boolean) : [],
     };
 
-    // Data wajib untuk mode CREATE (POST) saja
-    if (!isEdit) {
-      payload.categoryItemIds = autoIds.categoryId ? [autoIds.categoryId] : [];
-      payload.organizerItemIds = autoIds.organizerId ? [autoIds.organizerId] : [];
-      payload.startAt = new Date().toISOString();
-      payload.isFlexibleTime = true;
-      payload.location = "Menyesuaikan";
-    }
-
     try {
-      // 👉 PERUBAHAN: API Nembak sesuai mode (PUT / POST)
-      const targetUrl = isEdit ? `/api/admin/events/${eventId}` : "/api/admin/events";
+      // 👉 PERBAIKAN URL: Arahkan ke endpoint API yang baru dan benar
+      const targetUrl = isEdit ? `/api/admin/programs/berkelana/${eventId}` : "/api/admin/programs/berkelana";
       const targetMethod = isEdit ? "PUT" : "POST";
 
       const res = await fetch(targetUrl, {
@@ -137,11 +78,20 @@ ${description}
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Gagal menyimpan data");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Gagal menyimpan data");
+      }
 
-      alert(`🎉 Postingan Hysteria Berkelana berhasil ${isEdit ? 'diperbarui' : 'dibuat'}!`);
-      router.push("/admin/programs");
+      alert(`🎉 Postingan berhasil disimpan!`);
+      
+      // Refresh data di background dulu
       router.refresh();
+      
+      // Beri jeda sedikit sebelum pindah halaman agar session tidak 'kaget'
+      setTimeout(() => {
+        router.push("/admin/programs");
+      }, 300);
     } catch (error) {
       alert("Error: " + error.message);
     } finally {
@@ -173,7 +123,6 @@ ${description}
             <input name="title" value={form.title} onChange={handleChange} className={inputClass} required />
           </Card>
           <Card title="Deskripsi *">
-            {/* Editor harus render kalau undefined bukan undefined biar gak kedip */}
             {description !== undefined && (
                 <EventDescriptionEditor value={description} onChange={setDescription} />
             )}

@@ -115,8 +115,8 @@ function EventsPageContent() {
   }, []);
   
   return (
-    <div className="mx-auto px-4 mt-18 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-4 text-[var(--foreground)] bg-[var(--background)]">
-      <h1 className="text-[24px] sm:text-[30px] md:text-[36px] font-bold leading-[100%] text-[var(--foreground)]">
+    <div className="mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-4 text-[var(--foreground)] bg-[var(--background)]">
+      <h1 className="text-[24px] mt-8 sm:text-[30px] md:text-[36px] font-bold leading-[100%] text-[var(--foreground)]">
         Daftar Event
       </h1>
 
