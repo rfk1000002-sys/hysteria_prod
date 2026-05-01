@@ -25,6 +25,7 @@ const seeds = [
   require("./019-article-seed.js"),
   require("./020-visitor-stats.js"),
   require("./021-program-events-seed.js"),
+  require("./022-data-hysteria-slug.js"),
 ];
 
 async function main() {

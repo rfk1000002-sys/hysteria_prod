@@ -6,12 +6,11 @@ export async function GET() {
   try {
     const programs = await prisma.event.findMany({
       where: {
-        // 👉 PERUBAHAN BESAR: Kita filter berdasarkan Kategori (eventCategories)
         eventCategories: {
           some: {
             categoryItem: {
               slug: {
-                // Semua slug kategori dan sub-kategori Program Hysteria masuk ke sini
+                // 👉 PERUBAHAN: "hysteria-berkelana" SUDAH DIHAPUS DARI DAFTAR INI
                 in: [
                   "program-hysteria",
                   "festival-dan-pameran", "festival-kampung", "festival-kota", "biennale",
@@ -25,7 +24,7 @@ export async function GET() {
                   "residensi-dan-workshop", "flash-residency", "kandang-tandang",
                   "podcast", "safari-memori", "aston", "sore-di-stonen",
                   "pemutaran-film", "screening-am-film", "lawatan-bandeng-keliling-film",
-                  "video-series", "sapa-warga", "hysteria-berkelana"
+                  "video-series", "sapa-warga" 
                 ]
               }
             }

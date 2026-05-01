@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Poppins } from 'next/font/google';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react'; // Ditambahkan untuk tombol kembali
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -242,12 +243,29 @@ export default function DefaultProgramView({ actualSlug, heroData }) {
   return (
     <main className={`min-h-screen bg-white ${poppins.className}`}>
       
-      {/* 👉 HERO SECTION: Tinggi diperpanjang di Mobile (min-h-[400px]), di Desktop tetap aspect ratio 1920/850 */}
-      <section className="relative w-full bg-[#1a1a1a] flex flex-col justify-end overflow-hidden min-h-[400px] md:min-h-0 md:aspect-[1920/850]">
+      {/* 👉 HERO SECTION
+          Di Mobile (sampai sm): h-[280px] atau h-[350px].
+          Di Desktop (md ke atas): kembali ke aslinya min-h-0 dan aspect-[1920/850].
+      */}
+      <section className="relative w-full bg-[#1a1a1a] flex flex-col justify-end overflow-hidden h-[280px] sm:h-[350px] md:h-auto md:min-h-0 md:aspect-[1920/850]">
+        
         <div className="absolute inset-0 w-full h-full">
           <Image src={displayImage} alt={displayTitle} fill priority className="object-cover object-center" quality={100} sizes="100vw" />
+          {/* Overlay gradient asli tetap dipertahankan */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent md:via-black/30"></div> 
         </div>
+
+        {/* 👉 TOMBOL KEMBALI 
+            Hanya muncul di Mobile/Tablet (block md:hidden) 
+        */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-6 left-4 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full text-white transition hover:bg-white/20 md:hidden"
+          aria-label="Kembali"
+        >
+          <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+        </button>
+
         <div className="relative z-10 w-full px-6 md:px-10 lg:px-20 pb-8 md:pb-12 text-white">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] font-bold mb-3 md:mb-4 drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] tracking-tight uppercase whitespace-pre-line leading-tight">
             {displayTitle}

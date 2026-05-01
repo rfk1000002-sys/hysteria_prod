@@ -542,6 +542,7 @@ model Tag {
   slug        String       @unique @db.VarChar(100)
   articles    ArticleTag[]
   events      EventTag[]
+  berkelanaPosts BerkelanaPostTag[]
 }
 
 model ArticleTag {
@@ -615,4 +616,46 @@ enum MediaType {
 enum ProgramType {
   UMUM
   HYSTERIA_BERKELANA
+}
+
+model BerkelanaPost {
+  id              Int               @id @default(autoincrement())
+  title           String            @db.VarChar(255)
+  slug            String            @unique @db.VarChar(255)
+  
+  // Kolom spesifik yang sebelumnya disisipkan ke description
+  description     String?           @db.Text
+  preview         String?           @db.VarChar(500)
+  host            String?           @db.VarChar(255)
+  podcaster       String?           @db.VarChar(255)
+  
+  poster          String?           @db.VarChar(500)
+  
+  // Link Dokumentasi
+  instagramLink   String?           @db.VarChar(500)
+  youtubeLink     String?           @db.VarChar(500)
+  
+  isPublished     Boolean           @default(false)
+  views           Int               @default(0)
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relasi ke Tag
+  tags            BerkelanaPostTag[]
+
+  @@index([isPublished])
+  @@index([createdAt])
+}
+
+// Tabel pivot untuk relasi Many-to-Many ke model Tag
+model BerkelanaPostTag {
+  id              Int             @id @default(autoincrement())
+  berkelanaPostId Int
+  tagId           Int
+  
+  berkelanaPost   BerkelanaPost   @relation(fields: [berkelanaPostId], references: [id], onDelete: Cascade)
+  tag             Tag             @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([berkelanaPostId, tagId])
 }

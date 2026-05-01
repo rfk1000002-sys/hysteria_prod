@@ -43,7 +43,7 @@ import ArticlesPage from "../articles/page.jsx";
 // program
 import ProgramPage from "@/app/admin/programs/page.jsx";
 import CreateProgramPage from "@/app/admin/programs/create/page.jsx";
-import CreateHysteriaPage from "@/app/admin/programs/create-hysteria/page.jsx";
+import CreateHysteriaPage from "@/app/admin/programs/berkelana/page.jsx";
 import EditPodcastPage from "@/app/admin/programs/podcast/page.jsx";
 
 export default function AdminShell({ children }) {

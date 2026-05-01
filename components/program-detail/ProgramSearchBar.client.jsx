@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 
-// 👉 PERUBAHAN: Icon Search disesuaikan dengan desain UI (kaca pembesar)
 function SearchIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
@@ -12,7 +11,6 @@ function SearchIcon(props) {
   );
 }
 
-// 👉 PERUBAHAN: Icon Filter diubah menjadi Funnel (Corong) seperti desain UI
 function FilterIcon(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
@@ -23,18 +21,17 @@ function FilterIcon(props) {
 
 export default function ProgramSearchBar({
   initialQuery = "",
+  initialSort = "Terbaru",
   onSearch,
-  onSortChange, // Tambahan prop kalau nanti mau dihubungkan dengan filter Hysteria
+  onSortChange, 
   isLoading = false,
 }) {
   const [q, setQ] = useState(initialQuery);
-  
-  // 👉 STATE BARU: Untuk mengontrol Dropdown Filter
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [sortOption, setSortOption] = useState('Terbaru');
+  
+  const [sortOption, setSortOption] = useState(initialSort);
   const dropdownRef = useRef(null);
 
-  // Menutup dropdown jika klik di luar area
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -53,12 +50,12 @@ export default function ProgramSearchBar({
   function handleSortSelection(opt) {
     setSortOption(opt);
     setIsDropdownOpen(false);
-    onSortChange?.(opt); // Mengirim pilihan filter ke komponen induk (jika diperlukan)
+    onSortChange?.(opt); 
   }
 
   return (
-    <div className="flex items-center justify-center gap-4">
-      {/* AREA SEARCH (Ukuran Tetap max-w-3xl) */}
+    // 👉 PERUBAHAN: Menambahkan gap-3 di mobile, gap-4 di desktop
+    <div className="flex w-full items-center justify-center gap-3 md:gap-4">
       <form
         onSubmit={submit}
         className="relative w-full max-w-3xl"
@@ -68,16 +65,18 @@ export default function ProgramSearchBar({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search..."
-          className="w-full rounded-full border border-[#D63384] bg-white px-6 py-4 pr-14 text-sm text-[#D63384] outline-none placeholder:text-[#D63384]/60 focus:ring-2 focus:ring-[#D63384]/20 shadow-sm transition-all"
+          // 👉 PERUBAHAN RESPONSIVE: px-5 py-3.5 di mobile, kembali ke px-6 py-4 di desktop
+          className="w-full rounded-full border border-[#D63384] bg-white px-5 py-3 md:px-6 md:py-4 pr-12 md:pr-14 text-[13px] md:text-sm text-[#D63384] outline-none placeholder:text-[#D63384]/60 focus:ring-2 focus:ring-[#D63384]/20 shadow-sm transition-all"
         />
 
         <button
           type="submit"
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-[#D63384] hover:bg-pink-50 transition-colors"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-[#D63384] hover:bg-pink-50 transition-colors"
           aria-label="Search"
           disabled={isLoading}
         >
-          <SearchIcon className="h-[22px] w-[22px]" />
+          {/* 👉 PERUBAHAN RESPONSIVE: Ukuran icon menyesuaikan */}
+          <SearchIcon className="h-5 w-5 md:h-[22px] md:w-[22px]" />
         </button>
 
         {isLoading ? (
@@ -87,21 +86,22 @@ export default function ProgramSearchBar({
         ) : null}
       </form>
 
-      {/* AREA FILTER & DROPDOWN */}
       <div className="relative flex-shrink-0" ref={dropdownRef}>
         <button
           type="button"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className={`flex h-14 w-14 items-center justify-center rounded-full border border-[#D63384] transition-colors shadow-sm ${
+          // 👉 PERUBAHAN RESPONSIVE: Tombol lebih kecil (h-12 w-12) di mobile, kembali besar (h-14 w-14) di desktop
+          className={`flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-full border border-[#D63384] transition-colors shadow-sm ${
             isDropdownOpen ? 'bg-pink-50 text-[#D63384]' : 'bg-white text-[#D63384] hover:bg-pink-50'
           }`}
           aria-label="Filter"
         >
-          <FilterIcon className="h-5 w-5" />
+          {/* 👉 PERUBAHAN RESPONSIVE: Icon menyesuaikan */}
+          <FilterIcon className="h-4 w-4 md:h-5 md:w-5" />
         </button>
 
-        {/* Menu Dropdown Popup */}
         {isDropdownOpen && (
+          // 👉 PERUBAHAN RESPONSIVE: Dropdown rata kanan agar tidak terpotong tepi layar di mobile
           <div className="absolute right-0 mt-3 w-48 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] p-2 z-50">
             <p className="text-[#3F334D] font-bold px-4 pt-2 pb-3 text-sm">Sort by</p>
             <div className="flex flex-col gap-1">

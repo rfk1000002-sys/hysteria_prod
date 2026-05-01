@@ -2,7 +2,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-// 👉 PERUBAHAN 1: Hapus import getProgramDetailData yang lama
 import ProgramHero from "@/components/program-detail/ProgramHero";
 import ProgramPostsSection from "@/components/program-detail/ProgramPostsSection.client";
 import DefaultProgramView from "@/components/program-detail/DefaultProgramView.client";
@@ -52,60 +51,43 @@ export default async function ProgramDetailPage({ params, searchParams }) {
   const dbKey = slugToDbKey[actualSlug]; 
   const heroData = slugHerosData[dbKey] || null;
 
-
   // ==========================================================
   // KONDISI 1: JIKA USER MEMBUKA HALAMAN HYSTERIA BERKELANA
   // ==========================================================
   if (actualSlug === 'hysteria-berkelana') {
     const q = resolvedSearchParams?.q ?? "";
     const page = Number(resolvedSearchParams?.page ?? 1);
-    const itemsPerPage = 6; // 👉 Bisa diubah mau nampilin berapa card per halaman
+    const itemsPerPage = 6; 
     
-    // 1. Buat Filter Pencarian ke Tabel Event
+    // 1. Buat Filter Pencarian Langsung ke Tabel BerkelanaPost
     const whereClause = {
       isPublished: true,
-      eventCategories: {
-        some: {
-          categoryItem: {
-            slug: 'hysteria-berkelana' // Pastikan hanya narik kategori ini
-          }
-        }
-      },
       // Fitur Search (Jika ada inputan di search bar)
       ...(q ? { title: { contains: q, mode: 'insensitive' } } : {})
     };
 
-    // 2. Hitung Total Data & Halaman
-    const totalItems = await prisma.event.count({ where: whereClause });
+    // 2. Hitung Total Data & Halaman dari BerkelanaPost
+    const totalItems = await prisma.berkelanaPost.count({ where: whereClause });
     const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
-    // 3. Tarik Data dari Tabel Event
-    const dbEvents = await prisma.event.findMany({
+    // 3. Tarik Data dari Tabel BerkelanaPost
+    const dbPosts = await prisma.berkelanaPost.findMany({
       where: whereClause,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * itemsPerPage,
       take: itemsPerPage,
     });
 
-    // 4. Format Data Agar Cocok dengan Komponen Temanmu (ProgramPostsSection)
-    const formattedPosts = dbEvents.map(event => {
-      // 🪄 Trik Ekstrak "Preview Deskripsi" dari string gabungan
-      let previewText = "";
-      if (event.description && event.description.includes("**Preview:**")) {
-        const match = event.description.match(/\*\*Preview:\*\*\s*(.*)/);
-        if (match && match[1] !== "-") previewText = match[1];
-      } else {
-        // Fallback kalau nggak nemu teks preview (ambil 80 karakter awal)
-        previewText = event.description ? event.description.substring(0, 80) + "..." : "";
-      }
-
+    // 4. Format Data Agar Cocok dengan Komponen (Lebih rapi tanpa split string!)
+    const formattedPosts = dbPosts.map(post => {
       return {
-        id: event.id,
-        title: event.title,
-        slug: actualSlug, // Biar URL detailnya rapi: /program/hysteria-berkelana/123
-        thumbnailUrl: event.poster || "/image/default-placeholder.png",
-        heading: event.title,
-        shortText: previewText, // 👉 Sekarang beneran narik teks Preview!
+        id: post.id,
+        title: post.title,
+        slug: actualSlug, 
+        thumbnailUrl: post.poster || "/image/default-placeholder.png",
+        heading: post.title,
+        // Langsung ambil kolom preview dari database!
+        shortText: post.preview || (post.description ? post.description.substring(0, 80) + "..." : ""), 
       };
     });
 

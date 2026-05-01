@@ -27,34 +27,20 @@ export default function PostDetailSection({ post }) {
     ? post.tags.map(t => t.tag?.name).filter(Boolean)
     : [];
 
-  // 2. OLAH DESKRIPSI
-  let rawDesc = post.description || "";
-  let mainDescription = rawDesc;
-  let host = "";
-  let podcaster = "";
-
-  if (rawDesc.includes("---")) {
-    const parts = rawDesc.split("---");
-    mainDescription = parts[0].trim(); 
-    const meta = parts[1] || ""; 
-
-    const hostMatch = meta.match(/\*\*Host:\*\*\s*(.*)/);
-    const podMatch = meta.match(/\*\*Podcaster:\*\*\s*(.*)/);
-
-    if (hostMatch && hostMatch[1] !== "-") host = hostMatch[1].trim();
-    if (podMatch && podMatch[1] !== "-") podcaster = podMatch[1].trim();
-  }
+  // 👉 PERUBAHAN BESAR: 
+  // Karena sekarang tabel BerkelanaPost sudah punya kolom sendiri,
+  // Kita tinggal panggil datanya langsung! (Tanpa perlu Regex / Split "---")
+  const mainDescription = post.description || "";
+  const host = post.host || "";
+  const podcaster = post.podcaster || "";
 
   return (
     <section className="bg-white">
-      {/* 👉 PERUBAHAN: Lebarkan max-w-5xl menjadi max-w-[1200px] dan tambah padding */}
       <div className="mx-auto max-w-[1200px] px-6 lg:px-12 pb-20">
         
-        {/* 👉 PERUBAHAN GRID: Sesuaikan lebar kolom gambar dan kurangi gap sedikit */}
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
           
           {/* BAGIAN KIRI: GAMBAR */}
-          {/* Ubah lebar gambar menjadi 340px agar sedikit lebih besar proporsional dengan layar lebar */}
           <div className="w-full lg:w-[340px] flex-shrink-0 mx-auto lg:mx-0">
             <InstagramPreviewCard
               thumbnailUrl={post.poster || "/image/default-placeholder.png"}
